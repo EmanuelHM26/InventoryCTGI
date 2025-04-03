@@ -1,15 +1,21 @@
-import mysql from 'mysql2/promise';
-import dotenv from 'dotenv';
+import { Sequelize } from "sequelize";
+import dotenv from "dotenv";
 
+dotenv.config(); // Cargar variables de entorno
 
-dotenv.config();
-
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS || '',  // Aquí debe estar vacío
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT
+// Configuración de Sequelize
+const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
+  host: process.env.DB_HOST,
+  dialect: "mysql",
+  logging: false, // Desactivar logs en consola
 });
 
-export default pool;
+// Verificación de conexión
+try {
+  await sequelize.authenticate();
+  console.log("✅ Conexión a la base de datos establecida correctamente.");
+} catch (error) {
+  console.error("❌ Error al conectar con la base de datos:", error);
+}
+
+export default sequelize;

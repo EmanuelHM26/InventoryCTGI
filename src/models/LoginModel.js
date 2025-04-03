@@ -1,23 +1,46 @@
-import pool from '../config/database.js';
+import { DataTypes } from "sequelize";
+import sequelize from "../config/database.js";
+import Password from "../models/PasswordModel.js"; // Importa el modelo Password
 
-// Obtener todos los registros
-export const getAllLogins = async () => {
-    const [rows] = await pool.query('SELECT * FROM RegistroLogin');
-    return rows;
-};
+const RegistroLogin = sequelize.define("RegistroLogin", {
+  IdRegistroLogin: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  Usuario: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  Correo: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  IdPassword: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: Password, // Relación con la tabla Password
+      key: "IdPassword",
+    },
+  },
+  FechaInicioSesion: {
+    type: DataTypes.DATE,
+    allowNull: true,  // Permite NULL hasta que el usuario inicie sesión
+  },
+  HoraInicioSesion: {
+    type: DataTypes.TIME,
+    allowNull: true,  // Permite NULL hasta que el usuario inicie sesión
+  },
+}, {
+  tableName: "registroLogin",
+  timestamps: false,
+});
 
-// Obtener un registro por ID
-export const getLoginById = async (id) => {
-    const [rows] = await pool.query('SELECT * FROM RegistroLogin WHERE IdRegistroLogin = ?', [id]);
-    return rows[0] || null;
-};
+// Relación con la tabla Password
+RegistroLogin.belongsTo(Password, { foreignKey: "IdPassword" });
 
-// Crear un nuevo registro
-export const createLogin = async (data) => {
-    const { usuario, correo, password, idPassword, fechaInicio, fechaCierre, horaInicio, horaCierre } = data;
-    const [result] = await pool.query(
-        'INSERT INTO RegistroLogin (Usuario, Correo, Password, IdPassword, FechaInicioSesion, FechaCerrarSesion, HoraInicioSesion, HoraCerrarSesion) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [usuario, correo, password, idPassword, fechaInicio, fechaCierre, horaInicio, horaCierre]
-    );
-    return result.insertId;
-};
+export default RegistroLogin;
+

@@ -1,21 +1,16 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import loginRoutes from './routes/login.routes.js'; // Importa las rutas de login
-
-
-dotenv.config();
+import express from "express";
+import cors from "cors";
+import loginRoutes from "./routes/login.routes.js"
 
 const app = express();
 
-// Middlewares
+app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Ruta de prueba
-app.get('/', (req, res) => {
-  res.send("🚀 Servidor con ES Modules corriendo correctamente");
-});
 
-app.use('/api/logins', loginRoutes);
-
+// Aquí puedes agregar las rutas reales de tu proyecto
+// import userRoutes from "./routes/user.routes.js";
+app.use("/api", loginRoutes);
 
 export default app;
