@@ -67,3 +67,40 @@ export const getUserById = async (req, res) => {
   }
 };
 
+// Iniciar sesión
+export const loginUser = async (req, res) => {
+  try {
+    const { Usuario, PasswordTexto } = req.body;
+
+    if (!Usuario || !PasswordTexto) {
+      return res.status(400).json({ message: "Usuario y contraseña son obligatorios" });
+    }
+
+    // Buscar el usuario y hacer un INNER JOIN con la tabla Password
+    const user = await RegistroLogin.findOne({
+      where: { Usuario },
+      include: [
+        {
+          model: Password,
+          attributes: ["Password"], // Solo necesitamos la contraseña encriptada
+        },
+      ],
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Verificar la contraseña
+    const passwordMatch = await bcrypt.compare(PasswordTexto, user.Password.Password);
+    if (!passwordMatch) {
+      return res.status(401).json({ message: "Contraseña incorrecta" });
+    }
+
+    // Si las credenciales son correctas
+    res.status(200).json({ message: "Inicio de sesión exitoso", user: { Usuario: user.Usuario, Password: user.Password.Password } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error al iniciar sesión", error });
+  }
+};
