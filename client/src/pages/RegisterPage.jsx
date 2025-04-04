@@ -1,19 +1,40 @@
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { useAuth } from "../context/authContext";
+import { Link } from "react-router-dom";
+import Swal from "sweetalert2";
+// import { useState } from "react";
 
 const Register = () => {
-  const [usuario, setUsuario] = useState("");
-  const [correo, setCorreo] = useState("");
-  const [password, setPassword] = useState("");
+  const { register, handleSubmit, formState: { errors } } = useForm();
   const { signup } = useAuth();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     try {
-      await signup({ Usuario: usuario, Correo: correo, PasswordTexto: password });
-      console.log("Usuario registrado exitosamente");
+      await signup({ 
+        Usuario: data.usuario, 
+        Correo: data.correo, 
+        PasswordTexto: data.password, 
+      });
+
+      Swal.fire({
+        icon: "success",
+        title: "Registro exitoso",
+        text: "Usuario registrado exitosamente",
+        confirmButtonColor: "#22c55e", // Color verde
+        timer: 1500, // Duración de 5 segundos
+        timerProgressBar: true, // Mostrar barra de progreso
+      });
     } catch (error) {
       console.error("Error al registrar usuario:", error.message);
+
+      Swal.fire({
+        icon: "error",
+        title: "Error en el registro",
+        text: `Error al registrar usuario: ${error.message}`,
+        confirmButtonColor: "#ef4444", // Color rojo
+        timer: 1500, // Duración de 5 segundos
+        timerProgressBar: true, // Mostrar barra de progreso
+      });
     }
   };
 
@@ -34,39 +55,46 @@ const Register = () => {
             <button className="text-green-600 text-lg font-semibold border-b-2 border-green-600">Registrarse</button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4" >
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label htmlFor="usuario" className="block text-sm font-medium text-gray-700">Usuario</label>
               <input
-                id="usuario" 
-                type="text" 
+                id="usuario"
+                type="text"
                 placeholder="Cree un nombre de usuario"
-                value={usuario}
-                onChange={(e) => setUsuario(e.target.value)} 
+                {...register("usuario", { required: "El usuario es obligatorio" })}
                 className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500"
               />
+              {errors.usuario && <p className="text-red-500 text-xs mt-1">{errors.usuario.message}</p>}
             </div>
             <div>
               <label htmlFor="correo" className="block text-sm font-medium text-gray-700">Correo Electrónico</label>
               <input
                 id="correo"
-                value={correo}
-                onChange={(e) => setCorreo(e.target.value)} 
-                type="email" 
-                placeholder="Ingrese su correo electrónico" 
+                type="email"
+                placeholder="Ingrese su correo electrónico"
+                {...register("correo", { 
+                  required: "El correo es obligatorio", 
+                  pattern: { value: /^[^@]+@[^@]+\.[a-zA-Z]{2,}$/, message: "Correo inválido" } 
+                })}
                 className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500"
               />
+              {errors.correo && <p className="text-red-500 text-xs mt-1">{errors.correo.message}</p>}
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">Contraseña</label>
-              <input 
+              <input
                 id="password"
-                type="password" 
+                type="password"
                 placeholder="Cree una contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)} 
+                {...register("password", { 
+                  required: "La contraseña es obligatoria", 
+                  minLength: { value: 8, message: "Debe tener al menos 8 caracteres" },
+                  pattern: { value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/, message: "Debe incluir letras y números" }
+                })}
                 className="w-full px-4 py-2 border rounded-md focus:ring-green-500 focus:border-green-500"
               />
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
             </div>
             <button type="submit" className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition">
               Registrarse
@@ -75,11 +103,15 @@ const Register = () => {
           <p className="text-xs text-gray-500 mt-4 text-center">
             Al registrarte, aceptas nuestros <a href="#" className="text-green-600">Términos y Condiciones</a>
           </p>
+
+          <p className="text-xs text-gray-500 mt-4 text-center  hover:underline">
+            ¿Ya tienes una cuenta? <Link to="/login" className="text-green-600">Inicia sesión aquí</Link>
+          </p> 
+
         </div>
       </div>
     </div>
   );
 };
-
 
 export default Register;

@@ -1,18 +1,41 @@
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { useAuth } from "../context/authContext";
+import { Link } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const Login = () => {
-  const [usuario, setUsuario] = useState("");
-  const [password, setPassword] = useState("");
   const { signin } = useAuth();
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     try {
-      await signin({ Usuario: usuario, PasswordTexto: password });
-      console.log("Inicio de sesión exitoso");
+      await signin({
+        Usuario: data.usuario,
+        PasswordTexto: data.password,
+      });
+
+      // Alerta de éxito
+      Swal.fire({
+        icon: "success",
+        title: "Inicio de sesión exitoso",
+        text: "Has iniciado sesión correctamente",
+        confirmButtonColor: "#22c55e", // Color verde
+        timer: 1500,
+        timerProgressBar: true,
+      });
     } catch (error) {
       console.error("Error al iniciar sesión:", error.message);
+
+      // Alerta de error
+      Swal.fire({
+        icon: "error",
+        title: "Error al iniciar sesión",
+        text: "La contraseña o el usuario son incorrectos",
+        // text: `Error: ${error.message}`,
+        confirmButtonColor: "#ef4444", // Color rojo
+        timer: 1500,
+        timerProgressBar: true,
+      });
     }
   };
 
@@ -27,9 +50,9 @@ const Login = () => {
           </p>
         </div>
         {/* Sección Derecha */}
-        <div className="w-1/2 p-12"> {/* Aumentamos el padding para hacer el formulario más alto */}
+        <div className="w-1/2 p-12">
           <h2 className="text-2xl font-bold text-center text-green-600 mb-4">Iniciar Sesión</h2>
-          <form onSubmit={handleSubmit} className="space-y-6"> {/* Aumentamos el espacio entre los elementos */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label htmlFor="usuario" className="block text-sm font-medium text-gray-700">
                 Usuario
@@ -38,10 +61,10 @@ const Login = () => {
                 id="usuario"
                 type="text"
                 placeholder="Ingrese su usuario"
-                value={usuario}
-                onChange={(e) => setUsuario(e.target.value)}
+                {...register("usuario", { required: "El usuario es obligatorio" })}
                 className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
               />
+              {errors.usuario && <p className="text-red-500 text-xs mt-1">{errors.usuario.message}</p>}
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -51,20 +74,28 @@ const Login = () => {
                 id="password"
                 type="password"
                 placeholder="Ingrese su contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                {...register("password", { 
+                  required: "La contraseña es obligatoria", 
+                  minLength: { value: 8, message: "Debe tener al menos 8 caracteres" },
+                })}
                 className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
               />
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
             </div>
             <button
               type="submit"
-              className="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 transition duration-300" 
+              className="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 transition duration-300"
             >
               Iniciar Sesión
             </button>
-            <p className="text-sm text-center text-green-600 mt-4 cursor-pointer hover:underline"> 
+            <p className="text-sm text-center text-green-600 mt-4 cursor-pointer hover:underline">
               ¿Olvidaste tu contraseña?
             </p>
+
+            <p className="text-xs text-gray-500 mt-4 text-center hover:underline">
+              ¿No tienes cuenta? <Link to="/register" className="text-green-600">Regístrate aquí</Link>
+            </p>
+
           </form>
         </div>
       </div>

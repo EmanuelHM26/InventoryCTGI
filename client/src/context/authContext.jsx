@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await registerUser(userData);
       setUser(response.user); // Ajusta según la respuesta del backend
-      navigate("/");
+      navigate("/login");
     } catch (error) {
       console.error("Error al registrar usuario:", error.message);
       throw error;
