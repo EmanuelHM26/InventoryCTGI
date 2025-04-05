@@ -17,6 +17,9 @@ const RegistroLogin = sequelize.define("RegistroLogin", {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
+    validate: {
+      isEmail: true, // Validación de correo electrónico
+    }
   },
   IdPassword: {
     type: DataTypes.INTEGER,
@@ -33,6 +36,11 @@ const RegistroLogin = sequelize.define("RegistroLogin", {
   HoraInicioSesion: {
     type: DataTypes.TIME,
     allowNull: true,  // Permite NULL hasta que el usuario inicie sesión
+  },
+  isVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false, // Por defecto, no verificado
+    allowNull: false,
   },
 }, {
   tableName: "registroLogin",

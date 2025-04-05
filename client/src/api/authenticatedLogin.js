@@ -6,8 +6,9 @@ export const registerUser = async (userData) => {
     const response = await configAxios.post("/register", userData);
     return response.data;
   } catch (error) {
+    // console.error("Error al registrar usuario:", error.response?.data || error.message);
     console.error("Error al registrar usuario:", error.response?.data || error.message);
-    throw error;
+    res.status(500).json({ message: "Error al registrar usuario", error });
   }
 };
 

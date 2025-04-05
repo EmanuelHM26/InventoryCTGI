@@ -10,6 +10,7 @@ const Register = () => {
 
   const onSubmit = async (data) => {
     try {
+      console.log("Datos enviados al registro:", data);
       await signup({ 
         Usuario: data.usuario, 
         Correo: data.correo, 
@@ -19,9 +20,9 @@ const Register = () => {
       Swal.fire({
         icon: "success",
         title: "Registro exitoso",
-        text: "Usuario registrado exitosamente",
+        text: "Usuario registrado exitosamente, Revisa tu correo para verificar tu cuenta.",
         confirmButtonColor: "#22c55e", // Color verde
-        timer: 1500, // Duración de 5 segundos
+        timer: 2000, // Duración de 5 segundos
         timerProgressBar: true, // Mostrar barra de progreso
       });
     } catch (error) {
@@ -32,7 +33,7 @@ const Register = () => {
         title: "Error en el registro",
         text: `Error al registrar usuario: ${error.message}`,
         confirmButtonColor: "#ef4444", // Color rojo
-        timer: 1500, // Duración de 5 segundos
+        timer: 2000, // Duración de 5 segundos
         timerProgressBar: true, // Mostrar barra de progreso
       });
     }
