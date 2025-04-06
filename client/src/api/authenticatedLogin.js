@@ -26,10 +26,26 @@ export const loginUser = async (credentials) => {
 // Cerrar sesión
 export const logoutUser = async () => {
   try {
-    const response = await configAxios.post("/logout"); // Asegúrate de tener esta ruta en el backend
+    const response = await configAxios.post("/logout", {}, {
+      withCredentials: true, // Asegúrate de incluir las cookies
+    });
     return response.data;
   } catch (error) {
     console.error("Error al cerrar sesión:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// Verificar token refrescar pagina
+
+export const validateToken = async () => {
+  try {
+    const response = await configAxios.get("/verify-token", {
+      withCredentials: true, // Asegúrate de incluir las cookies
+    });
+    return response.data; // Devuelve los datos del usuario si el token es válido
+  } catch (error) {
+    console.error("Error al validar el token:", error.response?.data || error.message);
     throw error;
   }
 };

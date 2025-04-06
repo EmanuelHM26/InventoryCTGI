@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import loginRoutes from "./routes/login.routes.js"
+import dashboardRoutes from "./routes/dashboard.routes.js";
+
 import cookieParser from "cookie-parser";
 
 const app = express();
@@ -18,5 +20,8 @@ app.use(cookieParser());
 // Aquí puedes agregar las rutas reales de tu proyecto
 // import userRoutes from "./routes/user.routes.js";
 app.use("/api", loginRoutes);
+app.use("/api/dashboard", dashboardRoutes); // Registrar las rutas del dashboard
+
 
 export default app;
+

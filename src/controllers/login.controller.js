@@ -172,6 +172,16 @@ export const loginUser = async (req, res) => {
   }
 };
 
+// Cerrar sesión
+export const logoutUser = (req, res) => {
+  res.cookie("token", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    expires: new Date(0), // Expira inmediatamente
+  });
+  res.status(200).json({ message: "Sesión cerrada exitosamente" });
+};
+
 //Verificación de correo electrónico
 export const verifyEmail = async (req, res) => {
   try {
@@ -341,4 +351,12 @@ export const resetPassword = async (req, res) => {
       .status(500)
       .json({ message: "Error al restablecer la contraseña", error });
   }
+};
+
+export const verifyTokenController = (req, res) => {
+  const user = req.user; // El middleware verifyToken ya agrega el usuario al request
+  if (user) {
+    return res.status(200).json({ user });
+  }
+  res.status(401).json({ message: "Token inválido o no proporcionado" });
 };

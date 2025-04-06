@@ -4,6 +4,7 @@ import dotenv  from "dotenv"
 dotenv.config()
 
 export const verifyToken = (req, res, next) => {
+  console.log("Cookies recibidas:", req.cookies);
   const token = req.cookies.token
   if (!token) {
     return res.status(403).json({ message: "Token no proporcionado" });
