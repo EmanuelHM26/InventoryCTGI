@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import loginRoutes from "./routes/login.routes.js"
 import dashboardRoutes from "./routes/dashboard.routes.js";
+import rolRoutes from "./routes/rol.routes.js";
 
 import cookieParser from "cookie-parser";
 
@@ -22,6 +23,7 @@ app.use(cookieParser());
 app.use("/api", loginRoutes);
 app.use("/api/dashboard", dashboardRoutes); // Registrar las rutas del dashboard
 
+app.use("/api", rolRoutes); // Registrar las rutas de roles
 
 export default app;
 

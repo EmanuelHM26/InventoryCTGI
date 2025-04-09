@@ -1,6 +1,8 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import Password from "../models/PasswordModel.js"; // Importa el modelo Password
+import Role from "../models/RolModel.js";
+
 
 const RegistroLogin = sequelize.define("RegistroLogin", {
   IdRegistroLogin: {
@@ -42,6 +44,14 @@ const RegistroLogin = sequelize.define("RegistroLogin", {
     defaultValue: false, // Por defecto, no verificado
     allowNull: false,
   },
+  IdRol: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: Role,
+      key: "IdRol",
+    },
+  },
 }, {
   tableName: "registroLogin",
   timestamps: false,
@@ -49,6 +59,8 @@ const RegistroLogin = sequelize.define("RegistroLogin", {
 
 // Relación con la tabla Password
 RegistroLogin.belongsTo(Password, { foreignKey: "IdPassword" });
+// Relación con la tabla Rol
+RegistroLogin.belongsTo(Role, { foreignKey: "IdRol" });
 
 export default RegistroLogin;
 

@@ -9,4 +9,4 @@ export const getDashboardData = async (req, res) => {
       console.error("Error al cargar el dashboard:", error);
       res.status(500).json({ message: "Error al cargar el dashboard", error });
     }
-  };
+};

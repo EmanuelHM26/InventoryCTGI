@@ -14,6 +14,8 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Roles from "./components/Roles";
+import UsuariosSoftware from "./components/UsuariosSoftware";
 
 function App() {
   return (
@@ -33,6 +35,19 @@ function App() {
                 <DashboardPage />
               </ProtectedRoute>
             }
+          />
+          <Route
+            path="/dashboard/roles"
+            element={
+              <ProtectedRoute>
+                <Roles />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/usuarios-software"
+            element={<UsuariosSoftware />}
           />
         </Routes>
       </AuthProvider>

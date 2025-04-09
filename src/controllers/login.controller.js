@@ -32,11 +32,15 @@ export const createUser = async (req, res) => {
       FechaActualizacion: new Date(),
     });
 
+    // Asignar un rol por defecto (por ejemplo, "Usuario")
+    const rolPorDefecto = 1; // Cambia este valor según el IdRol de tu tabla `rol`
+
     // Guardar en la tabla RegistroLogin con la referencia a Password
     const newUser = await RegistroLogin.create({
       Usuario,
       Correo,
       IdPassword: nuevaPassword.IdPassword, // Relación con Password
+      IdRol: rolPorDefecto, // Asignar rol por defecto
     });
 
     // Generar un token de verificación
@@ -114,6 +118,53 @@ export const getUserById = async (req, res) => {
   }
 };
 
+// Eliminar un usuario
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Buscar el usuario por ID
+    const user = await RegistroLogin.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Eliminar el usuario
+    await user.destroy();
+    res.status(200).json({ message: "Usuario eliminado correctamente" });
+  } catch (error) {
+    console.error("Error al eliminar usuario:", error);
+    res.status(500).json({ message: "Error al eliminar usuario", error });
+  }
+};
+
+// Actualizar un usuario
+
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { Usuario, Correo, IdRol } = req.body;
+
+    // Buscar el usuario por ID
+    const user = await RegistroLogin.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Actualizar los datos del usuario
+    user.Usuario = Usuario || user.Usuario;
+    user.Correo = Correo || user.Correo;
+    user.IdRol = IdRol || user.IdRol;
+    await user.save();
+
+    res.status(200).json({ message: "Usuario actualizado correctamente", user });
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    res.status(500).json({ message: "Error al actualizar usuario", error });
+  }
+};
+
 // Iniciar sesión
 export const loginUser = async (req, res) => {
   try {
@@ -150,7 +201,7 @@ export const loginUser = async (req, res) => {
 
     // Si las credenciales son correctas
     const token = jwt.sign(
-      { id: user.IdRegistroLogin, Correo: user.Correo },
+      { id: user.IdRegistroLogin, Correo: user.Correo, Rol: user.IdRol },
       process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );

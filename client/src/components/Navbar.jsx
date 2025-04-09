@@ -1,60 +1,67 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/authContext";
+import {
+  FaHome,
+  FaUsers,
+  FaEdit,
+  FaBoxes,
+  FaChartLine,
+  FaSignOutAlt,
+} from "react-icons/fa";
+import { IoIosArrowDown } from "react-icons/io";
 
 const Navbar = () => {
   const [isAsignacionesOpen, setIsAsignacionesOpen] = useState(false);
   const [isInventarioOpen, setIsInventarioOpen] = useState(false);
   const { logout } = useAuth();
 
+  const linkClasses =
+    "flex items-center w-full py-1 px-4 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200";
+
   return (
-    <aside className="w-64 bg-green-600 text-white flex flex-col">
-      <div className="p-6 text-center border-b border-green-500">
-        <h1 className="text-2xl font-bold">CTGI Inventory</h1>
+    <aside className="w-64 bg-green-800 text-white flex flex-col min-h-screen">
+      <div className="p-4 text-center border-b border-white">
+        <h1 className="text-2xl font-bold">Inventario CTGI</h1>
       </div>
-      <nav className="flex-1 p-4 space-y-4">
+
+      <nav className="flex-1 p-2 space-y-2">
         {/* Inicio */}
-        <Link
-          to="/dashboard"
-          className="flex items-center py-2 px-4 rounded hover:bg-green-500 transition"
-        >
-          <i className="fas fa-home mr-2"></i> Inicio
+        <Link to="/dashboard" className={linkClasses}>
+          <FaHome className="mr-1" /> Inicio
         </Link>
 
         {/* Usuarios */}
-        <Link
-          to="/dashboard/usuarios"
-          className="flex items-center py-2 px-4 rounded hover:bg-green-500 transition"
-        >
-          <i className="fas fa-users mr-2"></i> Usuarios
+        <Link to="/dashboard/usuarios" className={linkClasses}>
+          <FaUsers className="mr-1" /> Usuarios
         </Link>
 
         {/* Asignaciones */}
         <div>
           <button
             onClick={() => setIsAsignacionesOpen(!isAsignacionesOpen)}
-            className="flex items-center justify-between w-full py-2 px-4 rounded hover:bg-green-500 transition"
+            className={`${linkClasses} w-full justify-between`}
           >
             <div className="flex items-center">
-              <i className="fas fa-edit mr-2"></i> Asignaciones
+              <FaEdit className="mr-1" /> Asignaciones
             </div>
-            <i
-              className={`fas fa-chevron-down transition-transform ${
+            <IoIosArrowDown
+              className={`transition-transform ${
                 isAsignacionesOpen ? "rotate-180" : ""
               }`}
-            ></i>
+            />
           </button>
           {isAsignacionesOpen && (
-            <div className="ml-6 mt-2 space-y-2">
+            <div className="ml-6 mt-1 space-y-1">
               <Link
                 to="/dashboard/asignaciones/detalles"
-                className="block py-2 px-4 rounded hover:bg-green-500 transition"
+                className="flex items-center py-1 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
               >
-                Detalles Asignaciones
+                Detalles de Asignación
               </Link>
               <Link
                 to="/dashboard/asignaciones/grupo"
-                className="block py-2 px-4 rounded hover:bg-green-500 transition"
+                className="flex items-center py-1 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
               >
                 Grupo
               </Link>
@@ -66,28 +73,28 @@ const Navbar = () => {
         <div>
           <button
             onClick={() => setIsInventarioOpen(!isInventarioOpen)}
-            className="flex items-center justify-between w-full py-2 px-4 rounded hover:bg-green-500 transition"
+            className={`${linkClasses} w-full justify-between`}
           >
             <div className="flex items-center">
-              <i className="fas fa-boxes mr-2"></i> Inventario
+              <FaBoxes className="mr-2" /> Inventario
             </div>
-            <i
-              className={`fas fa-chevron-down transition-transform ${
+            <IoIosArrowDown
+              className={`transition-transform ${
                 isInventarioOpen ? "rotate-180" : ""
               }`}
-            ></i>
+            />
           </button>
           {isInventarioOpen && (
             <div className="ml-6 mt-2 space-y-2">
               <Link
                 to="/dashboard/inventario/equipos-tecnologicos"
-                className="block py-2 px-4 rounded hover:bg-green-500 transition"
+                className="flex items-center py-2 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
               >
                 Equipos Tecnológicos
               </Link>
               <Link
                 to="/dashboard/inventario/productos-consumibles"
-                className="block py-2 px-4 rounded hover:bg-green-500 transition"
+                className="flex items-center py-2 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
               >
                 Productos Consumibles
               </Link>
@@ -96,16 +103,23 @@ const Navbar = () => {
         </div>
 
         {/* Reportes */}
-        <Link
-          to="/dashboard/reportes"
-          className="flex items-center py-2 px-4 rounded hover:bg-green-500 transition"
-        >
-          <i className="fas fa-chart-line mr-2"></i> Reportes
+        <Link to="/dashboard/reportes" className={linkClasses}>
+          <FaChartLine className="mr-2" /> Reportes
+        </Link>
+
+        <Link to="/dashboard/roles" className={linkClasses}>
+          <FaChartLine className="mr-2" /> Roles
+        </Link>
+
+        <Link to="/dashboard/usuarios-software" className={linkClasses}>
+          <FaUsers className="mr-2" /> Usuarios Software
         </Link>
       </nav>
-      <div className="p-4 border-t border-green-500">
-        <button className="w-full py-2 px-4 bg-red-500 rounded hover:bg-red-600 transition" onClick={logout}>
-          <i className="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
+
+      {/* Cerrar sesión */}
+      <div className="p-4 border-t border-white mt-auto">
+        <button onClick={logout} className={linkClasses}>
+          <FaSignOutAlt className="mr-2" /> Cerrar sesión
         </button>
       </div>
     </aside>
