@@ -4,6 +4,8 @@ import axios from "axios";
 const UsuariosSoftware = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [filteredUsuarios, setFilteredUsuarios] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [newUser, setNewUser] = useState({
     Usuario: "",
     Correo: "",
@@ -16,6 +18,16 @@ const UsuariosSoftware = () => {
     fetchUsuarios();
     fetchRoles();
   }, []);
+
+  useEffect(() => {
+    // Filtrar usuarios en tiempo real
+    const filtered = usuarios.filter(
+      (user) =>
+        user.Usuario.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.IdRegistroLogin.toString().includes(searchTerm)
+    );
+    setFilteredUsuarios(filtered);
+  }, [searchTerm, usuarios]);
 
   axios.defaults.withCredentials = true;
 
@@ -60,21 +72,36 @@ const UsuariosSoftware = () => {
     }
   };
 
- 
+
 
   const handleUpdateUser = async () => {
-    if (!editingUser.Usuario || !editingUser.Correo || !editingUser.IdRol) {
-      alert("Todos los campos son obligatorios");
+    if (!editingUser) {
+      alert("No hay usuario seleccionado para editar");
       return;
     }
+
+    // Crear un objeto con solo los campos modificados
+    const updatedFields = {};
+    if (editingUser.Usuario !== usuarios.find((u) => u.IdRegistroLogin === editingUser.IdRegistroLogin)?.Usuario) {
+      updatedFields.Usuario = editingUser.Usuario;
+    }
+    if (editingUser.Correo !== usuarios.find((u) => u.IdRegistroLogin === editingUser.IdRegistroLogin)?.Correo) {
+      updatedFields.Correo = editingUser.Correo;
+    }
+    if (editingUser.IdRol !== usuarios.find((u) => u.IdRegistroLogin === editingUser.IdRegistroLogin)?.IdRol) {
+      updatedFields.IdRol = editingUser.IdRol;
+    }
+
+    // Verificar si hay cambios
+    if (Object.keys(updatedFields).length === 0) {
+      alert("No se han realizado cambios");
+      return;
+    }
+
     try {
-      await axios.put(`http://localhost:3000/api/users/${editingUser.IdRegistroLogin}`, {
-        Usuario: editingUser.Usuario,
-        Correo: editingUser.Correo,
-        IdRol: editingUser.IdRol,
-      });
+      await axios.put(`http://localhost:3000/api/users/${editingUser.IdRegistroLogin}`, updatedFields);
       setEditingUser(null); // Cerrar el modo de edición
-      fetchUsuarios();
+      fetchUsuarios(); // Actualizar la lista de usuarios
     } catch (error) {
       console.error("Error al actualizar usuario:", error);
     }
@@ -83,6 +110,18 @@ const UsuariosSoftware = () => {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Gestión de Usuarios del Software</h1>
+
+      {/* Campo de búsqueda */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Buscar por ID o Nombre"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border p-2 rounded w-full"
+        />
+      </div>
+
       <div className="mb-4">
         <input
           type="text"
@@ -124,6 +163,7 @@ const UsuariosSoftware = () => {
           Crear Usuario
         </button>
       </div>
+
       <table className="table-auto w-full border-collapse border border-gray-300">
         <thead>
           <tr className="bg-gray-200">
@@ -135,7 +175,7 @@ const UsuariosSoftware = () => {
           </tr>
         </thead>
         <tbody>
-          {usuarios.map((user) => (
+          {filteredUsuarios.map((user) => (
             <tr key={user.IdRegistroLogin}>
               <td className="border border-gray-300 px-4 py-2">{user.IdRegistroLogin}</td>
               <td className="border border-gray-300 px-4 py-2">
