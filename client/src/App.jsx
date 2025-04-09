@@ -14,49 +14,36 @@ import VerifyEmailPage from "./pages/VerifyEmailPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Roles from "./components/Roles";
 import UsuariosSoftware from "./components/UsuariosSoftware";
-import Navbar from "./components/Navbar";
-import Main from "./components/Main";
-
-
+import ProtectedLayout from "./components/ProtectedLayout"; // Nuevo componente
+import Usuarios from "./components/Usuarios"
 
 const App = () => {
   return (
     <Router>
       <AuthProvider>
-        <div className="flex">
-          {/* Navbar siempre visible */}
-          <Navbar />
-          {/* Contenido dinámico al lado derecho */}
-          <div className="flex-1 p-4">
-            <Routes>
-              <Route path="/" element={<Navigate to={"/register"} />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/verify-email" element={<VerifyEmailPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              {/* <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                }
-              /> */}
-              <Route
-                path="/dashboard/roles"
-                element={
-                  <ProtectedRoute>
-                    <Roles />
-                  </ProtectedRoute>
-                }
-              />
+        <Routes>
+          {/* Rutas públicas */}
+          <Route path="/" element={<Navigate to="/register" />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-              <Route path="/dashboard" element={<Navigate to="/dashboard/usuarios-software" />} />
-              <Route path="/dashboard/usuarios-software" element={<UsuariosSoftware />} />
-            </Routes>
-          </div>
-        </div>
+          {/* Rutas protegidas */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <ProtectedLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="roles" element={<Roles />} />
+            <Route path="usuarios-software" element={<UsuariosSoftware />} />
+            <Route path="usuarios" element={<Usuarios />} />
+          </Route>
+        </Routes>
       </AuthProvider>
     </Router>
   );
