@@ -7,13 +7,14 @@ import {
   deleteUsuario,
 } from "../controllers/usuarios.controller.js";
 import { verifyToken } from "../middlewares/auth.middleware.js";
+import { verifyRole } from "../middlewares/rol.middleware.js";
 
 const router = express.Router();
 
-router.get("/usuarios", verifyToken, getUsuarios); // Obtener todos los usuarios
-router.get("/usuarios/:id", verifyToken, getUsuarioById); // Obtener un usuario por ID
-router.post("/usuarios", verifyToken, createUsuario); // Crear un nuevo usuario
-router.put("/usuarios/:id", verifyToken, updateUsuario); // Actualizar un usuario
-router.delete("/usuarios/:id", verifyToken, deleteUsuario); // Eliminar un usuario
+router.get("/usuarios", verifyToken, verifyRole([1]), getUsuarios);
+router.get("/usuarios/:id", verifyToken, verifyRole([1]), getUsuarioById);
+router.post("/usuarios", verifyToken, verifyRole([1]), createUsuario);
+router.put("/usuarios/:id", verifyToken, verifyRole([1]), updateUsuario);
+router.delete("/usuarios/:id", verifyToken, verifyRole([1]), deleteUsuario);
 
 export default router;

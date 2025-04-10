@@ -14,7 +14,8 @@ export const AuthProvider = ({ children }) => {
     const checkToken = async () => {
       try {
         const response = await validateToken();
-        setUser(response.user); // Establece el usuario si el token es válido
+        console.log("Token válido, usuario:", response);
+        setUser(response); // Establece el usuario si el token es válido
       } catch (error) {
         console.error("Token inválido o no proporcionado:", error.message);
         setUser(null);
@@ -46,7 +47,8 @@ export const AuthProvider = ({ children }) => {
   const signin = async (credentials) => {
     try {
       const response = await loginUser(credentials);
-      setUser(response.user); // Ajusta según la respuesta del backend
+      console.log("Respuesta del backend:", response);
+      setUser({Correo:  response.Correo}); // Ajusta según la respuesta del backend
       navigate("/dashboard");
     } catch (error) {
       console.error("Error al iniciar sesión:", error.message);

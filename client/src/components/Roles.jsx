@@ -11,7 +11,9 @@ const Roles = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/roles");
+      const response = await axios.get("http://localhost:3000/api/roles", {
+        withCredentials: true, // Enviar cookies
+      });
       setRoles(response.data);
     } catch (error) {
       console.error("Error al obtener roles:", error);
@@ -21,7 +23,7 @@ const Roles = () => {
   const handleCreateRole = async () => {
     if (!newRole) return;
     try {
-      await axios.post("http://localhost:3000/api/roles", { NombreRol: newRole });
+      await axios.post("http://localhost:3000/api/roles", { NombreRol: newRole }, {withCredentials: true});
       setNewRole("");
       fetchRoles();
     } catch (error) {
@@ -31,7 +33,9 @@ const Roles = () => {
 
   const handleDeleteRole = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/api/roles/${id}`);
+      await axios.delete(`http://localhost:3000/api/roles/${id}`, {
+        withCredentials: true,
+      });
       fetchRoles();
     } catch (error) {
       console.error("Error al eliminar rol:", error);

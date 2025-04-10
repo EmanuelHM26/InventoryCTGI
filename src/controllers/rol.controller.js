@@ -1,13 +1,18 @@
-import Role from "../models/RolModel.js";
-import RegistroLogin from "../models/LoginModel.js"; // Asegúrate de importar el modelo correcto
+import {
+  getRolesService,
+  createRoleService,
+  updateRoleService,
+  deleteRoleService,
+  updateUserRoleService,
+} from "../services/rol.service.js";
 
 // Obtener todos los roles
 export const getRoles = async (req, res) => {
   try {
-    const roles = await Role.findAll();
+    const roles = await getRolesService();
     res.json(roles);
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener roles", error });
+    res.status(500).json({ message: "Error al obtener roles", error: error.message });
   }
 };
 
@@ -15,15 +20,10 @@ export const getRoles = async (req, res) => {
 export const createRole = async (req, res) => {
   try {
     const { NombreRol } = req.body;
-    if (!NombreRol) {
-      return res
-        .status(400)
-        .json({ message: "El nombre del rol es obligatorio" });
-    }
-    const newRole = await Role.create({ NombreRol });
+    const newRole = await createRoleService(NombreRol);
     res.status(201).json(newRole);
   } catch (error) {
-    res.status(500).json({ message: "Error al crear rol", error });
+    res.status(500).json({ message: "Error al crear rol", error: error.message });
   }
 };
 
@@ -32,18 +32,10 @@ export const updateRole = async (req, res) => {
   try {
     const { id } = req.params;
     const { NombreRol } = req.body;
-
-    const role = await Role.findByPk(id);
-    if (!role) {
-      return res.status(404).json({ message: "Rol no encontrado" });
-    }
-
-    role.NombreRol = NombreRol;
-    await role.save();
-
-    res.json(role);
+    const updatedRole = await updateRoleService(id, NombreRol);
+    res.json(updatedRole);
   } catch (error) {
-    res.status(500).json({ message: "Error al actualizar rol", error });
+    res.status(500).json({ message: "Error al actualizar rol", error: error.message });
   }
 };
 
@@ -51,42 +43,21 @@ export const updateRole = async (req, res) => {
 export const deleteRole = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const role = await Role.findByPk(id);
-    if (!role) {
-      return res.status(404).json({ message: "Rol no encontrado" });
-    }
-
-    await role.destroy();
-    res.json({ message: "Rol eliminado correctamente" });
+    const result = await deleteRoleService(id);
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ message: "Error al eliminar rol", error });
+    res.status(500).json({ message: "Error al eliminar rol", error: error.message });
   }
 };
 
+// Actualizar el rol de un usuario
 export const updateUserRole = async (req, res) => {
   try {
-    const { id } = req.params; // ID del usuario
-    const { IdRol } = req.body; // Nuevo rol
-
-    // Verificar que el rol exista
-    const role = await Role.findByPk(IdRol);
-    if (!role) {
-      return res.status(400).json({ message: "El rol proporcionado no es válido" });
-    }
-
-    // Actualizar el rol del usuario
-    const user = await RegistroLogin.findByPk(id);
-    if (!user) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
-    }
-
-    user.IdRol = IdRol;
-    await user.save();
-
-    res.status(200).json({ message: "Rol actualizado exitosamente" });
+    const { id } = req.params;
+    const { IdRol } = req.body;
+    const result = await updateUserRoleService(id, IdRol);
+    res.status(200).json(result);
   } catch (error) {
-    console.error("Error en updateUserRole:", error);
-    res.status(500).json({ message: "Error al actualizar el rol", error });
+    res.status(500).json({ message: "Error al actualizar el rol", error: error.message });
   }
 };

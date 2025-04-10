@@ -62,5 +62,6 @@ RegistroLogin.belongsTo(Password, { foreignKey: "IdPassword" });
 // Relación con la tabla Rol
 RegistroLogin.belongsTo(Role, { foreignKey: "IdRol" });
 
+
 export default RegistroLogin;
 

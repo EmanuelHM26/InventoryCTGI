@@ -1,39 +1,43 @@
 import express from "express";
-import { 
-    createUser, 
-    getUsers,  
-    getUserById, 
-    loginUser, 
-    requestPasswordReset, 
-    validateResetToken, 
-    resetPassword, 
-    verifyTokenController,
-    logoutUser, 
-    deleteUser,
-    updateUser, 
+import {
+  createUser,
+  getAllUsers,
+  getUserById,
+  loginUser,
+  requestPasswordReset,
+  validateResetToken,
+  resetPassword,
+  verifyToken,
+  logoutUser,
+  deleteUser,
+  updateUser,
+  verifyEmail,
 } from "../controllers/login.controller.js";
-import { verifyToken } from "../middlewares/auth.middleware.js";
-import { verifyEmail } from "../controllers/login.controller.js";
 
+import { verifyToken as authMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
+// Registro y Login
 router.post("/register", createUser);
-router.get("/users", verifyToken, getUsers);
-router.get("/users/:id", verifyToken, getUserById);
-router.post("/login",loginUser);
+router.post("/login", loginUser);
 router.post("/logout", logoutUser);
-router.delete("/users/:id", verifyToken, deleteUser); // Ruta para eliminar un usuario
-router.put("/users/:id", verifyToken, updateUser); // Ruta para actualizar un usuario
 
+// Verificación de correo electrónico
 router.get("/verify-email", verifyEmail);
 
-// Rutas de restablecimiento de contraseña
+// Usuarios (protegidos)
+router.get("/users", authMiddleware, getAllUsers);
+router.get("/users/:id", authMiddleware, getUserById);
+router.put("/users/:id", authMiddleware, updateUser);
+router.delete("/users/:id", authMiddleware, deleteUser);
+
+// Restablecimiento de contraseña
 router.post("/forgot-password", requestPasswordReset);
 router.get("/validate-reset-token", validateResetToken);
 router.post("/reset-password", resetPassword);
-router.get("/verify-token", verifyToken, verifyTokenController);
+
+// Verificación de JWT
+router.get("/verify-token", authMiddleware, verifyToken);
 
 export default router;
-
-

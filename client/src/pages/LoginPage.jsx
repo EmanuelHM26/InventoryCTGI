@@ -1,15 +1,24 @@
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../context/authContext";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 
 const Login = () => {
-  const { signin } = useAuth();
+ const { signin, user } = useAuth();
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const onSubmit = async (data) => {
     try {
