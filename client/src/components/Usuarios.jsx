@@ -74,7 +74,7 @@ const Usuarios = () => {
   };
 
   return (
-    <div className="p-4 max-w-full">
+    <div className="px-10 py-20 max-w-full">
       <h1 className="text-xl font-bold mb-4">Usuarios Registrados</h1>
       <button
         onClick={() => {

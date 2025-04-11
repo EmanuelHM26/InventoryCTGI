@@ -12,10 +12,10 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import DashboardLayout from "./components/DashboardLayout";
 import Roles from "./components/Roles";
 import UsuariosSoftware from "./components/UsuariosSoftware";
-import ProtectedLayout from "./components/ProtectedLayout"; // Nuevo componente
-import Usuarios from "./components/Usuarios"
+import Usuarios from "./components/Usuarios";
 
 const App = () => {
   return (
@@ -35,7 +35,7 @@ const App = () => {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <ProtectedLayout />
+                <DashboardLayout />
               </ProtectedRoute>
             }
           >

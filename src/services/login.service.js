@@ -7,6 +7,7 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import ResetToken from "../models/ResetTokenModel.js";
+import Role from "../models/RolModel.js";
 
 dotenv.config();
 
@@ -236,4 +237,23 @@ export const deleteUserService = async (id) => {
 
   await user.destroy();
   return { message: "Usuario eliminado correctamente" };
+};
+
+export const getUserByEmailService = async (Correo) => {
+  try {
+    const user = await RegistroLogin.findOne({
+      where: { Correo },
+      attributes: ["Usuario", "Correo", "IdRol"], // Asegúrate de que estos campos existan en tu modelo
+      include: [
+        {
+          model: Role,
+          attributes: ["NombreRol"], // Asegúrate de que este campo exista en tu modelo de Roles
+          as: "Rol", // Asegúrate de que este alias coincida con tu asociación
+        }
+      ]
+    });
+    return user;
+  } catch (error) {
+    throw new Error("Error al obtener el usuario por correo");
+  }
 };

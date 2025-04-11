@@ -4,6 +4,8 @@ import axios from "axios";
 const Roles = () => {
   const [roles, setRoles] = useState([]);
   const [newRole, setNewRole] = useState("");
+  const [editingRole, setEditingRole] = useState(null);
+  const [updatedRoleName, setUpdatedRoleName] = useState("");
 
   useEffect(() => {
     fetchRoles();
@@ -42,6 +44,28 @@ const Roles = () => {
     }
   };
 
+  const handleEditRole = (role) => {
+    setEditingRole(role); // Establecer el rol en edición
+    setUpdatedRoleName(role.NombreRol); // Prellenar el nombre actual del rol
+  };
+
+  const handleUpdateRole = async () => {
+    if (!updatedRoleName || !editingRole) return;
+    try {
+      await axios.put(
+        `http://localhost:3000/api/roles/${editingRole.IdRol}`,
+        { NombreRol: updatedRoleName },
+        { withCredentials: true }
+      );
+      setEditingRole(null); // Salir del modo de edición
+      setUpdatedRoleName("");
+      fetchRoles();
+    } catch (error) {
+      console.error("Error al actualizar rol:", error);
+    }
+  };
+
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Gestión de Roles</h1>
@@ -72,13 +96,35 @@ const Roles = () => {
           {Array.isArray(roles) &&
             roles.map((role) => (
               <tr key={role.IdRol}>
+                <td className="border border-gray-300 px-4 py-2">{role.IdRol}</td>
                 <td className="border border-gray-300 px-4 py-2">
-                  {role.IdRol}
+                  {editingRole && editingRole.IdRol === role.IdRol ? (
+                    <input
+                      type="text"
+                      value={updatedRoleName}
+                      onChange={(e) => setUpdatedRoleName(e.target.value)}
+                      className="border p-2 rounded"
+                    />
+                  ) : (
+                    role.NombreRol
+                  )}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
-                  {role.NombreRol}
-                </td>
-                <td className="border border-gray-300 px-4 py-2">
+                  {editingRole && editingRole.IdRol === role.IdRol ? (
+                    <button
+                      onClick={handleUpdateRole}
+                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mr-2"
+                    >
+                      Guardar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleEditRole(role)}
+                      className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 mr-2"
+                    >
+                      Editar
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDeleteRole(role.IdRol)}
                     className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"

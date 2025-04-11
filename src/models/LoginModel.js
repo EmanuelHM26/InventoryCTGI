@@ -60,7 +60,7 @@ const RegistroLogin = sequelize.define("RegistroLogin", {
 // Relación con la tabla Password
 RegistroLogin.belongsTo(Password, { foreignKey: "IdPassword" });
 // Relación con la tabla Rol
-RegistroLogin.belongsTo(Role, { foreignKey: "IdRol" });
+RegistroLogin.belongsTo(Role, { foreignKey: "IdRol", as: "Rol" });
 
 
 export default RegistroLogin;

@@ -9,7 +9,8 @@ import {
   getAllUsersService,
   getUserByIdService,
   updateUserService,
-  deleteUserService
+  deleteUserService,
+  getUserByEmailService
 } from "../services/login.service.js";
 
 // ======================= REGISTRO =======================
@@ -26,6 +27,12 @@ export const createUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { token, Correo } = await loginUserService(req.body);
+    
+    const user = await getUserByEmailService(Correo);
+
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -33,7 +40,12 @@ export const loginUser = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    res.status(200).json({ message: "Inicio de sesión exitoso", Correo });
+    res.status(200).json({
+       message: "Inicio de sesión exitoso",
+       Usuario: user.Usuario,
+       Rol: user.Rol?.NombreRol || "Sin rol", 
+       Correo: user.Correo, 
+      });
   } catch (error) {
     res.status(401).json({ message: "Error al iniciar sesión", error: error.message });
   }

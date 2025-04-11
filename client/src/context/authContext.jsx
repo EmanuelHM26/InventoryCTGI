@@ -48,7 +48,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await loginUser(credentials);
       console.log("Respuesta del backend:", response);
-      setUser({Correo:  response.Correo}); // Ajusta según la respuesta del backend
+      setUser({
+        Usuario: response.Usuario,
+        Rol: response.Rol,
+        Correo:  response.Correo
+      }); // Ajusta según la respuesta del backend
       navigate("/dashboard");
     } catch (error) {
       console.error("Error al iniciar sesión:", error.message);

@@ -12,7 +12,9 @@ const UsuariosSoftware = () => {
     PasswordTexto: "",
     IdRol: "",
   });
-  const [editingUser, setEditingUser] = useState(null); // Usuario que se está editando
+  const [editingUser, setEditingUser] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1); // Página actual
+  const itemsPerPage = 10; // Número de usuarios por página
 
   useEffect(() => {
     fetchUsuarios();
@@ -20,13 +22,13 @@ const UsuariosSoftware = () => {
   }, []);
 
   useEffect(() => {
-    // Filtrar usuarios en tiempo real
     const filtered = usuarios.filter(
       (user) =>
         user.Usuario.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.IdRegistroLogin.toString().includes(searchTerm)
     );
     setFilteredUsuarios(filtered);
+    setCurrentPage(1); // Reiniciar a la primera página al filtrar
   }, [searchTerm, usuarios]);
 
   axios.defaults.withCredentials = true;
@@ -72,15 +74,12 @@ const UsuariosSoftware = () => {
     }
   };
 
-
-
   const handleUpdateUser = async () => {
     if (!editingUser) {
       alert("No hay usuario seleccionado para editar");
       return;
     }
 
-    // Crear un objeto con solo los campos modificados
     const updatedFields = {};
     if (editingUser.Usuario !== usuarios.find((u) => u.IdRegistroLogin === editingUser.IdRegistroLogin)?.Usuario) {
       updatedFields.Usuario = editingUser.Usuario;
@@ -92,7 +91,6 @@ const UsuariosSoftware = () => {
       updatedFields.IdRol = editingUser.IdRol;
     }
 
-    // Verificar si hay cambios
     if (Object.keys(updatedFields).length === 0) {
       alert("No se han realizado cambios");
       return;
@@ -100,18 +98,25 @@ const UsuariosSoftware = () => {
 
     try {
       await axios.put(`http://localhost:3000/api/users/${editingUser.IdRegistroLogin}`, updatedFields);
-      setEditingUser(null); // Cerrar el modo de edición
-      fetchUsuarios(); // Actualizar la lista de usuarios
+      setEditingUser(null);
+      fetchUsuarios();
     } catch (error) {
       console.error("Error al actualizar usuario:", error);
     }
   };
 
+  // Calcular los usuarios visibles en la página actual
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentUsuarios = filteredUsuarios.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Calcular el número total de páginas
+  const totalPages = Math.ceil(filteredUsuarios.length / itemsPerPage);
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Gestión de Usuarios del Software</h1>
 
-      {/* Campo de búsqueda */}
       <div className="mb-4">
         <input
           type="text"
@@ -175,7 +180,7 @@ const UsuariosSoftware = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredUsuarios.map((user) => (
+          {currentUsuarios.map((user) => (
             <tr key={user.IdRegistroLogin}>
               <td className="border border-gray-300 px-4 py-2">{user.IdRegistroLogin}</td>
               <td className="border border-gray-300 px-4 py-2">
@@ -252,6 +257,37 @@ const UsuariosSoftware = () => {
           ))}
         </tbody>
       </table>
+
+      {/* Paginación */}
+      <div className="flex justify-center mt-4">
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="px-4 py-2 mx-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
+        >
+          Anterior
+        </button>
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button
+            key={index + 1}
+            onClick={() => setCurrentPage(index + 1)}
+            className={`px-4 py-2 mx-1 ${
+              currentPage === index + 1
+                ? "bg-blue-600 text-white"
+                : "bg-gray-300 hover:bg-gray-400"
+            } rounded`}
+          >
+            {index + 1}
+          </button>
+        ))}
+        <button
+          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 mx-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
+        >
+          Próximo
+        </button>
+      </div>
     </div>
   );
 };
