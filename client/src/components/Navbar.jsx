@@ -27,7 +27,7 @@ const Navbar = () => {
 
       <nav className="flex-1 p-2 space-y-2">
         {/* Inicio */}
-        <Link to="/dashboard" className={linkClasses}>
+        <Link to="/dashboard/inicio" className={linkClasses}>
           <FaHome className="mr-1" /> Inicio
         </Link>
 

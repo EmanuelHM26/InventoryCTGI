@@ -16,6 +16,7 @@ import DashboardLayout from "./components/DashboardLayout";
 import Roles from "./components/Roles";
 import UsuariosSoftware from "./components/UsuariosSoftware";
 import Usuarios from "./components/Usuarios";
+import Inicio from "./components/Inicio";
 
 const App = () => {
   return (
@@ -39,6 +40,8 @@ const App = () => {
               </ProtectedRoute>
             }
           >
+            {/* Ruta para /dashboard/inicio */}
+            <Route path="inicio" element={<Inicio />} />
             <Route path="roles" element={<Roles />} />
             <Route path="usuarios-software" element={<UsuariosSoftware />} />
             <Route path="usuarios" element={<Usuarios />} />

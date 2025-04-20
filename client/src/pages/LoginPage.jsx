@@ -33,8 +33,8 @@ const Login = () => {
         title: "Inicio de sesión exitoso",
         text: "Has iniciado sesión correctamente",
         confirmButtonColor: "#22c55e", // Color verde
-        timer: 1500,
-        timerProgressBar: true,
+      }).then(() => {
+         navigate("/dashboard");
       });
     } catch (error) {
       console.error("Error al iniciar sesión:", error.message);
@@ -46,8 +46,8 @@ const Login = () => {
         text: "La contraseña o el usuario son incorrectos",
         // text: `Error: ${error.message}`,
         confirmButtonColor: "#ef4444", // Color rojo
-        timer: 1500,
-        timerProgressBar: true,
+      }).then(() => {
+        navigate("/login");   
       });
     }
   };
