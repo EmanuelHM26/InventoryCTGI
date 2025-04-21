@@ -2,37 +2,34 @@ import React from "react";
 import DashboardLayout from "../components/DashboardLayout";
 import Card from "../components/Card";
 import { BarChartOnValueChangeExample } from "../components/BarChart"; // Importa el componente del diagrama de barras
+import { FaUsers, FaFileInvoice, FaUserFriends, FaTruck } from "react-icons/fa"; // Importa los iconos necesarios
 
 const cardData = [
   {
-    iconClass: "fas fa-yen-sign",
-    title: "Payment amount",
-    value: "8,992",
-    subtitle: "Yesterday 8638",
+    iconClass: <FaUsers className="mr-1" />,
+    title: "Total Usuarios",
+    value: "20",
   },
   {
-    iconClass: "fas fa-file-invoice",
-    title: "Payment order",
-    value: "793",
-    subtitle: "Yesterday 753",
+    iconClass: <FaFileInvoice className="mr-1" />,
+    title: "Categorias",
+    value: "2",
   },
   {
-    iconClass: "fas fa-users",
-    title: "Paying customer",
-    value: "280",
-    subtitle: "Yesterday 320",
+    iconClass: <FaUserFriends className="mr-1" />,
+    title: "Total de Asignaciones",
+    value: "5",
   },
   {
-    iconClass: "fas fa-truck",
-    title: "Pending orders",
-    value: "480",
-    subtitle: "Yesterday 470",
+    iconClass: <FaTruck className="mr-1" />,
+    title: "Equipos en Inventario",
+    value: "50",
   },
 ];
 
 const Inicio = () => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* Renderizar las tarjetas */}
       {cardData.map((card, index) => (
         <Card

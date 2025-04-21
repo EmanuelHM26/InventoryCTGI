@@ -5,34 +5,32 @@ import { BarChart } from "@tremor/react"; // Cambiado para importar desde Tremor
 
 const chartdata = [
   {
-    name: "Amphibians",
-    "Number of threatened species": 2488,
+    name: "Computadores",
+    "Porcentaje de productos almacenados": 1000,
   },
   {
-    name: "Birds",
-    "Number of threatened species": 1445,
+    name: "Camaras",
+    "Porcentaje de productos almacenados": 800,
   },
   {
-    name: "Crustaceans",
-    "Number of threatened species": 743,
+    name: "Luces",
+    "Porcentaje de productos almacenados": 600,
   },
   {
-    name: "Ferns",
-    "Number of threatened species": 281,
+    name: "Microfonos",
+    "Porcentaje de productos almacenados": 400,
   },
   {
-    name: "Arachnids",
-    "Number of threatened species": 251,
+    name: "Cables",
+    "Porcentaje de productos almacenados": 200,
   },
   {
-    name: "Corals",
-    "Number of threatened species": 232,
+    name: "Mouses",
+    "Porcentaje de productos almacenados": 100,
   },
-  {
-    name: "Algae",
-    "Number of threatened species": 98,
-  },
+
 ];
+
 
 export const BarChartOnValueChangeExample = () => {
   const [value, setValue] = useState(null);
@@ -43,13 +41,15 @@ export const BarChartOnValueChangeExample = () => {
         className="h-72 w-full"
         data={chartdata}
         index="name"
-        categories={["Number of threatened species"]}
-        colors={["blue"]}
+        categories={["Porcentaje de productos almacenados"]}
+        colors={["red"]}
         yAxisWidth={45}
         onValueChange={(v) => setValue(v)}
       />
-      <pre className="mt-8 rounded-md bg-gray-950 p-3 text-sm text-white dark:bg-gray-800">
-        {JSON.stringify(value, null, 2)}
+      <pre className="mt-8 rounded-md bg-gray-500 p-3 text-sm text-white">
+        {value
+          ? `Has seleccionado: ${value.name} con un porcentaje de ${value["Porcentaje de productos almacenados"]}`
+          : "Selecciona un valor en el gráfico para ver los detalles."}
       </pre>
     </div>
   );

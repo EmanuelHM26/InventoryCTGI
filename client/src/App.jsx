@@ -41,6 +41,7 @@ const App = () => {
             }
           >
             {/* Ruta para /dashboard/inicio */}
+            <Route index element={<Navigate to="inicio" />} />
             <Route path="inicio" element={<Inicio />} />
             <Route path="roles" element={<Roles />} />
             <Route path="usuarios-software" element={<UsuariosSoftware />} />

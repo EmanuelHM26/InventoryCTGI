@@ -8,7 +8,9 @@ const Header = () => {
 
   return (
     <header className="absolute top-0 left-0 w-[calc(100%-16rem)] ml-64 bg-white shadow p-4 flex justify-between items-center z-50">
-      <h2 className="text-xl font-semibold text-gray-700">Dashboard</h2>
+      <h2 className="text-xl font-semibold text-gray-700">
+        Bienvenido, {user?.Usuario || "Usuario"} {/* Mostrar mensaje de bienvenida con el nombre del usuario */}
+      </h2>
       <div className="flex items-center space-x-4">
         <i className="fas fa-bell text-gray-600"></i>
         <div className="flex items-center space-x-2">
