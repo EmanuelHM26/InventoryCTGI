@@ -1,0 +1,15 @@
+.recharts-legend-item .recharts-surface {
+    fill: transparent; /* Asegúrate de que no haya fondo predeterminado */
+  }
+  
+  .recharts-legend-item:nth-child(1) .recharts-surface {
+    fill: #86efac; /* Color de fondo para "Almacenado" */
+  }
+  
+  .recharts-legend-item:nth-child(2) .recharts-surface {
+    fill: #22c55e; /* Color de fondo para "Asignado" */
+  }
+  
+  .recharts-legend-item text {
+    fill: black !important; /* Asegúrate de que el texto sea negro */
+  }

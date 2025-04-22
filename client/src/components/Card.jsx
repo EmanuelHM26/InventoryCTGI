@@ -9,8 +9,8 @@ const Card = ({ iconClass, title, value  }) => {
           <i className="icon text-2xl text-white">{iconClass}</i>
         </div>
         {/* Título y valor */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
+        <div className="flex flex-col w-sm">
+          <h3 className="text-base font-semibold text-gray-700">{title}</h3>
           <p className="text-3xl font-bold text-gray-800">{value}</p>
         </div>
       </div>
