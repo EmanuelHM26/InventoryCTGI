@@ -60,7 +60,7 @@ const Navbar = () => {
                 Asignaciones
               </Link>
               <Link
-                to="/dashboard/asignaciones/detalles"
+                to="/dashboard/detalle-asignacion"
                 className="flex items-center py-1 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
               >
                 Detalles de Asignación

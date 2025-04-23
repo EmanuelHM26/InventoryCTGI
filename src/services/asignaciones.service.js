@@ -1,5 +1,4 @@
-import Asignaciones from '../models/AsignacionesModel.js';
-import Usuario from '../models/UsuariosModel.js';
+import { Usuario, Asignaciones } from '../models/index.js';
 
 // Crear una nueva asignación
 export const createAsignacionService = async (data) => {
@@ -21,7 +20,13 @@ export const createAsignacionService = async (data) => {
 export const getAllAsignacionesService = async () => {
   try {
     const asignaciones = await Asignaciones.findAll({
-      include: [{ model: Usuario, as: "Usuario" }], // Incluye los datos del usuario relacionado
+      include: [
+        {
+          model: Usuario,
+          as: "Usuario",
+          attributes: ["IdUsuario", "Nombre", "Apellido"],
+        },
+      ],
     });
     return asignaciones;
   } catch (error) {
@@ -30,7 +35,10 @@ export const getAllAsignacionesService = async () => {
 };
 
 // Obtener una asignación por ID
-export const getAsignacionByIdService = async (idAsignaciones, fechaAsignacion) => {
+export const getAsignacionByIdService = async (
+  idAsignaciones,
+  fechaAsignacion
+) => {
   try {
     const asignacion = await Asignaciones.findOne({
       where: {
@@ -49,7 +57,11 @@ export const getAsignacionByIdService = async (idAsignaciones, fechaAsignacion) 
 };
 
 // Actualizar una asignación
-export const updateAsignacionService = async (idAsignaciones, fechaAsignacion, data) => {
+export const updateAsignacionService = async (
+  idAsignaciones,
+  fechaAsignacion,
+  data
+) => {
   try {
     const asignacion = await Asignaciones.findOne({
       where: {
@@ -58,7 +70,7 @@ export const updateAsignacionService = async (idAsignaciones, fechaAsignacion, d
       },
     });
     if (!asignacion) {
-      throw new Error('Asignación no encontrada');
+      throw new Error("Asignación no encontrada");
     }
     await asignacion.update(data);
     return asignacion;
@@ -68,7 +80,10 @@ export const updateAsignacionService = async (idAsignaciones, fechaAsignacion, d
 };
 
 // Eliminar una asignación
-export const deleteAsignacionService = async (idAsignaciones, fechaAsignacion) => {
+export const deleteAsignacionService = async (
+  idAsignaciones,
+  fechaAsignacion
+) => {
   try {
     const asignacion = await Asignaciones.findOne({
       where: {
@@ -77,10 +92,10 @@ export const deleteAsignacionService = async (idAsignaciones, fechaAsignacion) =
       },
     });
     if (!asignacion) {
-      throw new Error('Asignación no encontrada');
+      throw new Error("Asignación no encontrada");
     }
     await asignacion.destroy();
-    return { message: 'Asignación eliminada correctamente' };
+    return { message: "Asignación eliminada correctamente" };
   } catch (error) {
     throw new Error(`Error al eliminar la asignación: ${error.message}`);
   }

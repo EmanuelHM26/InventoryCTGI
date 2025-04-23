@@ -36,12 +36,12 @@ const Asignaciones = sequelize.define('Asignaciones', {
   collate: 'utf8_general_ci',
 });
 
-// Exporta una función para definir las relaciones
-export const defineAsignacionesRelations = (Usuario) => {
-  Asignaciones.belongsTo(Usuario, {
-    foreignKey: 'IdUsuario', // Llave foránea en la tabla Asignaciones
-    targetKey: 'IdUsuario',  // Llave primaria en la tabla Usuarios
-    as: 'Usuario',           // Alias para la relación
+// Esta función se llamará después de definir todos los modelos
+export const setupAsignacionesAssociations = (models) => {
+  Asignaciones.belongsTo(models.Usuario, {
+    foreignKey: 'IdUsuario',
+    targetKey: 'IdUsuario',
+    as: 'Usuario'
   });
 };
 

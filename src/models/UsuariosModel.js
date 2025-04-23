@@ -1,6 +1,5 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
-import Asignaciones from "./AsignacionesModel.js";
 
 const Usuario = sequelize.define("Usuario", {
     IdUsuario: {
@@ -65,13 +64,15 @@ const Usuario = sequelize.define("Usuario", {
     tableName: "usuarios",
     timestamps: false,
   }
-  
 );
 
-Usuario.hasMany(Asignaciones, {
-  foreignKey: 'IdUsuario', // Llave foránea en la tabla Asignaciones
-  sourceKey: 'IdUsuario',  // Llave primaria en la tabla Usuarios
-  as: 'Asignaciones',      // Alias para la relación
-});
-  
-  export default Usuario;
+// Esta función se llamará después de definir todos los modelos
+export const setupUsuarioAssociations = (models) => {
+  Usuario.hasMany(models.Asignaciones, {
+    foreignKey: 'IdUsuario',
+    sourceKey: 'IdUsuario',
+    as: 'Asignaciones'
+  });
+};
+
+export default Usuario;

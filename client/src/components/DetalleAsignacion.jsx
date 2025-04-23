@@ -8,110 +8,141 @@ import {
   ChevronRight,
   Plus,
   X,
+  ArrowLeft,
 } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
 
-const Asignaciones = () => {
-  const [asignaciones, setAsignaciones] = useState([]);
-  const [usuarios, setUsuarios] = useState([]); // Añadido estado para usuarios
+const DetalleAsignacion = () => {
+  const { idAsignacion } = useParams();
+  const navigate = useNavigate();
+  const [detalles, setDetalles] = useState([]);
+  const [items, setItems] = useState([]); // Para dropdown de items
+  const [asignacion, setAsignacion] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [newAsignacion, setNewAsignacion] = useState({
-    IdUsuario: "",
-    FechaAsignacion: "",
-    Observacion: "",
-    FechaDevolucion: "",
+  const [newDetalle, setNewDetalle] = useState({
+    IdAsignaciones: idAsignacion,
+    IdItem: "",
+    Cantidad: "",
+    IdOriginal: "",
   });
 
   // Estados para paginación y búsqueda
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({
-    key: "IdAsignaciones",
+    key: "IdDetalleAsignacion",
     direction: "ascending",
   });
   const itemsPerPage = 8;
 
   useEffect(() => {
-    fetchAsignaciones();
-    fetchUsuarios(); // Añadido para cargar usuarios
-  }, []);
+    fetchDetalles();
+    fetchItems();
+    fetchAsignacion();
+  }, [idAsignacion]);
 
-  const fetchAsignaciones = async () => {
+  const fetchDetalles = async () => {
     try {
       const response = await axios.get(
+        `http://localhost:3000/api/detalle-asignacion/asignacion/${idAsignacion}`,
+        {
+          withCredentials: true,
+        }
+      );
+      console.log("Detalles obtenidos:", response.data); // Añade este log para depuración
+      setDetalles(response.data);
+    } catch (error) {
+      console.error("Error al obtener detalles de asignación:", error);
+    }
+  };
+
+  const fetchItems = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/items", {
+        withCredentials: true,
+      });
+      setItems(response.data);
+    } catch (error) {
+      console.error("Error al obtener items:", error);
+    }
+  };
+
+  const fetchAsignacion = async () => {
+    try {
+      // Obtener la fecha de la asignación para la clave primaria compuesta
+      const asignacionesResponse = await axios.get(
         "http://localhost:3000/api/asignaciones",
         {
           withCredentials: true,
         }
       );
-      setAsignaciones(response.data);
-    } catch (error) {
-      console.error("Error al obtener asignaciones:", error);
-    }
-  };
 
-  // Función para obtener los usuarios
-  const fetchUsuarios = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:3000/api/usuarios",
-        {
-          withCredentials: true,
-        }
+      const asignacionEncontrada = asignacionesResponse.data.find(
+        (a) => a.IdAsignaciones.toString() === idAsignacion
       );
-      setUsuarios(response.data);
+
+      if (asignacionEncontrada) {
+        const fechaAsignacion = asignacionEncontrada.FechaAsignacion;
+
+        const response = await axios.get(
+          `http://localhost:3000/api/asignaciones/${idAsignacion}/${fechaAsignacion}`,
+          {
+            withCredentials: true,
+          }
+        );
+        setAsignacion(response.data);
+      }
     } catch (error) {
-      console.error("Error al obtener usuarios:", error);
+      console.error("Error al obtener información de la asignación:", error);
     }
   };
 
-  const handleCreateAsignacion = async () => {
+  const handleCreateDetalle = async () => {
     try {
-      if (newAsignacion.IdAsignaciones) {
+      if (newDetalle.IdDetalleAsignacion) {
         await axios.put(
-          `http://localhost:3000/api/asignaciones/${newAsignacion.IdAsignaciones}/${newAsignacion.FechaAsignacion}`,
-          newAsignacion,
+          `http://localhost:3000/api/detalle-asignacion/${newDetalle.IdDetalleAsignacion}`,
+          newDetalle,
           { withCredentials: true }
         );
       } else {
         await axios.post(
-          "http://localhost:3000/api/asignaciones",
-          newAsignacion,
+          "http://localhost:3000/api/detalle-asignacion",
+          newDetalle,
           {
             withCredentials: true,
           }
         );
       }
       setShowModal(false);
-      fetchAsignaciones();
+      fetchDetalles();
     } catch (error) {
       console.error(
-        newAsignacion.IdAsignaciones
-          ? "Error al actualizar asignación:"
-          : "Error al crear asignación:",
+        newDetalle.IdDetalleAsignacion
+          ? "Error al actualizar detalle:"
+          : "Error al crear detalle:",
         error
       );
     }
   };
 
-  const handleEditAsignacion = (asignacion) => {
-    setNewAsignacion(asignacion);
+  const handleEditDetalle = (detalle) => {
+    setNewDetalle(detalle);
     setShowModal(true);
   };
 
-  const handleDeleteAsignacion = async (id, fecha) => {
-    if (
-      window.confirm("¿Estás seguro de que deseas eliminar esta asignación?")
-    ) {
+  const handleDeleteDetalle = async (id) => {
+    if (window.confirm("¿Estás seguro de que deseas eliminar este detalle?")) {
       try {
         await axios.delete(
-          `http://localhost:3000/api/asignaciones/${id}/${fecha}`,
+          `http://localhost:3000/api/detalle-asignacion/${id}`,
           {
             withCredentials: true,
           }
         );
-        fetchAsignaciones();
+        fetchDetalles();
       } catch (error) {
-        console.error("Error al eliminar asignación:", error);
+        console.error("Error al eliminar detalle:", error);
       }
     }
   };
@@ -125,20 +156,18 @@ const Asignaciones = () => {
     setSortConfig({ key, direction });
   };
 
-  const filteredAsignaciones = asignaciones.filter((asignacion) => {
+  const filteredDetalles = detalles.filter((detalle) => {
     return (
-      asignacion.IdAsignaciones.toString().includes(searchTerm) ||
-      asignacion.Observacion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      asignacion.FechaAsignacion.includes(searchTerm) ||
-      asignacion.FechaDevolucion.includes(searchTerm) ||
-      (asignacion.Usuario && asignacion.Usuario.Nombre && 
-        asignacion.Usuario.Nombre.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (asignacion.Usuario && asignacion.Usuario.Apellido &&
-        asignacion.Usuario.Apellido.toLowerCase().includes(searchTerm.toLowerCase()))
+      detalle.IdDetalleAsignacion.toString().includes(searchTerm) ||
+      detalle.Cantidad.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      detalle.IdOriginal.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (detalle.Item &&
+        detalle.Item.Nombre &&
+        detalle.Item.Nombre.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
-  const sortedAsignaciones = [...filteredAsignaciones].sort((a, b) => {
+  const sortedDetalles = [...filteredDetalles].sort((a, b) => {
     if (a[sortConfig.key] < b[sortConfig.key]) {
       return sortConfig.direction === "ascending" ? -1 : 1;
     }
@@ -151,11 +180,11 @@ const Asignaciones = () => {
   // Paginación
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentAsignaciones = sortedAsignaciones.slice(
+  const currentDetalles = sortedDetalles.slice(
     indexOfFirstItem,
     indexOfLastItem
   );
-  const totalPages = Math.ceil(sortedAsignaciones.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedDetalles.length / itemsPerPage);
 
   const paginate = (pageNumber) => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
@@ -163,26 +192,35 @@ const Asignaciones = () => {
     }
   };
 
-  // Formatear fecha para mostrar en formato legible
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  };
-
   return (
     <div className="px-4 py-20 md:px-8 lg:px-10 max-w-full bg-gray-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
-            Asignaciones
-          </h1>
+          <div>
+            <button
+              onClick={() => navigate("/asignaciones")}
+              className="flex items-center text-blue-600 hover:text-blue-800 mb-4"
+            >
+              <ArrowLeft size={18} className="mr-1" />
+              Volver a Asignaciones
+            </button>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Detalles de Asignación #{idAsignacion}
+            </h1>
+            {asignacion && (
+              <p className="text-gray-600 mt-1">
+                Usuario: {asignacion.Usuario?.Nombre}{" "}
+                {asignacion.Usuario?.Apellido} | Fecha:{" "}
+                {new Date(asignacion.FechaAsignacion).toLocaleDateString()}
+              </p>
+            )}
+          </div>
 
-          <div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
+          <div className="flex flex-col sm:flex-row w-full md:w-auto gap-4 mt-4 md:mt-0">
             <div className="relative">
               <input
                 type="text"
-                placeholder="Buscar asignación..."
+                placeholder="Buscar detalle..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -203,18 +241,18 @@ const Asignaciones = () => {
 
             <button
               onClick={() => {
-                setNewAsignacion({
-                  IdUsuario: "",
-                  FechaAsignacion: "",
-                  Observacion: "",
-                  FechaDevolucion: "",
+                setNewDetalle({
+                  IdAsignaciones: idAsignacion,
+                  IdItem: "",
+                  Cantidad: "",
+                  IdOriginal: "",
                 });
                 setShowModal(true);
               }}
               className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
             >
               <Plus size={18} className="mr-2" />
-              Nueva Asignación
+              Nuevo Detalle
             </button>
           </div>
         </div>
@@ -223,77 +261,65 @@ const Asignaciones = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {[
-                  "ID",
-                  "Usuario",
-                  "Fecha Asignación",
-                  "Observación",
-                  "Fecha Devolución",
-                  "Acciones",
-                ].map((header, index) => (
-                  <th
-                    key={index}
-                    onClick={() => {
-                      if (index < 5) {
-                        const keys = [
-                          "IdAsignaciones",
-                          "IdUsuario",
-                          "FechaAsignacion",
-                          "Observacion",
-                          "FechaDevolucion",
-                        ];
-                        requestSort(keys[index]);
-                      }
-                    }}
-                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                      index < 5 ? "cursor-pointer hover:bg-gray-100" : ""
-                    }`}
-                  >
-                    {header}
-                  </th>
-                ))}
+                {["ID", "Ítem", "Cantidad", "ID Original", "Acciones"].map(
+                  (header, index) => (
+                    <th
+                      key={index}
+                      onClick={() => {
+                        if (index < 4) {
+                          const keys = [
+                            "IdDetalleAsignacion",
+                            "IdItem",
+                            "Cantidad",
+                            "IdOriginal",
+                          ];
+                          requestSort(keys[index]);
+                        }
+                      }}
+                      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        index < 4 ? "cursor-pointer hover:bg-gray-100" : ""
+                      }`}
+                    >
+                      {header}
+                    </th>
+                  )
+                )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {currentAsignaciones.length > 0 ? (
-                currentAsignaciones.map((asignacion) => (
+              {currentDetalles.length > 0 ? (
+                currentDetalles.map((detalle) => (
                   <tr
-                    key={`${asignacion.IdAsignaciones}-${asignacion.FechaAsignacion}`}
+                    key={detalle.IdDetalleAsignacion}
                     className="hover:bg-blue-50 transition-colors duration-150"
                   >
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {asignacion.IdAsignaciones}
+                      {detalle.IdDetalleAsignacion}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {asignacion.Usuario?.Nombre || 'N/A'} {asignacion.Usuario?.Apellido || ''}
+                      {detalle.Item?.Nombre || `Item #${detalle.IdItem}`}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(asignacion.FechaAsignacion)}
+                      {detalle.Cantidad}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {asignacion.Observacion}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(asignacion.FechaDevolucion)}
+                      {detalle.IdOriginal}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => handleEditAsignacion(asignacion)}
+                          onClick={() => handleEditDetalle(detalle)}
                           className="p-1 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors duration-200"
-                          title="Editar asignación"
+                          title="Editar detalle"
                         >
                           <Edit size={16} />
                         </button>
                         <button
                           onClick={() =>
-                            handleDeleteAsignacion(
-                              asignacion.IdAsignaciones,
-                              asignacion.FechaAsignacion
-                            )
+                            handleDeleteDetalle(detalle.IdDetalleAsignacion)
                           }
                           className="p-1 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition-colors duration-200"
-                          title="Eliminar asignación"
+                          title="Eliminar detalle"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -304,10 +330,10 @@ const Asignaciones = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan="5"
                     className="px-4 py-8 text-center text-gray-500"
                   >
-                    No se encontraron asignaciones
+                    No se encontraron detalles para esta asignación
                   </td>
                 </tr>
               )}
@@ -316,12 +342,12 @@ const Asignaciones = () => {
         </div>
 
         {/* Paginación */}
-        {sortedAsignaciones.length > 0 && (
+        {sortedDetalles.length > 0 && (
           <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
             <div>
               Mostrando {indexOfFirstItem + 1} a{" "}
-              {Math.min(indexOfLastItem, sortedAsignaciones.length)} de{" "}
-              {sortedAsignaciones.length} asignaciones
+              {Math.min(indexOfLastItem, sortedDetalles.length)} de{" "}
+              {sortedDetalles.length} detalles
             </div>
             <div className="flex space-x-1">
               <button
@@ -364,66 +390,50 @@ const Asignaciones = () => {
         )}
       </div>
 
-      {/* Modal para crear o editar una asignación */}
+      {/* Modal para crear o editar un detalle */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-screen overflow-y-auto">
             <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">
-              {newAsignacion.IdAsignaciones
-                ? "Editar Asignación"
-                : "Crear Nueva Asignación"}
+              {newDetalle.IdDetalleAsignacion
+                ? "Editar Detalle"
+                : "Crear Nuevo Detalle"}
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Usuario
+                  Ítem
                 </label>
                 <select
-                  value={newAsignacion.IdUsuario}
+                  value={newDetalle.IdItem}
                   onChange={(e) =>
-                    setNewAsignacion({
-                      ...newAsignacion,
-                      IdUsuario: e.target.value,
+                    setNewDetalle({
+                      ...newDetalle,
+                      IdItem: e.target.value,
                     })
                   }
                   className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Seleccione un usuario</option>
-                  {usuarios.map((usuario) => (
-                    <option key={usuario.IdUsuario} value={usuario.IdUsuario}>
-                      {usuario.Nombre} {usuario.Apellido}
+                  <option value="">Seleccione un ítem</option>
+                  {items.map((item) => (
+                    <option key={item.IdItem} value={item.IdItem}>
+                      {item.Nombre}
                     </option>
                   ))}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha Asignación
-                </label>
-                <input
-                  type="date"
-                  value={newAsignacion.FechaAsignacion}
-                  onChange={(e) =>
-                    setNewAsignacion({
-                      ...newAsignacion,
-                      FechaAsignacion: e.target.value,
-                    })
-                  }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Observación
+                  Cantidad
                 </label>
                 <input
                   type="text"
-                  value={newAsignacion.Observacion}
+                  value={newDetalle.Cantidad}
                   onChange={(e) =>
-                    setNewAsignacion({
-                      ...newAsignacion,
-                      Observacion: e.target.value,
+                    setNewDetalle({
+                      ...newDetalle,
+                      Cantidad: e.target.value,
                     })
                   }
                   className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -431,15 +441,15 @@ const Asignaciones = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha Devolución
+                  ID Original
                 </label>
                 <input
-                  type="date"
-                  value={newAsignacion.FechaDevolucion}
+                  type="text"
+                  value={newDetalle.IdOriginal}
                   onChange={(e) =>
-                    setNewAsignacion({
-                      ...newAsignacion,
-                      FechaDevolucion: e.target.value,
+                    setNewDetalle({
+                      ...newDetalle,
+                      IdOriginal: e.target.value,
                     })
                   }
                   className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -455,10 +465,10 @@ const Asignaciones = () => {
                 Cancelar
               </button>
               <button
-                onClick={handleCreateAsignacion}
+                onClick={handleCreateDetalle}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
               >
-                {newAsignacion.IdAsignaciones ? "Actualizar" : "Crear"}
+                {newDetalle.IdDetalleAsignacion ? "Actualizar" : "Crear"}
               </button>
             </div>
           </div>
@@ -468,4 +478,4 @@ const Asignaciones = () => {
   );
 };
 
-export default Asignaciones;
+export default DetalleAsignacion;
