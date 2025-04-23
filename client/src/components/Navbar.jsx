@@ -46,13 +46,19 @@ const Navbar = () => {
               <FaEdit className="mr-1" /> Asignaciones
             </div>
             <IoIosArrowDown
-              className={`transition-transform ${
-                isAsignacionesOpen ? "rotate-180" : ""
-              }`}
+              className={`transition-transform ${isAsignacionesOpen ? "rotate-180" : ""
+                }`}
             />
           </button>
           {isAsignacionesOpen && (
             <div className="ml-6 mt-1 space-y-1">
+
+              <Link
+                to="/dashboard/asignaciones"
+                className="flex items-center py-1 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
+              >
+                Asignaciones
+              </Link>
               <Link
                 to="/dashboard/asignaciones/detalles"
                 className="flex items-center py-1 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
@@ -79,9 +85,8 @@ const Navbar = () => {
               <FaBoxes className="mr-2" /> Inventario
             </div>
             <IoIosArrowDown
-              className={`transition-transform ${
-                isInventarioOpen ? "rotate-180" : ""
-              }`}
+              className={`transition-transform ${isInventarioOpen ? "rotate-180" : ""
+                }`}
             />
           </button>
           {isInventarioOpen && (

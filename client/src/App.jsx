@@ -17,6 +17,7 @@ import Roles from "./components/Roles";
 import UsuariosSoftware from "./components/UsuariosSoftware";
 import Usuarios from "./components/Usuarios";
 import Inicio from "./components/Inicio";
+import Asignaciones from "./components/Asignaciones";
 
 const App = () => {
   return (
@@ -46,6 +47,7 @@ const App = () => {
             <Route path="roles" element={<Roles />} />
             <Route path="usuarios-software" element={<UsuariosSoftware />} />
             <Route path="usuarios" element={<Usuarios />} />
+            <Route path="asignaciones" element={<Asignaciones />} />
           </Route>
         </Routes>
       </AuthProvider>
