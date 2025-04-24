@@ -1,12 +1,13 @@
 import { useForm } from "react-hook-form";
 import { useAuth } from "../context/authContext";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 // import { useState } from "react";
 
 const Register = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const { signup } = useAuth();
+  const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     try {
@@ -22,8 +23,8 @@ const Register = () => {
         title: "Registro exitoso",
         text: "Usuario registrado exitosamente, Revisa tu correo para verificar tu cuenta.",
         confirmButtonColor: "#22c55e", // Color verde
-        timer: 2000, // Duración de 5 segundos
-        timerProgressBar: true, // Mostrar barra de progreso
+      }).then(() => {
+        navigate("/login")
       });
     } catch (error) {
       console.error("Error al registrar usuario:", error.message);
@@ -33,8 +34,8 @@ const Register = () => {
         title: "Error en el registro",
         text: `Error al registrar usuario: ${error.message}`,
         confirmButtonColor: "#ef4444", // Color rojo
-        timer: 2000, // Duración de 5 segundos
-        timerProgressBar: true, // Mostrar barra de progreso
+      }).then(() => {
+        navigate("/register")
       });
     }
   };
