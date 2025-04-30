@@ -4,6 +4,7 @@ import {
   getAsignacionByIdService,
   updateAsignacionService,
   deleteAsignacionService,
+  getRecentAsignacionesService,
 } from '../services/asignaciones.service.js';
 
 // Crear una nueva asignación
@@ -60,3 +61,15 @@ export const deleteAsignacion = async (req, res) => {
     res.status(404).json({ message: error.message });
   }
 };
+
+// Obtner asignaciones recientes
+
+export const getRecentAsignaciones = async (req, res) => {
+  try {
+    const { fechaInicio, fechaFin } = req.query;
+    const asignacionesRecientes = await getRecentAsignacionesService(fechaInicio, fechaFin);
+    res.status(200).json(asignacionesRecientes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}

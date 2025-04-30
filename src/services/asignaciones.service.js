@@ -100,3 +100,24 @@ export const deleteAsignacionService = async (
     throw new Error(`Error al eliminar la asignación: ${error.message}`);
   }
 };
+
+// Obtener asignaciones recientes
+
+export const getRecentAsignacionesService = async () => {
+  try {
+    const asignaciones = await Asignaciones.findAll({
+      order: [["FechaAsignacion", "DESC"]],
+      limit: 6,
+      include: [
+        {
+          model: Usuario,
+          as: "Usuario",
+          attributes: ["IdUsuario", "Nombre", "Apellido"],
+        },
+      ],
+    });
+    return asignaciones;
+  } catch (error) {
+    throw new Error(`Error al obtener las asignaciones recientes: ${error.message}`);
+  }
+}

@@ -42,7 +42,7 @@ export const BarChartOnValueChangeExample = () => {
   const [value, setValue] = useState(null);
 
   return (
-    <div className="bg-white pt-10 pb-6 px-6 rounded-lg shadow-md">
+    <div className="bg-white pt-10 pb-12 px-6 rounded-lg shadow-md">
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
           data={chartdata}

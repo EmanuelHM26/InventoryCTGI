@@ -1,7 +1,8 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { registerUser, loginUser, logoutUser, validateToken } from "../api/authenticatedLogin";
+import { registerUser, loginUser, logoutUser, getAuthenticatedUser } from "../api/authenticatedLogin";
 import Swal from "sweetalert2";
+import axios from "axios";
 
 const AuthContext = createContext();
 
@@ -10,35 +11,67 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Función para cargar los datos del usuario
+  const loadUserData = async () => {
+    try {
+      const userData = await getAuthenticatedUser();
+      console.log("Datos del usuario obtenidos:", userData);
+      
+      // Importante: Asegurarse de que los datos tienen la estructura correcta
+      setUser({
+        id: userData.id,
+        nombre: userData.nombre,
+        rol: userData.rol
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Error al cargar datos del usuario:", error);
+      setUser(null);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Verificar autenticación al cargar la página
   useEffect(() => {
-    const checkToken = async () => {
+    const checkAuth = async () => {
+      setLoading(true);
       try {
-        const response = await validateToken();
-        console.log("Token válido, usuario:", response);
-        setUser(response); // Establece el usuario si el token es válido
+        await loadUserData();
       } catch (error) {
-        console.error("Token inválido o no proporcionado:", error.message);
+        console.error("Error al verificar autenticación:", error);
         setUser(null);
       } finally {
-        setLoading(false); // Finaliza la carga inicial
+        setLoading(false);
       }
     };
 
-    checkToken();
+    checkAuth();
   }, []);
 
-  if (loading) {
-    return <div>Cargando...</div>; // Muestra un indicador de carga mientras se valida el token
-  }
 
+  const getAuthenticatedUser = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/auth/me", {
+        withCredentials: true, // Asegúrate de incluir las cookies
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error al obtener datos del usuario:", error);
+      throw error;
+    }
+  };
+  
   // Registro de usuario
   const signup = async (userData) => {
     try {
       const response = await registerUser(userData);
-      setUser(response.user); // Ajusta según la respuesta del backend
       navigate("/login");
+      return response;
     } catch (error) {
-      console.error("Error al registrar usuario:", error.message);
+      console.error("Error al registrar usuario:", error);
       throw error;
     }
   };
@@ -47,15 +80,18 @@ export const AuthProvider = ({ children }) => {
   const signin = async (credentials) => {
     try {
       const response = await loginUser(credentials);
-      console.log("Respuesta del backend:", response);
-      setUser({
-        Usuario: response.Usuario,
-        Rol: response.Rol,
-        Correo:  response.Correo
-      }); // Ajusta según la respuesta del backend
-      navigate("/dashboard");
+      console.log("Respuesta de inicio de sesión:", response);
+      
+      // Después de iniciar sesión, obtener los datos del usuario
+      const success = await loadUserData();
+      
+      if (success) {
+        navigate("/dashboard");
+      }
+      
+      return response;
     } catch (error) {
-      console.error("Error al iniciar sesión:", error.message);
+      console.error("Error al iniciar sesión:", error);
       throw error;
     }
   };
@@ -72,27 +108,25 @@ export const AuthProvider = ({ children }) => {
       confirmButtonText: "Sí, cerrar sesión",
       cancelButtonText: "Cancelar",
     });
-  
+
     if (!result.isConfirmed) return;
-  
+
     try {
-      await logoutUser(); // Llama a la API para eliminar el token
-      setUser(null); // Limpia el estado del usuario
-      navigate("/login"); // Redirige al login
+      await logoutUser();
+      setUser(null);
+      navigate("/login");
       Swal.fire("Sesión cerrada", "Has cerrado sesión exitosamente.", "success");
     } catch (error) {
-      console.error("Error al cerrar sesión:", error.message);
+      console.error("Error al cerrar sesión:", error);
       Swal.fire("Error", "Hubo un problema al cerrar sesión.", "error");
-      throw error;
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, signup, signin, logout }}>
+    <AuthContext.Provider value={{ user, loading, signup, signin, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => useContext(AuthContext);
-

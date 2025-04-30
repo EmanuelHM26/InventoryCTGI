@@ -49,3 +49,15 @@ export const validateToken = async () => {
     throw error;
   }
 };
+
+export const getAuthenticatedUser = async () => {
+  try {
+    const response = await configAxios.get("/auth/me", {
+      withCredentials: true,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener datos del usuario:", error.response?.data || error.message);
+    throw error;
+  }
+};

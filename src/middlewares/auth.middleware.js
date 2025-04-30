@@ -1,34 +1,50 @@
 import jwt from "jsonwebtoken";
-import dotenv  from "dotenv"
+import dotenv from "dotenv";
+import RegistroLogin from "../models/LoginModel.js";
+import Role from "../models/RolModel.js";
 
-dotenv.config()
+dotenv.config();
 
-export const verifyToken = (req, res, next) => {
-  console.log("Cookies recibidas:", req.cookies);
-
-  // Intentar obtener el token de las cookies
+export const verifyToken = async (req, res, next) => {
   let token = req.cookies.token;
 
-  // Si no hay token en las cookies, buscar en el encabezado Authorization
   if (!token && req.headers.authorization) {
     const authHeader = req.headers.authorization;
     if (authHeader.startsWith("Bearer ")) {
-      token = authHeader.split(" ")[1]; // Extraer el token después de "Bearer"
+      token = authHeader.split(" ")[1];
     }
   }
 
-  // Si no se encuentra el token en ninguna parte
   if (!token) {
     return res.status(403).json({ message: "Token no proporcionado" });
   }
 
   try {
-    // Verificar el token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Agregar los datos del usuario al request
-    console.log("Usuario autenticado:", req.user);
+
+    // Obtener el usuario con su rol
+    const user = await RegistroLogin.findByPk(decoded.id, {
+      include: [{
+        model: Role,
+        attributes: ["NombreRol"],
+        as: "Rol"
+      }]
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    req.user = {
+      id: user.IdRegistroLogin,
+      nombre: user.Usuario,
+      rol: user.Rol?.NombreRol || "Sin rol",
+      rolId: user.IdRol 
+    };
+
     next();
   } catch (error) {
+    console.error("Error en verifyToken:", error);
     res.status(401).json({ message: "Token inválido" });
   }
 };

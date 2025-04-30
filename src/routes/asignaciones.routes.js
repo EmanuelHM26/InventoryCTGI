@@ -5,6 +5,7 @@ import {
   getAsignacionById,
   updateAsignacion,
   deleteAsignacion,
+  getRecentAsignaciones,
 } from '../controllers/asignaciones.controller.js';
 import { verifyToken } from '../middlewares/auth.middleware.js';
 import { verifyRole } from '../middlewares/rol.middleware.js';
@@ -25,5 +26,7 @@ router.put('/asignaciones/:idAsignaciones/:fechaAsignacion', verifyToken, verify
 
 // Eliminar una asignación
 router.delete('/asignaciones/:idAsignaciones/:fechaAsignacion', verifyToken, verifyRole([1]), deleteAsignacion);
+
+router.get('/asignaciones/recent', verifyToken, verifyRole([1]), getRecentAsignaciones);
 
 export default router;
