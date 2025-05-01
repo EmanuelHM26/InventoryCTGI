@@ -1,30 +1,37 @@
 import { searchGlobalService } from '../services/busqueda.service.js';
 
-// Controlador para manejar la búsqueda global
 export const searchGlobal = async (req, res) => {
   try {
     const { term } = req.query;
     
-    if (!term) {
+    // Validar que se proporcione un término de búsqueda
+    if (!term || term.trim() === '') {
       return res.status(200).json({
         success: true,
-        data: {
-          usuarios: [],
-          asignaciones: []
-        }
+        message: 'Término de búsqueda vacío',
+        data: { usuarios: [], asignaciones: [] }
       });
     }
 
-    const results = await searchGlobalService(term);
+    // Ejecutar búsqueda en el servicio
+    const resultados = await searchGlobalService(term);
     
+    // Responder con resultados
     return res.status(200).json({
       success: true,
-      data: results
+      message: 'Búsqueda completada',
+      data: resultados
     });
+    
   } catch (error) {
+    console.error('Error en el controlador de búsqueda global:', error);
+    
+    // Enviar respuesta de error con estructura correcta
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: 'Error al procesar la búsqueda',
+      error: error.message,
+      data: { usuarios: [], asignaciones: [] }
     });
   }
 };

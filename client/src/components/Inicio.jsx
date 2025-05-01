@@ -32,10 +32,6 @@ const Inicio = () => {
   ]);
 
   const [asignacionesRecientes, setAsignacionesRecientes] = useState([]);
-  const [searchResults, setSearchResults] = useState({
-    usuarios: [],
-    asignaciones: []
-  });
   const [loading, setLoading] = useState(true);
 
   // Cargar datos del dashboard al iniciar el componente
@@ -87,86 +83,22 @@ const Inicio = () => {
     fetchDashboardData();
   }, []);
 
-  // Manejar resultados de búsqueda
+  // Esta función se pasa a SearchGlobal pero ahora solo maneja notificaciones o logs
   const handleSearch = (results) => {
-    setSearchResults(results);
-  };
-
-  // Renderizar los resultados de búsqueda
-  const renderSearchResults = () => {
-    const hasUsuarios = searchResults.usuarios && searchResults.usuarios.length > 0;
-    const hasAsignaciones = searchResults.asignaciones && searchResults.asignaciones.length > 0;
-    
-    if (!hasUsuarios && !hasAsignaciones) {
-      return <p className="text-gray-500">No se encontraron resultados.</p>;
-    }
-
-    return (
-      <div className="space-y-4">
-        {hasUsuarios && (
-          <div>
-            <h4 className="text-md font-semibold text-gray-700 mb-2">Usuarios</h4>
-            <ul className="border rounded-lg overflow-hidden divide-y divide-gray-200">
-              {searchResults.usuarios.map((usuario) => (
-                <li 
-                  key={usuario.IdUsuario} 
-                  className="p-3 hover:bg-gray-50 cursor-pointer flex items-center"
-                  onClick={() => window.location.href = `/usuarios/${usuario.IdUsuario}`}
-                >
-                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                    {usuario.Nombre.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">{usuario.Nombre} {usuario.Apellido}</p>
-                    <p className="text-xs text-gray-500">{usuario.Email || 'Sin correo'}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {hasAsignaciones && (
-          <div>
-            <h4 className="text-md font-semibold text-gray-700 mb-2">Asignaciones</h4>
-            <ul className="border rounded-lg overflow-hidden divide-y divide-gray-200">
-              {searchResults.asignaciones.map((asignacion) => (
-                <li 
-                  key={`${asignacion.IdAsignaciones}-${asignacion.FechaAsignacion}`} 
-                  className="p-3 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => window.location.href = `/asignaciones/${asignacion.IdAsignaciones}/${asignacion.FechaAsignacion}`}
-                >
-                  <div className="flex justify-between mb-1">
-                    <p className="text-sm font-medium text-gray-800">
-                      {asignacion.Usuario ? `${asignacion.Usuario.Nombre} ${asignacion.Usuario.Apellido}` : 'Usuario desconocido'}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(asignacion.FechaAsignacion).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <p className="text-xs text-gray-600 truncate">{asignacion.Observacion}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    );
+    // Solo registramos los resultados pero no mostramos un componente adicional
+    console.log("Resultados de búsqueda:", results);
+    // No mostramos SearchResults en la página principal
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       
-      {/* Buscador global */}
+      {/* Buscador global - ahora solo muestra el dropdown */}
       <div className="lg:col-span-4 bg-white p-6 mt-20 rounded-lg shadow-md">
-        <SearchGlobal onSearch={handleSearch} />
-        {/* Resultados de búsqueda */}
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold text-gray-700">Resultados de la búsqueda</h3>
-          {renderSearchResults()}
+        <div className="mb-4">
+          <SearchGlobal onSearch={handleSearch} />
         </div>
       </div>
-
 
       {/* Renderizar las tarjetas */}
       {cardData.map((card, index) => (
@@ -178,9 +110,7 @@ const Inicio = () => {
           subtitle={card.subtitle}
         />
       ))}
-
       
-
       {/* Diagrama de barras */}
       <div className="lg:col-span-2">
         <BarChartOnValueChangeExample />
