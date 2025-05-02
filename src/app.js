@@ -7,6 +7,8 @@ import usuarioRoutes from "./routes/usuarios.routes.js"
 import asignacionesRoutes from "./routes/asignaciones.routes.js";
 import authRoutes from "./routes/authMe.routes.js";
 import busquedaRoutes from "./routes/busqueda.routes.js";
+import equiposTecnologicosRoutes from './routes/equiposTecnologicos.routes.js';
+import productosConsumiblesRoutes from './routes/productosConsumibles.routes.js';
 
 import cookieParser from "cookie-parser";
 
@@ -37,6 +39,10 @@ app.use("/api", usuarioRoutes)
 app.use("/api", asignacionesRoutes)
 
 app.use("/api", busquedaRoutes)
+
+app.use("/api", equiposTecnologicosRoutes); // Registrar las rutas de equipos tecnológicos
+
+app.use('/api', productosConsumiblesRoutes); // Registrar las rutas de productos consumibles
 
 export default app;
 

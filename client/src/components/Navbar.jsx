@@ -66,7 +66,7 @@ const Navbar = () => {
                 Detalles de Asignación
               </Link>
               <Link
-                to="/dashboard/asignaciones/grupo"
+                to="/dashboard/grupo"
                 className="flex items-center py-1 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
               >
                 Grupo
@@ -92,13 +92,13 @@ const Navbar = () => {
           {isInventarioOpen && (
             <div className="ml-6 mt-2 space-y-2">
               <Link
-                to="/dashboard/inventario/equipos-tecnologicos"
+                to="/dashboard/equipos-tecnologicos"
                 className="flex items-center py-2 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
               >
                 Equipos Tecnológicos
               </Link>
               <Link
-                to="/dashboard/inventario/productos-consumibles"
+                to="/dashboard/productos-consumibles"
                 className="flex items-center py-2 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
               >
                 Productos Consumibles
