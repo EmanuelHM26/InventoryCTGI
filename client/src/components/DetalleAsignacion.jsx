@@ -198,7 +198,7 @@ const DetalleAsignacion = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
             <button
-              onClick={() => navigate("/asignaciones")}
+              onClick={() => navigate("/dashboard/asignaciones")}
               className="flex items-center text-blue-600 hover:text-blue-800 mb-4"
             >
               <ArrowLeft size={18} className="mr-1" />

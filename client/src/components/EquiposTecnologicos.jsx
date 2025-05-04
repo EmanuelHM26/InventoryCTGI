@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
@@ -197,35 +196,30 @@ const EquiposTecnologicos = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {[
-                  "ID",
-                  "Código",
-                  "Nombre",
-                  "Marca",
-                  "Estado",
-                  "Acciones",
-                ].map((header, index) => (
-                  <th
-                    key={index}
-                    onClick={() => {
-                      if (index < 5) {
-                        const keys = [
-                          "IdEquiposTecnologicos",
-                          "Codigo",
-                          "Nombre",
-                          "Marca",
-                          "Estado",
-                        ];
-                        requestSort(keys[index]);
-                      }
-                    }}
-                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                      index < 5 ? "cursor-pointer hover:bg-gray-100" : ""
-                    }`}
-                  >
-                    {header}
-                  </th>
-                ))}
+                {["ID", "Código", "Nombre", "Marca", "Estado", "Acciones"].map(
+                  (header, index) => (
+                    <th
+                      key={index}
+                      onClick={() => {
+                        if (index < 5) {
+                          const keys = [
+                            "IdEquiposTecnologicos",
+                            "Codigo",
+                            "Nombre",
+                            "Marca",
+                            "Estado",
+                          ];
+                          requestSort(keys[index]);
+                        }
+                      }}
+                      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                        index < 5 ? "cursor-pointer hover:bg-gray-100" : ""
+                      }`}
+                    >
+                      {header}
+                    </th>
+                  )
+                )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -247,8 +241,16 @@ const EquiposTecnologicos = () => {
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                       {equipo.Marca}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {equipo.Estado}
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          equipo.Estado === "Activo"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {equipo.Estado}
+                      </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
@@ -260,7 +262,9 @@ const EquiposTecnologicos = () => {
                           <Edit size={16} />
                         </button>
                         <button
-                          onClick={() => handleDeleteEquipo(equipo.IdEquiposTecnologicos)}
+                          onClick={() =>
+                            handleDeleteEquipo(equipo.IdEquiposTecnologicos)
+                          }
                           className="p-1 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition-colors duration-200"
                           title="Eliminar equipo"
                         >

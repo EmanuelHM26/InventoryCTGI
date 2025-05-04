@@ -5,7 +5,7 @@ import Header from "./Header";
 
 const DashboardLayout = () => {
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100">
       {/* Navbar con ancho fijo */}
       <aside className="w-64 bg-green-700 h-screen fixed">
         <Navbar />
@@ -16,7 +16,7 @@ const DashboardLayout = () => {
         {/* Header siempre visible */}
         <Header />
         {/* Contenido principal */}
-        <main className="p-4">
+        <main className="p-4 flex-grow">
           <Outlet />
         </main>
       </div>
