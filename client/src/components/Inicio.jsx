@@ -9,76 +9,51 @@ import SearchGlobal from "../components/SearchGlobal";
 import AccionesRapidas from "../components/AccionesRapidas";
 
 const Inicio = () => {
-  const [cardData, setCardData] = useState([
-    {
-      iconClass: <FaUsers className="text-white" size={32} />,
-      title: "Total Usuarios",
-      value: "0",
-    },
-    {
-      iconClass: <FaFileInvoice className="text-white" size={32} />,
-      title: "Categorías",
-      value: "0",
-    },
-    {
-      iconClass: <FaUserFriends className="text-white" size={32} />,
-      title: "Total de Asignaciones",
-      value: "0",
-    },
-    {
-      iconClass: <FaTruck className="text-white" size={32} />,
-      title: "Equipos en Inventario",
-      value: "0",
-    },
-  ]);
-
+  const [cardData, setCardData] = useState([]);
   const [asignacionesRecientes, setAsignacionesRecientes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Nueva función handleSearch
-  const handleSearch = (results) => {
-    return("Resultados de búsqueda:", results);
-    // Aquí puedes manejar los resultados de búsqueda si es necesario
-  };
-
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchCardData = async () => {
       try {
-        const [usuariosRes, asignacionesRes, categoriasRes, equiposRes] =
+        // Realizar las solicitudes a las APIs
+        const [usuariosRes, asignacionesRes, equiposRes, productosRes] =
           await Promise.all([
-            axios.get("/api/usuarios"),
-            axios.get("/api/asignaciones"),
-            axios.get("/api/categorias"),
-            axios.get("/api/inventario"),
+            axios.get("/api/usuarios/count"),
+            axios.get("/asignaciones/count"),
+            axios.get("/equipos-tecnologicos/count"),
+            axios.get("/productos-consumibles/count"),
           ]);
 
+        // Validar que las respuestas contengan el campo `count`
         setCardData([
           {
             iconClass: <FaUsers className="text-white" size={32} />,
             title: "Total Usuarios",
-            value: usuariosRes.data.length.toString(),
-          },
-          {
-            iconClass: <FaFileInvoice className="text-white" size={32} />,
-            title: "Categorías",
-            value: categoriasRes.data.length.toString(),
+            value: usuariosRes.data?.count?.toString() || "0",
           },
           {
             iconClass: <FaUserFriends className="text-white" size={32} />,
-            title: "Total de Asignaciones",
-            value: asignacionesRes.data.length.toString(),
+            title: "Total Asignaciones",
+            value: asignacionesRes.data?.count?.toString() || "0",
+          },
+          {
+            iconClass: <FaFileInvoice className="text-white" size={32} />,
+            title: "Equipos Tecnológicos",
+            value: equiposRes.data?.count?.toString() || "0",
           },
           {
             iconClass: <FaTruck className="text-white" size={32} />,
-            title: "Equipos en Inventario",
-            value: equiposRes.data.length.toString(),
+            title: "Productos Consumibles",
+            value: productosRes.data?.count?.toString() || "0",
           },
         ]);
 
-        const asignacionesRecientes = await axios.get(
+        // Obtener asignaciones recientes
+        const asignacionesRecientesRes = await axios.get(
           "/api/asignaciones/recientes"
         );
-        setAsignacionesRecientes(asignacionesRecientes.data);
+        setAsignacionesRecientes(asignacionesRecientesRes.data || []);
       } catch (error) {
         console.error("Error al cargar datos del dashboard:", error);
       } finally {
@@ -86,8 +61,16 @@ const Inicio = () => {
       }
     };
 
-    fetchDashboardData();
+    fetchCardData(); // primera vez
+    const interval = setInterval(fetchCardData, 5000); // cada 5 segundos
+
+    return () => clearInterval(interval); // limpiar el intervalo al desmontar
   }, []);
+
+  const handleSearch = (results) => {
+    return("Resultados de búsqueda:", results);
+    // Aquí puedes manejar los resultados de búsqueda si es necesario
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

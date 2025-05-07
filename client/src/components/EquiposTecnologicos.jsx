@@ -110,11 +110,23 @@ const EquiposTecnologicos = () => {
   };
 
   const filteredEquipos = equipos.filter((equipo) => {
+    const searchTermLower = searchTerm.toLowerCase(); // Convertir el término de búsqueda a minúsculas para comparación
+
+    // Filtrar por ID exacto si el término de búsqueda es un número
+    if (!isNaN(searchTerm) && searchTerm.trim() !== "") {
+      return equipo.IdEquiposTecnologicos.toString() === searchTerm.trim();
+    }
+
+    // Filtrar por coincidencia exacta en el estado
+    if (searchTermLower === "activo" || searchTermLower === "inactivo") {
+      return equipo.Estado.toLowerCase() === searchTermLower;
+    }
+
+    // Filtrar por coincidencias parciales en otros campos
     return (
       equipo.Codigo.toString().includes(searchTerm) ||
-      equipo.Nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      equipo.Marca.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      equipo.Estado.toLowerCase().includes(searchTerm.toLowerCase())
+      equipo.Nombre.toLowerCase().includes(searchTermLower) ||
+      equipo.Marca.toLowerCase().includes(searchTermLower)
     );
   });
 
@@ -212,9 +224,8 @@ const EquiposTecnologicos = () => {
                           requestSort(keys[index]);
                         }
                       }}
-                      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                        index < 5 ? "cursor-pointer hover:bg-gray-100" : ""
-                      }`}
+                      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 5 ? "cursor-pointer hover:bg-gray-100" : ""
+                        }`}
                     >
                       {header}
                     </th>
@@ -243,11 +254,10 @@ const EquiposTecnologicos = () => {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          equipo.Estado === "Activo"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${equipo.Estado === "Activo"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                          }`}
                       >
                         {equipo.Estado}
                       </span>
@@ -300,11 +310,10 @@ const EquiposTecnologicos = () => {
               <button
                 onClick={() => paginate(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-md ${
-                  currentPage === 1
-                    ? "text-gray-300 cursor-not-allowed"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === 1
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <ChevronLeft size={18} />
               </button>
@@ -312,11 +321,10 @@ const EquiposTecnologicos = () => {
                 <button
                   key={idx}
                   onClick={() => paginate(idx + 1)}
-                  className={`w-10 h-10 rounded-md ${
-                    currentPage === idx + 1
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                  className={`w-10 h-10 rounded-md ${currentPage === idx + 1
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                    }`}
                 >
                   {idx + 1}
                 </button>
@@ -324,11 +332,10 @@ const EquiposTecnologicos = () => {
               <button
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-md ${
-                  currentPage === totalPages
-                    ? "text-gray-300 cursor-not-allowed"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === totalPages
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <ChevronRight size={18} />
               </button>

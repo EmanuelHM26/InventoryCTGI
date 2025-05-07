@@ -116,6 +116,14 @@ const Asignaciones = () => {
     }
   };
 
+  // Formatear fecha para mostrar en formato legible
+  const formatDate = (dateString) => {
+
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
   // Funciones para la tabla mejorada
   const requestSort = (key) => {
     let direction = "ascending";
@@ -126,15 +134,26 @@ const Asignaciones = () => {
   };
 
   const filteredAsignaciones = asignaciones.filter((asignacion) => {
+    const searchTermLower = searchTerm.toLowerCase(); // Convertir el término de búsqueda a minúsculas para comparación
+
+    // Filtrar por ID exacto si el término de búsqueda es un número
+    if (!isNaN(searchTerm) && searchTerm.trim() !== "") {
+      return asignacion.IdAsignaciones.toString() === searchTerm.trim();
+    }
+
+    // Concatenar nombre y apellido del usuario
+    const fullName = asignacion.Usuario
+      ? `${asignacion.Usuario.Nombre || ""} ${asignacion.Usuario.Apellido || ""}`.toLowerCase()
+      : "";
+
+    // Filtrar por coincidencias parciales en otros campos
     return (
-      asignacion.IdAsignaciones.toString().includes(searchTerm) ||
-      asignacion.Observacion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      asignacion.FechaAsignacion.includes(searchTerm) ||
-      asignacion.FechaDevolucion.includes(searchTerm) ||
-      (asignacion.Usuario && asignacion.Usuario.Nombre && 
-        asignacion.Usuario.Nombre.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (asignacion.Usuario && asignacion.Usuario.Apellido &&
-        asignacion.Usuario.Apellido.toLowerCase().includes(searchTerm.toLowerCase()))
+      asignacion.Observacion.toLowerCase().includes(searchTermLower) ||
+      (asignacion.FechaAsignacion &&
+        formatDate(asignacion.FechaAsignacion).includes(searchTerm)) ||
+      (asignacion.FechaDevolucion &&
+        formatDate(asignacion.FechaDevolucion).includes(searchTerm)) ||
+      fullName.includes(searchTermLower)
     );
   });
 
@@ -161,13 +180,6 @@ const Asignaciones = () => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
     }
-  };
-
-  // Formatear fecha para mostrar en formato legible
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
   };
 
   return (
@@ -245,9 +257,8 @@ const Asignaciones = () => {
                         requestSort(keys[index]);
                       }
                     }}
-                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                      index < 5 ? "cursor-pointer hover:bg-gray-100" : ""
-                    }`}
+                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 5 ? "cursor-pointer hover:bg-gray-100" : ""
+                      }`}
                   >
                     {header}
                   </th>
@@ -327,11 +338,10 @@ const Asignaciones = () => {
               <button
                 onClick={() => paginate(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-md ${
-                  currentPage === 1
-                    ? "text-gray-300 cursor-not-allowed"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === 1
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <ChevronLeft size={18} />
               </button>
@@ -339,11 +349,10 @@ const Asignaciones = () => {
                 <button
                   key={idx}
                   onClick={() => paginate(idx + 1)}
-                  className={`w-10 h-10 rounded-md ${
-                    currentPage === idx + 1
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                  className={`w-10 h-10 rounded-md ${currentPage === idx + 1
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                    }`}
                 >
                   {idx + 1}
                 </button>
@@ -351,11 +360,10 @@ const Asignaciones = () => {
               <button
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-md ${
-                  currentPage === totalPages
-                    ? "text-gray-300 cursor-not-allowed"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === totalPages
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <ChevronRight size={18} />
               </button>
