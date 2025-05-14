@@ -10,6 +10,7 @@ import busquedaRoutes from "./routes/busqueda.routes.js";
 import equiposTecnologicosRoutes from './routes/equiposTecnologicos.routes.js';
 import productosConsumiblesRoutes from './routes/productosConsumibles.routes.js';
 import countItemsRoutes from './routes/countItems.routes.js';
+import grupoRoutes from "./routes/grupo.routes.js";
 
 import cookieParser from "cookie-parser";
 
@@ -56,5 +57,9 @@ app.use('/api', productosConsumiblesRoutes);
 
 // Registrar las rutas de conteo de items
 app.use('/api', countItemsRoutes); 
+
+// Registrar las rutas de grupos
+app.use('/api', grupoRoutes); 
+
 export default app;
 

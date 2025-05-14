@@ -21,6 +21,7 @@ import Asignaciones from "./components/Asignaciones";
 import DetalleAsignacion from "./components/DetalleAsignacion";
 import EquiposTecnologicos from "./components/EquiposTecnologicos";
 import ProductosConsumibles from "./components/ProductosConsumibles";
+import Grupos from "./components/Grupos";
 
 const App = () => {
   return (
@@ -54,7 +55,8 @@ const App = () => {
             <Route path="detalle-asignacion" element={<DetalleAsignacion />} />
             <Route path="equipos-tecnologicos" element={<EquiposTecnologicos />} />
             <Route path="productos-consumibles" element={<ProductosConsumibles />} />
-            
+            <Route path="grupo" element={<Grupos />} />
+
           </Route>
         </Routes>
       </AuthProvider>
