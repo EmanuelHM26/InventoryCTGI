@@ -21,6 +21,7 @@ const Asignaciones = () => {
     FechaDevolucion: "",
     Cantidad: "",      // <-- Agregado
     Item: "",          // <-- Agregado
+    Estado: "Activo",
   });
 
   // Estados para paginación y búsqueda
@@ -247,6 +248,7 @@ const Asignaciones = () => {
                   "Fecha Devolución",
                   "Cantidad",         // <-- Agregado
                   "Item",             // <-- Agregado
+                  "Estado",
                   "Acciones",
                 ].map((header, index) => (
                   <th
@@ -300,6 +302,9 @@ const Asignaciones = () => {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.Item}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {asignacion.Estado}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
@@ -499,6 +504,26 @@ const Asignaciones = () => {
                   className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Estado
+              </label>
+              <select
+                value={newAsignacion.Estado}
+                onChange={(e) =>
+                  setNewAsignacion({
+                    ...newAsignacion,
+                    Estado: e.target.value,
+                  })
+                }
+                className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+                <option value="Devuelto">Devuelto</option>
+              </select>
             </div>
 
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">

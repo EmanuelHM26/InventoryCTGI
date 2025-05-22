@@ -33,6 +33,11 @@ const Asignaciones = sequelize.define('Asignaciones', {
     type: DataTypes.STRING(100),
     allowNull: false,
   },
+  Estado: {
+  type: DataTypes.STRING(45),
+  allowNull: false,
+  defaultValue: 'Activo', // Puedes cambiar el valor por defecto si lo deseas
+},
   Item: {
     type: DataTypes.STRING(100),
     allowNull: false,

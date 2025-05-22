@@ -3,13 +3,9 @@ import { Usuario, Asignaciones } from '../models/index.js';
 // Crear una nueva asignación
 export const createAsignacionService = async (data) => {
   try {
-    // Verifica que el usuario exista antes de crear la asignación
     const usuario = await Usuario.findByPk(data.IdUsuario);
-    if (!usuario) {
-      throw new Error("El usuario especificado no existe");
-    }
-
-    // Crea la asignación
+    if (!usuario) throw new Error("El usuario especificado no existe");
+    if (!data.Estado) data.Estado = 'Activo'; // Valor por defecto si no viene del frontend
     const nuevaAsignacion = await Asignaciones.create(data);
     return nuevaAsignacion;
   } catch (error) {
@@ -69,9 +65,7 @@ export const updateAsignacionService = async (
         FechaAsignacion: fechaAsignacion,
       },
     });
-    if (!asignacion) {
-      throw new Error("Asignación no encontrada");
-    }
+    if (!asignacion) throw new Error("Asignación no encontrada");
     await asignacion.update(data);
     return asignacion;
   } catch (error) {
