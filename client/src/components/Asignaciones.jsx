@@ -19,6 +19,8 @@ const Asignaciones = () => {
     FechaAsignacion: "",
     Observacion: "",
     FechaDevolucion: "",
+    Cantidad: "",      // <-- Agregado
+    Item: "",          // <-- Agregado
   });
 
   // Estados para paginación y búsqueda
@@ -220,6 +222,8 @@ const Asignaciones = () => {
                   FechaAsignacion: "",
                   Observacion: "",
                   FechaDevolucion: "",
+                  Cantidad: "",    // <-- Agregado
+                  Item: "",        // <-- Agregado
                 });
                 setShowModal(true);
               }}
@@ -241,23 +245,27 @@ const Asignaciones = () => {
                   "Fecha Asignación",
                   "Observación",
                   "Fecha Devolución",
+                  "Cantidad",         // <-- Agregado
+                  "Item",             // <-- Agregado
                   "Acciones",
                 ].map((header, index) => (
                   <th
                     key={index}
                     onClick={() => {
-                      if (index < 5) {
+                      if (index < 7) {
                         const keys = [
                           "IdAsignaciones",
                           "IdUsuario",
                           "FechaAsignacion",
                           "Observacion",
                           "FechaDevolucion",
+                          "Cantidad",    // <-- Agregado
+                          "Item",        // <-- Agregado
                         ];
                         requestSort(keys[index]);
                       }
                     }}
-                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 5 ? "cursor-pointer hover:bg-gray-100" : ""
+                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 7 ? "cursor-pointer hover:bg-gray-100" : ""
                       }`}
                   >
                     {header}
@@ -287,6 +295,12 @@ const Asignaciones = () => {
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(asignacion.FechaDevolucion)}
                     </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {asignacion.Cantidad}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {asignacion.Item}
+                    </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
                         <button
@@ -315,7 +329,7 @@ const Asignaciones = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan="8"
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     No se encontraron asignaciones
@@ -448,6 +462,38 @@ const Asignaciones = () => {
                     setNewAsignacion({
                       ...newAsignacion,
                       FechaDevolucion: e.target.value,
+                    })
+                  }
+                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Cantidad
+                </label>
+                <input
+                  type="text"
+                  value={newAsignacion.Cantidad}
+                  onChange={(e) =>
+                    setNewAsignacion({
+                      ...newAsignacion,
+                      Cantidad: e.target.value,
+                    })
+                  }
+                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Item
+                </label>
+                <input
+                  type="text"
+                  value={newAsignacion.Item}
+                  onChange={(e) =>
+                    setNewAsignacion({
+                      ...newAsignacion,
+                      Item: e.target.value,
                     })
                   }
                   className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"

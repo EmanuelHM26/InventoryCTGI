@@ -1,11 +1,11 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes, STRING } from 'sequelize';
 import sequelize from "../config/database.js";
 
 const Asignaciones = sequelize.define('Asignaciones', {
   IdAsignaciones: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
-    primaryKey: true,
+    primaryKey: false,
     allowNull: false,
   },
   IdUsuario: {
@@ -27,6 +27,14 @@ const Asignaciones = sequelize.define('Asignaciones', {
   },
   FechaDevolucion: {
     type: DataTypes.DATEONLY,
+    allowNull: false,
+  },
+  Cantidad:{
+    type: DataTypes.STRING(100),
+    allowNull: false,
+  },
+  Item: {
+    type: DataTypes.STRING(100),
     allowNull: false,
   },
 }, {

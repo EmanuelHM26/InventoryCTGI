@@ -18,7 +18,6 @@ import UsuariosSoftware from "./components/UsuariosSoftware";
 import Usuarios from "./components/Usuarios";
 import Inicio from "./components/Inicio";
 import Asignaciones from "./components/Asignaciones";
-import DetalleAsignacion from "./components/DetalleAsignacion";
 import EquiposTecnologicos from "./components/EquiposTecnologicos";
 import ProductosConsumibles from "./components/ProductosConsumibles";
 import Grupos from "./components/Grupos";
@@ -52,7 +51,6 @@ const App = () => {
             <Route path="usuarios-software" element={<UsuariosSoftware />} />
             <Route path="usuarios" element={<Usuarios />} />
             <Route path="asignaciones" element={<Asignaciones />} />
-            <Route path="detalle-asignacion" element={<DetalleAsignacion />} />
             <Route path="equipos-tecnologicos" element={<EquiposTecnologicos />} />
             <Route path="productos-consumibles" element={<ProductosConsumibles />} />
             <Route path="grupo" element={<Grupos />} />
