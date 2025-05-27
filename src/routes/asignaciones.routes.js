@@ -19,13 +19,13 @@ router.post('/asignaciones', verifyToken, verifyRole([1]), createAsignacion);
 router.get('/asignaciones', verifyToken, verifyRole([1]), getAllAsignaciones);
 
 // Obtener una asignación por ID
-router.get('/asignaciones/:idAsignaciones/:fechaAsignacion', verifyToken, verifyRole([1]), getAsignacionById);
+router.get('/asignaciones/:idAsignaciones', verifyToken, verifyRole([1]), getAsignacionById);
 
 // Actualizar una asignación
-router.put('/asignaciones/:idAsignaciones/:fechaAsignacion', verifyToken, verifyRole([1]), updateAsignacion);
+router.put('/asignaciones/:idAsignaciones', verifyToken, verifyRole([1]), updateAsignacion);
 
 // Eliminar una asignación
-router.delete('/asignaciones/:idAsignaciones/:fechaAsignacion', verifyToken, verifyRole([1]), deleteAsignacion);
+router.delete('/asignaciones/:idAsignaciones', verifyToken, verifyRole([1]), deleteAsignacion);
 
 router.get('/asignaciones/recent', verifyToken, verifyRole([1]), getRecentAsignaciones);
 

@@ -5,7 +5,7 @@ const Asignaciones = sequelize.define('Asignaciones', {
   IdAsignaciones: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
-    primaryKey: false,
+    primaryKey: true,
     allowNull: false,
   },
   IdUsuario: {
@@ -19,7 +19,7 @@ const Asignaciones = sequelize.define('Asignaciones', {
   FechaAsignacion: {
     type: DataTypes.DATEONLY,
     allowNull: false,
-    primaryKey: true,
+
   },
   Observacion: {
     type: DataTypes.STRING(45),

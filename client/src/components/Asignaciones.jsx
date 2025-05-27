@@ -12,15 +12,15 @@ import {
 
 const Asignaciones = () => {
   const [asignaciones, setAsignaciones] = useState([]);
-  const [usuarios, setUsuarios] = useState([]); // Añadido estado para usuarios
+  const [usuarios, setUsuarios] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [newAsignacion, setNewAsignacion] = useState({
     IdUsuario: "",
     FechaAsignacion: "",
     Observacion: "",
     FechaDevolucion: "",
-    Cantidad: "",      // <-- Agregado
-    Item: "",          // <-- Agregado
+    Cantidad: "",
+    Item: "",
     Estado: "Activo",
   });
 
@@ -35,7 +35,7 @@ const Asignaciones = () => {
 
   useEffect(() => {
     fetchAsignaciones();
-    fetchUsuarios(); // Añadido para cargar usuarios
+    fetchUsuarios();
   }, []);
 
   const fetchAsignaciones = async () => {
@@ -71,7 +71,7 @@ const Asignaciones = () => {
     try {
       if (newAsignacion.IdAsignaciones) {
         await axios.put(
-          `http://localhost:3000/api/asignaciones/${newAsignacion.IdAsignaciones}/${newAsignacion.FechaAsignacion}`,
+          `http://localhost:3000/api/asignaciones/${newAsignacion.IdAsignaciones}`,
           newAsignacion,
           { withCredentials: true }
         );
@@ -101,13 +101,13 @@ const Asignaciones = () => {
     setShowModal(true);
   };
 
-  const handleDeleteAsignacion = async (id, fecha) => {
+  const handleDeleteAsignacion = async (id) => {
     if (
       window.confirm("¿Estás seguro de que deseas eliminar esta asignación?")
     ) {
       try {
         await axios.delete(
-          `http://localhost:3000/api/asignaciones/${id}/${fecha}`,
+          `http://localhost:3000/api/asignaciones/${id}`,
           {
             withCredentials: true,
           }
@@ -121,7 +121,6 @@ const Asignaciones = () => {
 
   // Formatear fecha para mostrar en formato legible
   const formatDate = (dateString) => {
-
     if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleDateString();
@@ -137,19 +136,16 @@ const Asignaciones = () => {
   };
 
   const filteredAsignaciones = asignaciones.filter((asignacion) => {
-    const searchTermLower = searchTerm.toLowerCase(); // Convertir el término de búsqueda a minúsculas para comparación
+    const searchTermLower = searchTerm.toLowerCase();
 
-    // Filtrar por ID exacto si el término de búsqueda es un número
     if (!isNaN(searchTerm) && searchTerm.trim() !== "") {
       return asignacion.IdAsignaciones.toString() === searchTerm.trim();
     }
 
-    // Concatenar nombre y apellido del usuario
     const fullName = asignacion.Usuario
       ? `${asignacion.Usuario.Nombre || ""} ${asignacion.Usuario.Apellido || ""}`.toLowerCase()
       : "";
 
-    // Filtrar por coincidencias parciales en otros campos
     return (
       asignacion.Observacion.toLowerCase().includes(searchTermLower) ||
       (asignacion.FechaAsignacion &&
@@ -223,8 +219,9 @@ const Asignaciones = () => {
                   FechaAsignacion: "",
                   Observacion: "",
                   FechaDevolucion: "",
-                  Cantidad: "",    // <-- Agregado
-                  Item: "",        // <-- Agregado
+                  Cantidad: "",
+                  Item: "",
+                  Estado: "Activo",
                 });
                 setShowModal(true);
               }}
@@ -246,8 +243,8 @@ const Asignaciones = () => {
                   "Fecha Asignación",
                   "Observación",
                   "Fecha Devolución",
-                  "Cantidad",         // <-- Agregado
-                  "Item",             // <-- Agregado
+                  "Cantidad",
+                  "Item",
                   "Estado",
                   "Acciones",
                 ].map((header, index) => (
@@ -261,8 +258,8 @@ const Asignaciones = () => {
                           "FechaAsignacion",
                           "Observacion",
                           "FechaDevolucion",
-                          "Cantidad",    // <-- Agregado
-                          "Item",        // <-- Agregado
+                          "Cantidad",
+                          "Item",
                         ];
                         requestSort(keys[index]);
                       }
@@ -279,7 +276,7 @@ const Asignaciones = () => {
               {currentAsignaciones.length > 0 ? (
                 currentAsignaciones.map((asignacion) => (
                   <tr
-                    key={`${asignacion.IdAsignaciones}-${asignacion.FechaAsignacion}`}
+                    key={asignacion.IdAsignaciones}
                     className="hover:bg-blue-50 transition-colors duration-150"
                   >
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
@@ -303,8 +300,19 @@ const Asignaciones = () => {
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.Item}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {asignacion.Estado}
+                    {/* ESTADO CON COLORES */}
+                    <td className="px-4 py-3 whitespace-nowrap text-sm">
+                      <span
+                        className={
+                          asignacion.Estado === "Activo"
+                            ? "bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold"
+                            : asignacion.Estado === "Inactivo"
+                            ? "bg-red-100 text-red-700 px-3 py-1 rounded-full font-semibold"
+                            : "bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-semibold"
+                        }
+                      >
+                        {asignacion.Estado}
+                      </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
@@ -318,8 +326,7 @@ const Asignaciones = () => {
                         <button
                           onClick={() =>
                             handleDeleteAsignacion(
-                              asignacion.IdAsignaciones,
-                              asignacion.FechaAsignacion
+                              asignacion.IdAsignaciones
                             )
                           }
                           className="p-1 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition-colors duration-200"
@@ -334,7 +341,7 @@ const Asignaciones = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="8"
+                    colSpan="9"
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     No se encontraron asignaciones
