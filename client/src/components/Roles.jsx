@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import Swal from "sweetalert2";
 
 const Roles = () => {
   const [roles, setRoles] = useState([]);
@@ -9,7 +10,7 @@ const Roles = () => {
     IdRol: "",
     NombreRol: ""
   });
-  
+
   // Estados para paginación y búsqueda
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,23 +34,53 @@ const Roles = () => {
 
   const handleCreateRole = async () => {
     try {
+      if (!newRole.NombreRol.trim()) {
+        await Swal.fire({
+          icon: "warning",
+          title: "Campo obligatorio",
+          text: "El nombre del rol es obligatorio.",
+          confirmButtonText: "Aceptar"
+        });
+        return;
+      }
+
       if (newRole.IdRol) {
         await axios.put(
           `http://localhost:3000/api/roles/${newRole.IdRol}`,
           { NombreRol: newRole.NombreRol },
           { withCredentials: true }
         );
+        await Swal.fire({
+          icon: "success",
+          title: "Rol actualizado",
+          text: "El rol se actualizó correctamente.",
+          confirmButtonText: "Aceptar"
+        });
       } else {
         await axios.post(
-          "http://localhost:3000/api/roles", 
-          { NombreRol: newRole.NombreRol }, 
+          "http://localhost:3000/api/roles",
+          { NombreRol: newRole.NombreRol },
           { withCredentials: true }
         );
+        await Swal.fire({
+          icon: "success",
+          title: "Rol creado",
+          text: "El rol se creó correctamente.",
+          confirmButtonText: "Aceptar"
+        });
       }
       setShowModal(false);
       setNewRole({ IdRol: "", NombreRol: "" });
       fetchRoles();
     } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: newRole.IdRol
+          ? "Ocurrió un error al actualizar el rol."
+          : "Ocurrió un error al crear el rol.",
+        confirmButtonText: "Aceptar"
+      });
       console.error(
         newRole.IdRol
           ? "Error al actualizar rol:"
@@ -65,13 +96,36 @@ const Roles = () => {
   };
 
   const handleDeleteRole = async (id) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este rol?")) {
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción eliminará el rol. ¿Deseas continuar?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (result.isConfirmed) {
       try {
         await axios.delete(`http://localhost:3000/api/roles/${id}`, {
           withCredentials: true,
         });
         fetchRoles();
+        await Swal.fire({
+          icon: "success",
+          title: "Eliminado",
+          text: "El rol fue eliminado correctamente.",
+          confirmButtonText: "Aceptar"
+        });
       } catch (error) {
+        await Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Ocurrió un error al eliminar el rol.",
+          confirmButtonText: "Aceptar"
+        });
         console.error("Error al eliminar rol:", error);
       }
     }
@@ -120,7 +174,7 @@ const Roles = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Gestión de Roles</h1>
-          
+
           <div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
             <div className="relative">
               <input
@@ -132,7 +186,7 @@ const Roles = () => {
               />
               <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
               {searchTerm && (
-                <button 
+                <button
                   onClick={() => setSearchTerm("")}
                   className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
                 >
@@ -140,7 +194,7 @@ const Roles = () => {
                 </button>
               )}
             </div>
-            
+
             <button
               onClick={() => {
                 setNewRole({ IdRol: "", NombreRol: "" });
@@ -159,7 +213,7 @@ const Roles = () => {
             <thead className="bg-gray-50">
               <tr>
                 {["ID", "Nombre del Rol", "Acciones"].map((header, index) => (
-                  <th 
+                  <th
                     key={index}
                     onClick={() => {
                       if (index < 2) { // No permitir ordenar por la columna de acciones
@@ -167,9 +221,8 @@ const Roles = () => {
                         requestSort(keys[index]);
                       }
                     }}
-                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                      index < 2 ? "cursor-pointer hover:bg-gray-100" : ""
-                    }`}
+                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 2 ? "cursor-pointer hover:bg-gray-100" : ""
+                      }`}
                   >
                     <div className="flex items-center">
                       {header}
@@ -188,11 +241,10 @@ const Roles = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {currentRoles.length > 0 ? (
                 currentRoles.map((role, index) => (
-                  <tr 
+                  <tr
                     key={role.IdRol}
-                    className={`hover:bg-blue-50 transition-colors duration-150 ${
-                      index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    }`}
+                    className={`hover:bg-blue-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`}
                   >
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{role.IdRol}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{role.NombreRol}</td>
@@ -226,7 +278,7 @@ const Roles = () => {
             </tbody>
           </table>
         </div>
-        
+
         {/* Paginación */}
         {sortedRoles.length > 0 && (
           <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
@@ -234,18 +286,17 @@ const Roles = () => {
               Mostrando {indexOfFirstItem + 1} a {Math.min(indexOfLastItem, sortedRoles.length)} de {sortedRoles.length} roles
             </div>
             <div className="flex space-x-1">
-              <button 
+              <button
                 onClick={() => paginate(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-md ${
-                  currentPage === 1 
-                    ? "text-gray-300 cursor-not-allowed" 
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === 1
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <ChevronLeft size={18} />
               </button>
-              
+
               {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
                 let pageNumber;
                 if (totalPages <= 5) {
@@ -257,30 +308,28 @@ const Roles = () => {
                 } else {
                   pageNumber = currentPage - 2 + idx;
                 }
-                
+
                 return (
                   <button
                     key={idx}
                     onClick={() => paginate(pageNumber)}
-                    className={`w-10 h-10 rounded-md ${
-                      currentPage === pageNumber
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={`w-10 h-10 rounded-md ${currentPage === pageNumber
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
                   >
                     {pageNumber}
                   </button>
                 );
               })}
-              
-              <button 
+
+              <button
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-md ${
-                  currentPage === totalPages 
-                    ? "text-gray-300 cursor-not-allowed" 
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === totalPages
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <ChevronRight size={18} />
               </button>
@@ -296,7 +345,7 @@ const Roles = () => {
             <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">
               {newRole.IdRol ? "Editar Rol" : "Crear Nuevo Rol"}
             </h2>
-            
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Rol</label>
               <input
@@ -307,7 +356,7 @@ const Roles = () => {
                 placeholder="Ingrese el nombre del rol"
               />
             </div>
-            
+
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
               <button
                 onClick={() => setShowModal(false)}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, Filter, X } from "lucide-react";
+import Swal from "sweetalert2";
 
 const Usuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -15,7 +16,7 @@ const Usuarios = () => {
     IdTiposDocumentos: "",
     IdRol: "",
   });
-  
+
   // Estados para paginación y búsqueda
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,14 +46,32 @@ const Usuarios = () => {
           newUser,
           { withCredentials: true }
         );
+        Swal.fire({
+          icon: "success",
+          title: "Usuario actualizado",
+          text: "El usuario se actualizó correctamente.",
+          showConfirmButton: true,
+        });
       } else {
         await axios.post("http://localhost:3000/api/usuarios", newUser, {
           withCredentials: true,
+        });
+        Swal.fire({
+          icon: "success",
+          title: "Usuario creado",
+          text: "El usuario se creó correctamente.",
+          showConfirmButton: true,
         });
       }
       setShowModal(false);
       fetchUsuarios();
     } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Ocurrió un error al guardar el usuario.",
+        showConfirmButton: true,
+      });
       console.error(
         newUser.IdUsuario
           ? "Error al actualizar usuario:"
@@ -65,16 +84,44 @@ const Usuarios = () => {
   const handleEditUser = (user) => {
     setNewUser(user);
     setShowModal(true);
+    Swal.fire({
+      icon: "info",
+      title: "Modo edición",
+      text: "Ahora puedes editar el usuario.",
+      showConfirmButton: true,
+    });
   };
 
   const handleDeleteUser = async (id) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este usuario?")) {
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción eliminará el usuario. ¿Deseas continuar?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (result.isConfirmed) {
       try {
         await axios.delete(`http://localhost:3000/api/usuarios/${id}`, {
           withCredentials: true,
         });
         fetchUsuarios();
+        Swal.fire({
+          icon: "success",
+          title: "Eliminado",
+          text: "El usuario fue eliminado correctamente.",
+          showConfirmButton: true,
+        });
       } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Ocurrió un error al eliminar el usuario.",
+        });
         console.error("Error al eliminar usuario:", error);
       }
     }
@@ -126,7 +173,7 @@ const Usuarios = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Usuarios Registrados</h1>
-          
+
           <div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
             <div className="relative">
               <input
@@ -138,7 +185,7 @@ const Usuarios = () => {
               />
               <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
               {searchTerm && (
-                <button 
+                <button
                   onClick={() => setSearchTerm("")}
                   className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
                 >
@@ -146,7 +193,7 @@ const Usuarios = () => {
                 </button>
               )}
             </div>
-            
+
             <button
               onClick={() => {
                 setNewUser({
@@ -174,7 +221,7 @@ const Usuarios = () => {
             <thead className="bg-gray-50">
               <tr>
                 {["ID", "Nombre", "Apellido", "Tipo Doc.", "Número Doc.", "Usuario", "Correo", "Acciones"].map((header, index) => (
-                  <th 
+                  <th
                     key={index}
                     onClick={() => {
                       if (index < 7) { // No permitir ordenar por la columna de acciones
@@ -182,9 +229,8 @@ const Usuarios = () => {
                         requestSort(keys[index]);
                       }
                     }}
-                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 ${
-                      index < 7 ? "cursor-pointer" : ""
-                    }`}
+                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 ${index < 7 ? "cursor-pointer" : ""
+                      }`}
                   >
                     <div className="flex items-center">
                       {header}
@@ -203,11 +249,10 @@ const Usuarios = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {currentUsuarios.length > 0 ? (
                 currentUsuarios.map((user, index) => (
-                  <tr 
+                  <tr
                     key={user.IdUsuario}
-                    className={`hover:bg-blue-50 transition-colors duration-150 ${
-                      index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    }`}
+                    className={`hover:bg-blue-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`}
                   >
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.IdUsuario}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.Nombre}</td>
@@ -246,7 +291,7 @@ const Usuarios = () => {
             </tbody>
           </table>
         </div>
-        
+
         {/* Paginación */}
         {sortedUsuarios.length > 0 && (
           <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
@@ -254,18 +299,17 @@ const Usuarios = () => {
               Mostrando {indexOfFirstItem + 1} a {Math.min(indexOfLastItem, sortedUsuarios.length)} de {sortedUsuarios.length} usuarios
             </div>
             <div className="flex space-x-1">
-              <button 
+              <button
                 onClick={() => paginate(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-md ${
-                  currentPage === 1 
-                    ? "text-gray-300 cursor-not-allowed" 
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === 1
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <ChevronLeft size={18} />
               </button>
-              
+
               {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
                 let pageNumber;
                 if (totalPages <= 5) {
@@ -277,30 +321,28 @@ const Usuarios = () => {
                 } else {
                   pageNumber = currentPage - 2 + idx;
                 }
-                
+
                 return (
                   <button
                     key={idx}
                     onClick={() => paginate(pageNumber)}
-                    className={`w-10 h-10 rounded-md ${
-                      currentPage === pageNumber
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={`w-10 h-10 rounded-md ${currentPage === pageNumber
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
                   >
                     {pageNumber}
                   </button>
                 );
               })}
-              
-              <button 
+
+              <button
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-md ${
-                  currentPage === totalPages 
-                    ? "text-gray-300 cursor-not-allowed" 
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === totalPages
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <ChevronRight size={18} />
               </button>
@@ -316,7 +358,7 @@ const Usuarios = () => {
             <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">
               {newUser.IdUsuario ? "Editar Usuario" : "Crear Nuevo Usuario"}
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
@@ -391,7 +433,7 @@ const Usuarios = () => {
                 />
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
               <button
                 onClick={() => setShowModal(false)}

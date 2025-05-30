@@ -1,90 +1,16 @@
-/*import {
+import {
   createAsignacionService,
   getAllAsignacionesService,
   getAsignacionByIdService,
   updateAsignacionService,
   deleteAsignacionService,
-  getRecentAsignacionesService,
+  getAsignacionesByDaysService
 } from '../services/asignaciones.service.js';
 
 // Crear una nueva asignación
 export const createAsignacion = async (req, res) => {
   try {
-    const data = req.body;
-    const nuevaAsignacion = await createAsignacionService(data);
-    res.status(201).json(nuevaAsignacion);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
-// Obtener todas las asignaciones
-export const getAllAsignaciones = async (req, res) => {
-  try {
-    const asignaciones = await getAllAsignacionesService();
-    res.status(200).json(asignaciones);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Obtener una asignación por ID
-export const getAsignacionById = async (req, res) => {
-  try {
-    const { idAsignaciones, fechaAsignacion } = req.params;
-    const asignacion = await getAsignacionByIdService(idAsignaciones, fechaAsignacion);
-    res.status(200).json(asignacion);
-  } catch (error) {
-    res.status(404).json({ message: error.message });
-  }
-};
-
-// Actualizar una asignación
-export const updateAsignacion = async (req, res) => {
-  try {
-    const { idAsignaciones, fechaAsignacion } = req.params;
-    const data = req.body;
-    const asignacionActualizada = await updateAsignacionService(idAsignaciones, fechaAsignacion, data);
-    res.status(200).json(asignacionActualizada);
-  } catch (error) {
-    res.status(404).json({ message: error.message });
-  }
-};
-
-// Eliminar una asignación
-export const deleteAsignacion = async (req, res) => {
-  try {
-    const { idAsignaciones, fechaAsignacion } = req.params;
-    const resultado = await deleteAsignacionService(idAsignaciones, fechaAsignacion);
-    res.status(200).json(resultado);
-  } catch (error) {
-    res.status(404).json({ message: error.message });
-  }
-};
-
-// Obtner asignaciones recientes
-
-export const getRecentAsignaciones = async (req, res) => {
-  try {
-    const { fechaInicio, fechaFin } = req.query;
-    const asignacionesRecientes = await getRecentAsignacionesService(fechaInicio, fechaFin);
-    res.status(200).json(asignacionesRecientes);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-}
-*/
-
-import { Usuario, Asignaciones } from '../models/index.js';
-
-// Crear una nueva asignación
-export const createAsignacion = async (req, res) => {
-  try {
-    const data = req.body;
-    const usuario = await Usuario.findByPk(data.IdUsuario);
-    if (!usuario) return res.status(400).json({ message: "El usuario especificado no existe" });
-    if (!data.Estado) data.Estado = 'Activo';
-    const nuevaAsignacion = await Asignaciones.create(data);
+    const nuevaAsignacion = await createAsignacionService(req.body);
     res.status(201).json(nuevaAsignacion);
   } catch (error) {
     res.status(400).json({ message: `Error al crear la asignación: ${error.message}` });
@@ -94,15 +20,7 @@ export const createAsignacion = async (req, res) => {
 // Obtener todas las asignaciones
 export const getAllAsignaciones = async (req, res) => {
   try {
-    const asignaciones = await Asignaciones.findAll({
-      include: [
-        {
-          model: Usuario,
-          as: "Usuario",
-          attributes: ["IdUsuario", "Nombre", "Apellido"],
-        },
-      ],
-    });
+    const asignaciones = await getAllAsignacionesService();
     res.status(200).json(asignaciones);
   } catch (error) {
     res.status(500).json({ message: `Error al obtener las asignaciones: ${error.message}` });
@@ -113,12 +31,7 @@ export const getAllAsignaciones = async (req, res) => {
 export const getAsignacionById = async (req, res) => {
   try {
     const { idAsignaciones } = req.params;
-    const asignacion = await Asignaciones.findOne({
-      where: {
-        IdAsignaciones: idAsignaciones,
-      },
-      include: [{ model: Usuario, as: "Usuario" }],
-    });
+    const asignacion = await getAsignacionByIdService(idAsignaciones);
     if (!asignacion) {
       return res.status(404).json({ message: "Asignación no encontrada" });
     }
@@ -132,14 +45,7 @@ export const getAsignacionById = async (req, res) => {
 export const updateAsignacion = async (req, res) => {
   try {
     const { idAsignaciones } = req.params;
-    const data = req.body;
-    const asignacion = await Asignaciones.findOne({
-      where: {
-        IdAsignaciones: idAsignaciones,
-      },
-    });
-    if (!asignacion) return res.status(404).json({ message: "Asignación no encontrada" });
-    await asignacion.update(data);
+    const asignacion = await updateAsignacionService(idAsignaciones, req.body);
     res.status(200).json(asignacion);
   } catch (error) {
     res.status(500).json({ message: `Error al actualizar la asignación: ${error.message}` });
@@ -150,35 +56,18 @@ export const updateAsignacion = async (req, res) => {
 export const deleteAsignacion = async (req, res) => {
   try {
     const { idAsignaciones } = req.params;
-    const asignacion = await Asignaciones.findOne({
-      where: {
-        IdAsignaciones: idAsignaciones,
-      },
-    });
-    if (!asignacion) {
-      return res.status(404).json({ message: "Asignación no encontrada" });
-    }
-    await asignacion.destroy();
-    res.status(200).json({ message: "Asignación eliminada correctamente" });
+    const result = await deleteAsignacionService(idAsignaciones);
+    res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: `Error al eliminar la asignación: ${error.message}` });
   }
 };
 
 // Obtener asignaciones recientes
-export const getRecentAsignaciones = async (req, res) => {
+export const getAsignacionesByDays = async (req, res) => {
   try {
-    const asignaciones = await Asignaciones.findAll({
-      order: [["FechaAsignacion", "DESC"]],
-      limit: 6,
-      include: [
-        {
-          model: Usuario,
-          as: "Usuario",
-          attributes: ["IdUsuario", "Nombre", "Apellido"],
-        },
-      ],
-    });
+    const { days = 7 } = req.query;
+    const asignaciones = await getAsignacionesByDaysService(days);
     res.status(200).json(asignaciones);
   } catch (error) {
     res.status(500).json({ message: `Error al obtener las asignaciones recientes: ${error.message}` });

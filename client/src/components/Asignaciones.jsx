@@ -9,6 +9,7 @@ import {
   Plus,
   X,
 } from "lucide-react";
+import Swal from "sweetalert2";
 
 const Asignaciones = () => {
   const [asignaciones, setAsignaciones] = useState([]);
@@ -75,6 +76,13 @@ const Asignaciones = () => {
           newAsignacion,
           { withCredentials: true }
         );
+        Swal.fire({
+          icon: "success",
+          title: "Asignación actualizada",
+          text: "La asignación se actualizó correctamente.",
+          timer: 1800,
+          showConfirmButton: false,
+        });
       } else {
         await axios.post(
           "http://localhost:3000/api/asignaciones",
@@ -83,10 +91,30 @@ const Asignaciones = () => {
             withCredentials: true,
           }
         );
+        Swal.fire({
+          icon: "success",
+          title: "Asignación creada",
+          text: "La asignación se creó correctamente.",
+          showConfirmButton: true,
+        });
       }
       setShowModal(false);
       fetchAsignaciones();
+      setNewAsignacion({
+        IdUsuario: "",
+        FechaAsignacion: "",
+        Observacion: "",
+        FechaDevolucion: "",
+        Cantidad: "",
+        Item: "",
+        Estado: "Activo",
+      });
     } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Ocurrió un error al guardar la asignación.",
+      });
       console.error(
         newAsignacion.IdAsignaciones
           ? "Error al actualizar asignación:"
@@ -97,14 +125,53 @@ const Asignaciones = () => {
   };
 
   const handleEditAsignacion = (asignacion) => {
-    setNewAsignacion(asignacion);
-    setShowModal(true);
-  };
+    Swal.fire({
+      title: "¿Deseas editar esta asignación?",
+      text: "Podrás modificar los datos de la asignación seleccionada.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, editar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Formatear las fechas para el input date
+        const formatDateForInput = (dateString) => {
+          if (!dateString) return "";
+          const date = new Date(dateString);
+          return date.toISOString().split('T')[0];
+        };
 
+        setNewAsignacion({
+          ...asignacion,
+          FechaAsignacion: formatDateForInput(asignacion.FechaAsignacion),
+          FechaDevolucion: formatDateForInput(asignacion.FechaDevolucion),
+        });
+        setShowModal(true);
+        Swal.fire({
+          icon: "info",
+          title: "Modo edición",
+          text: "Ahora puedes editar la asignación.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      }
+    });
+  };
   const handleDeleteAsignacion = async (id) => {
-    if (
-      window.confirm("¿Estás seguro de que deseas eliminar esta asignación?")
-    ) {
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción eliminará la asignación. ¿Deseas continuar?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (result.isConfirmed) {
       try {
         await axios.delete(
           `http://localhost:3000/api/asignaciones/${id}`,
@@ -113,7 +180,19 @@ const Asignaciones = () => {
           }
         );
         fetchAsignaciones();
+        Swal.fire({
+          icon: "success",
+          title: "Eliminado",
+          text: "La asignación fue eliminada correctamente.",
+          timer: 1800,
+          showConfirmButton: true,
+        });
       } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Ocurrió un error al eliminar la asignación.",
+        });
         console.error("Error al eliminar asignación:", error);
       }
     }
@@ -146,13 +225,17 @@ const Asignaciones = () => {
       ? `${asignacion.Usuario.Nombre || ""} ${asignacion.Usuario.Apellido || ""}`.toLowerCase()
       : "";
 
+    const userName = asignacion.Usuario?.Usuario?.toLowerCase() || "";
+
     return (
-      asignacion.Observacion.toLowerCase().includes(searchTermLower) ||
+      asignacion.Observacion?.toLowerCase().includes(searchTermLower) ||
       (asignacion.FechaAsignacion &&
         formatDate(asignacion.FechaAsignacion).includes(searchTerm)) ||
       (asignacion.FechaDevolucion &&
         formatDate(asignacion.FechaDevolucion).includes(searchTerm)) ||
-      fullName.includes(searchTermLower)
+      fullName.includes(searchTermLower) ||
+      userName.includes(searchTermLower) ||
+      asignacion.Item?.toLowerCase().includes(searchTermLower)
     );
   });
 
@@ -283,7 +366,7 @@ const Asignaciones = () => {
                       {asignacion.IdAsignaciones}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {asignacion.Usuario?.Nombre || 'N/A'} {asignacion.Usuario?.Apellido || ''}
+                      {asignacion.Usuario?.Usuario || 'N/A'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(asignacion.FechaAsignacion)}
@@ -307,8 +390,8 @@ const Asignaciones = () => {
                           asignacion.Estado === "Activo"
                             ? "bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold"
                             : asignacion.Estado === "Inactivo"
-                            ? "bg-red-100 text-red-700 px-3 py-1 rounded-full font-semibold"
-                            : "bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-semibold"
+                              ? "bg-red-100 text-red-700 px-3 py-1 rounded-full font-semibold"
+                              : "bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-semibold"
                         }
                       >
                         {asignacion.Estado}
@@ -484,7 +567,7 @@ const Asignaciones = () => {
                   Cantidad
                 </label>
                 <input
-                  type="text"
+                  type="number"
                   value={newAsignacion.Cantidad}
                   onChange={(e) =>
                     setNewAsignacion({

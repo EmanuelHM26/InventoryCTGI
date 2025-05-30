@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, UserPlus, X, Save, Eye, EyeOff } from "lucide-react";
+import { Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, UserPlus, X, Save, Eye, EyeOff, Check } from "lucide-react";
+import Swal from "sweetalert2";
 
 const UsuariosSoftware = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -59,26 +60,65 @@ const UsuariosSoftware = () => {
 
   const handleCreateUser = async () => {
     if (!newUser.Usuario || !newUser.Correo || !newUser.PasswordTexto || !newUser.IdRol) {
-      alert("Todos los campos son obligatorios");
+      Swal.fire({
+        icon: "warning",
+        title: "Campos obligatorios",
+        text: "Todos los campos son obligatorios.",
+        confirmButtonText: "Aceptar"
+      });
       return;
     }
-    
     try {
       await axios.post("http://localhost:3000/api/register", newUser);
       setNewUser({ Usuario: "", Correo: "", PasswordTexto: "", IdRol: "" });
       setFormVisible(false);
       fetchUsuarios();
+      await Swal.fire({
+        icon: "success",
+        title: "Usuario creado",
+        text: "El usuario se creó correctamente.",
+        confirmButtonText: "Aceptar"
+      });
     } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Ocurrió un error al crear el usuario.",
+        confirmButtonText: "Aceptar"
+      });
       console.error("Error al crear usuario:", error);
     }
   };
 
   const handleDeleteUser = async (id) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este usuario?")) {
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción eliminará el usuario. ¿Deseas continuar?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (result.isConfirmed) {
       try {
         await axios.delete(`http://localhost:3000/api/users/${id}`);
         fetchUsuarios();
+        await Swal.fire({
+          icon: "success",
+          title: "Eliminado",
+          text: "El usuario fue eliminado correctamente.",
+          confirmButtonText: "Aceptar"
+        });
       } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Ocurrió un error al eliminar el usuario.",
+          confirmButtonText: "Aceptar"
+        });
         console.error("Error al eliminar usuario:", error);
       }
     }
@@ -86,7 +126,12 @@ const UsuariosSoftware = () => {
 
   const handleUpdateUser = async () => {
     if (!editingUser) {
-      alert("No hay usuario seleccionado para editar");
+      Swal.fire({
+        icon: "warning",
+        title: "Sin selección",
+        text: "No hay usuario seleccionado para editar.",
+        confirmButtonText: "Aceptar"
+      });
       return;
     }
 
@@ -102,7 +147,12 @@ const UsuariosSoftware = () => {
     }
 
     if (Object.keys(updatedFields).length === 0) {
-      alert("No se han realizado cambios");
+      await Swal.fire({
+        icon: "info",
+        title: "Sin cambios",
+        text: "No se han realizado cambios.",
+        confirmButtonText: "Aceptar"
+      });
       return;
     }
 
@@ -110,7 +160,19 @@ const UsuariosSoftware = () => {
       await axios.put(`http://localhost:3000/api/users/${editingUser.IdRegistroLogin}`, updatedFields);
       setEditingUser(null);
       fetchUsuarios();
+      await Swal.fire({
+        icon: "success",
+        title: "Usuario actualizado",
+        text: "El usuario se actualizó correctamente.",
+        confirmButtonText: "Aceptar"
+      });
     } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Ocurrió un error al actualizar el usuario.",
+        confirmButtonText: "Aceptar"
+      });
       console.error("Error al actualizar usuario:", error);
     }
   };
@@ -156,7 +218,7 @@ const UsuariosSoftware = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Gestión de Usuarios del Software</h1>
-          
+
           <div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
             <div className="relative">
               <input
@@ -168,7 +230,7 @@ const UsuariosSoftware = () => {
               />
               <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
               {searchTerm && (
-                <button 
+                <button
                   onClick={() => setSearchTerm("")}
                   className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
                 >
@@ -176,7 +238,7 @@ const UsuariosSoftware = () => {
                 </button>
               )}
             </div>
-            
+
             <button
               onClick={() => setFormVisible(!formVisible)}
               className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
@@ -263,7 +325,7 @@ const UsuariosSoftware = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th 
+                <th
                   onClick={() => requestSort("IdRegistroLogin")}
                   className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 >
@@ -276,7 +338,7 @@ const UsuariosSoftware = () => {
                     )}
                   </div>
                 </th>
-                <th 
+                <th
                   onClick={() => requestSort("Usuario")}
                   className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 >
@@ -289,7 +351,7 @@ const UsuariosSoftware = () => {
                     )}
                   </div>
                 </th>
-                <th 
+                <th
                   onClick={() => requestSort("Correo")}
                   className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 >
@@ -302,7 +364,7 @@ const UsuariosSoftware = () => {
                     )}
                   </div>
                 </th>
-                <th 
+                <th
                   onClick={() => requestSort("IdRol")}
                   className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 >
@@ -323,11 +385,10 @@ const UsuariosSoftware = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {currentUsuarios.length > 0 ? (
                 currentUsuarios.map((user, index) => (
-                  <tr 
+                  <tr
                     key={user.IdRegistroLogin}
-                    className={`hover:bg-blue-50 transition-colors duration-150 ${
-                      index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    }`}
+                    className={`hover:bg-blue-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`}
                   >
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.IdRegistroLogin}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
@@ -380,9 +441,9 @@ const UsuariosSoftware = () => {
                             <button
                               onClick={handleUpdateUser}
                               className="p-1 rounded-full bg-green-100 hover:bg-green-200 text-green-600 transition-colors duration-200"
-                              title="Guardar cambios"
+                              title="Confirmar edición"
                             >
-                              <Save size={16} />
+                              <Check size={16} />
                             </button>
                             <button
                               onClick={cancelEdit}
@@ -422,7 +483,7 @@ const UsuariosSoftware = () => {
             </tbody>
           </table>
         </div>
-        
+
         {/* Paginación */}
         {sortedUsuarios.length > 0 && (
           <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
@@ -430,18 +491,17 @@ const UsuariosSoftware = () => {
               Mostrando {indexOfFirstItem + 1} a {Math.min(indexOfLastItem, sortedUsuarios.length)} de {sortedUsuarios.length} usuarios
             </div>
             <div className="flex space-x-1">
-              <button 
+              <button
                 onClick={() => paginate(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-md ${
-                  currentPage === 1 
-                    ? "text-gray-300 cursor-not-allowed" 
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === 1
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <ChevronLeft size={18} />
               </button>
-              
+
               {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
                 let pageNumber;
                 if (totalPages <= 5) {
@@ -453,30 +513,28 @@ const UsuariosSoftware = () => {
                 } else {
                   pageNumber = currentPage - 2 + idx;
                 }
-                
+
                 return (
                   <button
                     key={idx}
                     onClick={() => paginate(pageNumber)}
-                    className={`w-10 h-10 rounded-md ${
-                      currentPage === pageNumber
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                    className={`w-10 h-10 rounded-md ${currentPage === pageNumber
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
                   >
                     {pageNumber}
                   </button>
                 );
               })}
-              
-              <button 
+
+              <button
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-md ${
-                  currentPage === totalPages 
-                    ? "text-gray-300 cursor-not-allowed" 
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === totalPages
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <ChevronRight size={18} />
               </button>

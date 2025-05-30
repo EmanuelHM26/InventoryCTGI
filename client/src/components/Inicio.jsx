@@ -3,7 +3,6 @@ import axios from "axios";
 import DashboardLayout from "../components/DashboardLayout";
 import AsignacionesRecent from "../components/AsignacionesRecent";
 import Card from "../components/Card";
-import { BarChartOnValueChangeExample } from "../components/BarChart";
 import { FaUsers, FaFileInvoice, FaUserFriends, FaTruck } from "react-icons/fa";
 import SearchGlobal from "../components/SearchGlobal";
 import AccionesRapidas from "../components/AccionesRapidas";
@@ -99,11 +98,6 @@ const Inicio = () => {
       {/* Tabla de asignaciones recientes */}
       <div className="lg:col-span-4">
         <AsignacionesRecent asignaciones={asignacionesRecientes} />
-      </div>
-
-      {/* Diagrama de barras */}
-      <div className="lg:col-span-4 bg-white p-6 rounded-lg shadow-md">
-        <BarChartOnValueChangeExample />
       </div>
     </div>
   );

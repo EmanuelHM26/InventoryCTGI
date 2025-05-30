@@ -5,7 +5,7 @@ import {
   getAsignacionById,
   updateAsignacion,
   deleteAsignacion,
-  getRecentAsignaciones,
+  getAsignacionesByDays
 } from '../controllers/asignaciones.controller.js';
 import { verifyToken } from '../middlewares/auth.middleware.js';
 import { verifyRole } from '../middlewares/rol.middleware.js';
@@ -18,6 +18,9 @@ router.post('/asignaciones', verifyToken, verifyRole([1]), createAsignacion);
 // Obtener todas las asignaciones
 router.get('/asignaciones', verifyToken, verifyRole([1]), getAllAsignaciones);
 
+// Obtener asignaciones recientes
+router.get('/asignaciones/recent', verifyToken, verifyRole([1]), getAsignacionesByDays);
+
 // Obtener una asignación por ID
 router.get('/asignaciones/:idAsignaciones', verifyToken, verifyRole([1]), getAsignacionById);
 
@@ -27,6 +30,5 @@ router.put('/asignaciones/:idAsignaciones', verifyToken, verifyRole([1]), update
 // Eliminar una asignación
 router.delete('/asignaciones/:idAsignaciones', verifyToken, verifyRole([1]), deleteAsignacion);
 
-router.get('/asignaciones/recent', verifyToken, verifyRole([1]), getRecentAsignaciones);
 
 export default router;
