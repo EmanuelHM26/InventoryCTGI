@@ -11,6 +11,8 @@ import equiposTecnologicosRoutes from './routes/equiposTecnologicos.routes.js';
 import productosConsumiblesRoutes from './routes/productosConsumibles.routes.js';
 import countItemsRoutes from './routes/countItems.routes.js';
 import grupoRoutes from "./routes/grupo.routes.js";
+import reservasFijasRoutes from "./routes/reservasFijas.routes.js";
+import reservasDiariasRoutes from "./routes/reservasDiarias.routes.js";
 
 import cookieParser from "cookie-parser";
 
@@ -29,6 +31,7 @@ app.use(cookieParser());
 // Aquí puedes agregar las rutas reales de tu proyecto
 // import userRoutes from "./routes/user.routes.js";
 //Ruta de autenticación
+
 app.use("/api/auth", authRoutes); // Registrar las rutas de autenticación
 
 // Ruta de login y dashboard
@@ -60,6 +63,13 @@ app.use('/api', countItemsRoutes);
 
 // Registrar las rutas de grupos
 app.use('/api', grupoRoutes); 
+
+// Registrar las rutas de reservas fijas
+app.use('/api', reservasFijasRoutes);
+
+
+// Registrar las rutas de reservas diarias
+app.use('/api', reservasDiariasRoutes);
 
 export default app;
 

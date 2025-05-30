@@ -65,6 +65,13 @@ const Navbar = () => {
               >
                 Grupo
               </Link>
+
+                   <Link
+                to="/dashboard/reservas"
+                className="flex items-center py-1 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
+              >
+                Reservas
+              </Link>
             </div>
           )}
         </div>
