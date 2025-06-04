@@ -5,7 +5,8 @@ import {
   getAsignacionById,
   updateAsignacion,
   deleteAsignacion,
-  getAsignacionesByDays
+  getAsignacionesByDays,
+  confirmarDevolucion
 } from '../controllers/asignaciones.controller.js';
 import { verifyToken } from '../middlewares/auth.middleware.js';
 import { verifyRole } from '../middlewares/rol.middleware.js';
@@ -20,6 +21,9 @@ router.get('/asignaciones', verifyToken, verifyRole([1]), getAllAsignaciones);
 
 // Obtener asignaciones recientes
 router.get('/asignaciones/recent', verifyToken, verifyRole([1]), getAsignacionesByDays);
+
+// Confirmar devolución de una asignación
+router.patch('/asignaciones/:idAsignaciones/confirmar-devolucion', verifyToken, verifyRole([1]), confirmarDevolucion);
 
 // Obtener una asignación por ID
 router.get('/asignaciones/:idAsignaciones', verifyToken, verifyRole([1]), getAsignacionById);

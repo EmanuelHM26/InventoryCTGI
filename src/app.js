@@ -13,6 +13,7 @@ import countItemsRoutes from './routes/countItems.routes.js';
 import grupoRoutes from "./routes/grupo.routes.js";
 import reservasFijasRoutes from "./routes/reservasFijas.routes.js";
 import reservasDiariasRoutes from "./routes/reservasDiarias.routes.js";
+import contarEstadisticasInicioRoutes from "./routes/estadisticasInicio.routes.js";
 
 import cookieParser from "cookie-parser";
 
@@ -70,6 +71,9 @@ app.use('/api', reservasFijasRoutes);
 
 // Registrar las rutas de reservas diarias
 app.use('/api', reservasDiariasRoutes);
+
+// Registrar las rutas de estadísticas de inicio
+app.use('/api', contarEstadisticasInicioRoutes);
 
 export default app;
 

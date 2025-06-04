@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Search, Edit, Trash2, Plus, X, ChevronLeft, ChevronRight } from "lucide-react";
+import Swal from "sweetalert2";
 
 const ProductosConsumibles = () => {
   const [productos, setProductos] = useState([]);
@@ -45,16 +46,34 @@ const ProductosConsumibles = () => {
           newProducto,
           { withCredentials: true }
         );
+        Swal.fire({
+          icon: "success",
+          title: "Producto actualizado",
+          text: "El producto se actualizó correctamente.",
+          showConfirmButton: true,
+        });
       } else {
         await axios.post(
           "http://localhost:3000/api/productosconsumibles",
           newProducto,
           { withCredentials: true }
         );
+        Swal.fire({
+          icon: "success",
+          title: "Producto creado",
+          text: "El producto se creó correctamente.",
+          showConfirmButton: true,
+        });
       }
       setShowModal(false);
       fetchProductos();
     } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Ocurrió un error al guardar el producto.",
+        showConfirmButton: true,
+      });
       console.error("Error al guardar producto:", error);
     }
   };
@@ -65,14 +84,37 @@ const ProductosConsumibles = () => {
   };
 
   const handleDeleteProducto = async (id) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este producto?")) {
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción eliminará el producto. ¿Deseas continuar?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (result.isConfirmed) {
       try {
         await axios.delete(
           `http://localhost:3000/api/productosconsumibles/${id}`,
           { withCredentials: true }
         );
         fetchProductos();
+        Swal.fire({
+          icon: "success",
+          title: "Eliminado",
+          text: "El producto fue eliminado correctamente.",
+          showConfirmButton: true,
+        });
       } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Ocurrió un error al eliminar el producto.",
+          showConfirmButton: true,
+        });
         console.error("Error al eliminar producto:", error);
       }
     }
@@ -179,9 +221,8 @@ const ProductosConsumibles = () => {
                           requestSort(keys[index]);
                         }
                       }}
-                      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                        index < 4 ? "cursor-pointer hover:bg-gray-100" : ""
-                      }`}
+                      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 4 ? "cursor-pointer hover:bg-gray-100" : ""
+                        }`}
                     >
                       {header}
                     </th>
@@ -256,11 +297,10 @@ const ProductosConsumibles = () => {
               <button
                 onClick={() => paginate(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-md ${
-                  currentPage === 1
-                    ? "text-gray-300 cursor-not-allowed"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === 1
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <ChevronLeft size={18} />
               </button>
@@ -268,11 +308,10 @@ const ProductosConsumibles = () => {
                 <button
                   key={idx}
                   onClick={() => paginate(idx + 1)}
-                  className={`w-10 h-10 rounded-md ${
-                    currentPage === idx + 1
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                  className={`w-10 h-10 rounded-md ${currentPage === idx + 1
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                    }`}
                 >
                   {idx + 1}
                 </button>
@@ -280,11 +319,10 @@ const ProductosConsumibles = () => {
               <button
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-md ${
-                  currentPage === totalPages
-                    ? "text-gray-300 cursor-not-allowed"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`p-2 rounded-md ${currentPage === totalPages
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100"
+                  }`}
               >
                 <ChevronRight size={18} />
               </button>

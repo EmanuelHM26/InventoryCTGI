@@ -42,8 +42,8 @@ export const getAsignacionByIdService = async (idAsignaciones) => {
       where: {
         IdAsignaciones: idAsignaciones,
       },
-      include: [{ 
-        model: Usuario, 
+      include: [{
+        model: Usuario,
         as: "Usuario",
         attributes: ["IdUsuario", "Usuario", "Nombre", "Apellido"]
       }],
@@ -65,11 +65,11 @@ export const updateAsignacionService = async (idAsignaciones, data) => {
         IdAsignaciones: idAsignaciones,
       },
     });
-    
+
     if (!asignacion) {
       throw new Error("Asignación no encontrada");
     }
-    
+
     // Verificar que el usuario existe solo si se está actualizando el IdUsuario
     if (data.IdUsuario && data.IdUsuario !== asignacion.IdUsuario) {
       const usuario = await Usuario.findByPk(data.IdUsuario);
@@ -77,36 +77,36 @@ export const updateAsignacionService = async (idAsignaciones, data) => {
         throw new Error("El usuario especificado no existe");
       }
     }
-    
+
     // Crear objeto con solo los campos que se van a actualizar (no vacíos/null/undefined)
     const camposActualizar = {};
-    
+
     Object.keys(data).forEach(key => {
       if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
         camposActualizar[key] = data[key];
       }
     });
-    
+
     // Si no hay campos para actualizar, retornar la asignación actual
     if (Object.keys(camposActualizar).length === 0) {
       throw new Error("No se proporcionaron campos válidos para actualizar");
     }
-    
+
     // Actualizar solo los campos proporcionados
     await asignacion.update(camposActualizar);
-    
+
     // Retornar la asignación actualizada con los datos del usuario
     const asignacionActualizada = await Asignaciones.findOne({
       where: {
         IdAsignaciones: idAsignaciones,
       },
-      include: [{ 
-        model: Usuario, 
+      include: [{
+        model: Usuario,
         as: "Usuario",
         attributes: ["IdUsuario", "Usuario", "Nombre", "Apellido"]
       }],
     });
-    
+
     return asignacionActualizada;
   } catch (error) {
     throw new Error(`Error al actualizar la asignación: ${error.message}`);
@@ -156,5 +156,52 @@ export const getAsignacionesByDaysService = async (days = 7) => {
     return asignaciones;
   } catch (error) {
     throw new Error(`Error al obtener las asignaciones recientes: ${error.message}`);
+  }
+};
+
+//Confirmar una asignación
+
+//Confirmar una asignación - VERSIÓN CORREGIDA
+export const confirmarDevolucionService = async (idAsignaciones) => {
+  try {
+    const asignacion = await Asignaciones.findOne({
+      where: {
+        IdAsignaciones: idAsignaciones,
+      },
+    });
+
+    if (!asignacion) {
+      throw new Error("Asignación no encontrada");
+    }
+
+    if (asignacion.Estado === 'Inactivo') {
+      throw new Error("Esta asignación ya ha sido devuelta");
+    }
+
+    // CORRECCIÓN 1: Crear fecha actual sin ajustes de timezone
+    const fechaActual = new Date();
+    fechaActual.setMinutes(fechaActual.getMinutes() - fechaActual.getTimezoneOffset());
+    const fechaFormateada = fechaActual.toISOString().slice(0, 10);
+
+    await asignacion.update({
+      FechaDevolucion: fechaFormateada,
+      Estado: 'Inactivo'
+    });
+
+    // Retornar la asignación actualizada con los datos del usuario
+    const asignacionActualizada = await Asignaciones.findOne({
+      where: {
+        IdAsignaciones: idAsignaciones,
+      },
+      include: [{
+        model: Usuario,
+        as: "Usuario",
+        attributes: ["IdUsuario", "Usuario", "Nombre", "Apellido"]
+      }],
+    });
+
+    return asignacionActualizada;
+  } catch (error) {
+    throw new Error(`Error al confirmar la devolución: ${error.message}`);
   }
 };

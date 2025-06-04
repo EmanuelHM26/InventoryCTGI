@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Plus,
   X,
+  Check,
 } from "lucide-react";
 import Swal from "sweetalert2";
 
@@ -198,12 +199,63 @@ const Asignaciones = () => {
     }
   };
 
+  // Función para confirmar devolución de una asignación
+  const handleConfirmarDevolucion = async (id) => {
+    const result = await Swal.fire({
+      title: "¿Confirmar devolución?",
+      text: "Se establecerá la fecha actual como fecha de devolución y el estado cambiará a 'Inactivo'.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#10b981",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sí, confirmar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        // IMPORTANTE: Hacer la petición PATCH sin datos en el body
+        const response = await axios.patch(
+          `http://localhost:3000/api/asignaciones/${id}/confirmar-devolucion`,
+          {}, // Body vacío - el backend maneja todo
+          { withCredentials: true }
+        );
+
+        console.log('Respuesta del servidor:', response.data); // Para debug
+
+        // Recargar las asignaciones para mostrar los cambios
+        await fetchAsignaciones();
+
+        Swal.fire({
+          icon: "success",
+          title: "Devolución confirmada",
+          text: "La devolución se registró correctamente con la fecha actual.",
+          timer: 1800,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error("Error completo:", error.response?.data || error.message);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: error.response?.data?.message || "Ocurrió un error al confirmar la devolución.",
+        });
+      }
+    }
+  };
+
   // Formatear fecha para mostrar en formato legible
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+    // Mostrar la fecha tal cual viene (YYYY-MM-DD)
+    return dateString;
   };
+
+  function getTodayLocal() {
+    const today = new Date();
+    today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+    return today.toISOString().split('T')[0]; // Retorna la fecha en formato YYYY-MM-DD
+  }
 
   // Funciones para la tabla mejorada
   const requestSort = (key) => {
@@ -299,9 +351,9 @@ const Asignaciones = () => {
               onClick={() => {
                 setNewAsignacion({
                   IdUsuario: "",
-                  FechaAsignacion: "",
+                  FechaAsignacion: getTodayLocal(),
                   Observacion: "",
-                  FechaDevolucion: "",
+                  FechaDevolucion: getTodayLocal(),
                   Cantidad: "",
                   Item: "",
                   Estado: "Activo",
@@ -389,9 +441,7 @@ const Asignaciones = () => {
                         className={
                           asignacion.Estado === "Activo"
                             ? "bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold"
-                            : asignacion.Estado === "Inactivo"
-                              ? "bg-red-100 text-red-700 px-3 py-1 rounded-full font-semibold"
-                              : "bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-semibold"
+                            : "bg-red-100 text-red-700 px-3 py-1 rounded-full font-semibold"
                         }
                       >
                         {asignacion.Estado}
@@ -417,6 +467,16 @@ const Asignaciones = () => {
                         >
                           <Trash2 size={16} />
                         </button>
+
+                        {asignacion.Estado === "Activo" && (
+                          <button
+                            onClick={() => handleConfirmarDevolucion(asignacion.IdAsignaciones)}
+                            className="p-1 rounded-full bg-green-100 hover:bg-green-200 text-green-600 transition-colors duration-200"
+                            title="Confirmar devolución"
+                          >
+                            <Check size={16} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

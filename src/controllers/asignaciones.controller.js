@@ -4,7 +4,8 @@ import {
   getAsignacionByIdService,
   updateAsignacionService,
   deleteAsignacionService,
-  getAsignacionesByDaysService
+  getAsignacionesByDaysService,
+  confirmarDevolucionService
 } from '../services/asignaciones.service.js';
 
 // Crear una nueva asignación
@@ -71,5 +72,16 @@ export const getAsignacionesByDays = async (req, res) => {
     res.status(200).json(asignaciones);
   } catch (error) {
     res.status(500).json({ message: `Error al obtener las asignaciones recientes: ${error.message}` });
+  }
+};
+
+// Confirmar devolución de una asignación
+export const confirmarDevolucion = async (req, res) => {
+  try {
+    const { idAsignaciones } = req.params;
+    const asignacion = await confirmarDevolucionService(idAsignaciones);
+    res.status(200).json(asignacion);
+  } catch (error) {
+    res.status(500).json({ message: `Error al confirmar la devolución: ${error.message}` });
   }
 };

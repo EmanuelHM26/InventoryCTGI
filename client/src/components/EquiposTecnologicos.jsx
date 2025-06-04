@@ -9,6 +9,7 @@ import {
   Plus,
   X,
 } from "lucide-react";
+import Swal from "sweetalert2";
 
 const EquiposTecnologicos = () => {
   const [equipos, setEquipos] = useState([]);
@@ -58,18 +59,34 @@ const EquiposTecnologicos = () => {
           newEquipo,
           { withCredentials: true }
         );
+        Swal.fire({
+          icon: "success",
+          title: "Equipo actualizado",
+          text: "El equipo se actualizó correctamente.",
+          showConfirmButton: true,
+        });
       } else {
         await axios.post(
           "http://localhost:3000/api/equipostecnologicos",
           newEquipo,
-          {
-            withCredentials: true,
-          }
+          { withCredentials: true }
         );
+        Swal.fire({
+          icon: "success",
+          title: "Equipo creado",
+          text: "El equipo se creó correctamente.",
+          showConfirmButton: true,
+        });
       }
       setShowModal(false);
       fetchEquipos();
     } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Ocurrió un error al guardar el equipo.",
+        showConfirmButton: true,
+      });
       console.error(
         newEquipo.IdEquiposTecnologicos
           ? "Error al actualizar equipo:"
@@ -85,16 +102,37 @@ const EquiposTecnologicos = () => {
   };
 
   const handleDeleteEquipo = async (id) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este equipo?")) {
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción eliminará el equipo. ¿Deseas continuar?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (result.isConfirmed) {
       try {
         await axios.delete(
           `http://localhost:3000/api/equipostecnologicos/${id}`,
-          {
-            withCredentials: true,
-          }
+          { withCredentials: true }
         );
         fetchEquipos();
+        Swal.fire({
+          icon: "success",
+          title: "Eliminado",
+          text: "El equipo fue eliminado correctamente.",
+          showConfirmButton: true,
+        });
       } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Ocurrió un error al eliminar el equipo.",
+          showConfirmButton: true,
+        });
         console.error("Error al eliminar equipo:", error);
       }
     }
