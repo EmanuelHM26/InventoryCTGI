@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Plus,
   X,
+  Check,
 } from "lucide-react";
 
 const Reservas = () => {
@@ -70,18 +71,40 @@ const Reservas = () => {
   const handleCreateReserva = async () => {
     try {
       if (activeTab === "fijas") {
+        if (
+          !newReserva.nombrePrograma ||
+          !newReserva.ficha ||
+          !newReserva.materialReservado
+        ) {
+          alert("Por favor, completa todos los campos de la reserva fija.");
+          return;
+        }
         const endpoint = "http://localhost:3000/api/reservasfijas";
+        const reservaFija = {
+          ...newReserva,
+          Estado: "Disponible", // Siempre enviar Disponible
+        };
         if (newReserva.idReservaFija) {
           await axios.put(
             `${endpoint}/${newReserva.idReservaFija}`,
-            newReserva,
+            reservaFija,
             { withCredentials: true }
           );
         } else {
-          await axios.post(endpoint, newReserva, { withCredentials: true });
+          await axios.post(endpoint, reservaFija, { withCredentials: true });
         }
         fetchReservasFijas();
       } else {
+        // Validación para diarias
+        if (
+          !newReserva.IdUsuario ||
+          !newReserva.ficha ||
+          !newReserva.materialReservado ||
+          !newReserva.fecha
+        ) {
+          alert("Por favor, completa todos los campos de la reserva diaria.");
+          return;
+        }
         const endpoint = "http://localhost:3000/api/reservas-diarias";
         if (newReserva.idReservaDiaria) {
           await axios.put(
@@ -98,6 +121,7 @@ const Reservas = () => {
       setNewReserva({});
     } catch (error) {
       console.error("Error al procesar reserva:", error);
+      alert("Error al procesar reserva: " + (error.response?.data?.message || error.message));
     }
   };
 
@@ -125,6 +149,22 @@ const Reservas = () => {
       } catch (error) {
         console.error("Error al eliminar reserva:", error);
       }
+    }
+  };
+
+  // Alterna el estado entre Disponible y Asignado
+  const handleCheckReservaFija = async (reserva) => {
+    try {
+      const nuevoEstado = reserva.Estado === "Disponible" ? "Asignado" : "Disponible";
+      await axios.put(
+        `http://localhost:3000/api/reservasfijas/${reserva.idReservaFija}`,
+        { ...reserva, Estado: nuevoEstado },
+        { withCredentials: true }
+      );
+      fetchReservasFijas();
+    } catch (error) {
+      alert("No se pudo cambiar el estado.");
+      console.error(error);
     }
   };
 
@@ -259,25 +299,6 @@ const Reservas = () => {
               }
               className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Estado
-            </label>
-            <select
-              value={newReserva.Estado || "Activa"}
-              onChange={(e) =>
-                setNewReserva({
-                  ...newReserva,
-                  Estado: e.target.value,
-                })
-              }
-              className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="Activa">Activa</option>
-              <option value="Completada">Completada</option>
-              <option value="Cancelada">Cancelada</option>
-            </select>
           </div>
         </>
       );
@@ -477,9 +498,9 @@ const Reservas = () => {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            reserva.Estado === "Activa"
+                            reserva.Estado === "Disponible"
                               ? "bg-green-100 text-green-800"
-                              : reserva.Estado === "Completada"
+                              : reserva.Estado === "Asignado"
                               ? "bg-blue-100 text-blue-800"
                               : "bg-red-100 text-red-800"
                           }`}>
@@ -501,6 +522,21 @@ const Reservas = () => {
                               title="Eliminar reserva"
                             >
                               <Trash2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleCheckReservaFija(reserva)}
+                              className={`p-1 rounded-full ${
+                                reserva.Estado === "Disponible"
+                                  ? "bg-green-100 hover:bg-green-200 text-green-600"
+                                  : "bg-blue-100 hover:bg-blue-200 text-blue-600"
+                              } transition-colors duration-200`}
+                              title={
+                                reserva.Estado === "Disponible"
+                                  ? "Marcar como Asignado"
+                                  : "Marcar como Disponible"
+                              }
+                            >
+                              <Check size={16} />
                             </button>
                           </div>
                         </td>
