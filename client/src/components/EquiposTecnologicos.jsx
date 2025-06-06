@@ -15,13 +15,17 @@ const EquiposTecnologicos = () => {
   const [equipos, setEquipos] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [newEquipo, setNewEquipo] = useState({
-    Codigo: "",
+    Cuentadante: "",
     Nombre: "",
-    Marca: "",
-    Estado: "",
-    IdEstado: "",
-    IdCodigoBarras: "",
-    IdGrupo: "",
+    Regional: "",
+    Costo: "",
+    Modelo: "",
+    Descripcion: "",
+    DescripcionActual: "",
+    Tipo: "",
+    Atributos: "",
+    Fecha: "",
+    Valor: "",
   });
 
   // Estados para paginación y búsqueda
@@ -41,9 +45,7 @@ const EquiposTecnologicos = () => {
     try {
       const response = await axios.get(
         "http://localhost:3000/api/equipostecnologicos",
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
       setEquipos(response.data);
     } catch (error) {
@@ -148,23 +150,13 @@ const EquiposTecnologicos = () => {
   };
 
   const filteredEquipos = equipos.filter((equipo) => {
-    const searchTermLower = searchTerm.toLowerCase(); // Convertir el término de búsqueda a minúsculas para comparación
-
-    // Filtrar por ID exacto si el término de búsqueda es un número
-    if (!isNaN(searchTerm) && searchTerm.trim() !== "") {
-      return equipo.IdEquiposTecnologicos.toString() === searchTerm.trim();
-    }
-
-    // Filtrar por coincidencia exacta en el estado
-    if (searchTermLower === "activo" || searchTermLower === "inactivo") {
-      return equipo.Estado.toLowerCase() === searchTermLower;
-    }
-
-    // Filtrar por coincidencias parciales en otros campos
+    const searchTermLower = searchTerm.toLowerCase();
     return (
-      equipo.Codigo.toString().includes(searchTerm) ||
-      equipo.Nombre.toLowerCase().includes(searchTermLower) ||
-      equipo.Marca.toLowerCase().includes(searchTermLower)
+      equipo.Nombre?.toLowerCase().includes(searchTermLower) ||
+      equipo.Regional?.toLowerCase().includes(searchTermLower) ||
+      equipo.Modelo?.toLowerCase().includes(searchTermLower) ||
+      equipo.Descripcion?.toLowerCase().includes(searchTermLower) ||
+      equipo.DescripcionActual?.toLowerCase().includes(searchTermLower)
     );
   });
 
@@ -224,13 +216,17 @@ const EquiposTecnologicos = () => {
             <button
               onClick={() => {
                 setNewEquipo({
-                  Codigo: "",
+                  Cuentadante: "",
                   Nombre: "",
-                  Marca: "",
-                  Estado: "",
-                  IdEstado: "",
-                  IdCodigoBarras: "",
-                  IdGrupo: "",
+                  Regional: "",
+                  Costo: "",
+                  Modelo: "",
+                  Descripcion: "",
+                  DescripcionActual: "",
+                  Tipo: "",
+                  Atributos: "",
+                  Fecha: "",
+                  Valor: "",
                 });
                 setShowModal(true);
               }}
@@ -246,29 +242,48 @@ const EquiposTecnologicos = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {["ID", "Código", "Nombre", "Marca", "Estado", "Acciones"].map(
-                  (header, index) => (
-                    <th
-                      key={index}
-                      onClick={() => {
-                        if (index < 5) {
-                          const keys = [
-                            "IdEquiposTecnologicos",
-                            "Codigo",
-                            "Nombre",
-                            "Marca",
-                            "Estado",
-                          ];
-                          requestSort(keys[index]);
-                        }
-                      }}
-                      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 5 ? "cursor-pointer hover:bg-gray-100" : ""
-                        }`}
-                    >
-                      {header}
-                    </th>
-                  )
-                )}
+                {[
+                  "ID",
+                  "Cuentadante",
+                  "Nombre",
+                  "Regional",
+                  "Costo",
+                  "Modelo",
+                  "Descripción",
+                  "Descripción Actual",
+                  "Tipo",
+                  "Atributos",
+                  "Fecha",
+                  "Valor",
+                  "Acciones",
+                ].map((header, index) => (
+                  <th
+                    key={index}
+                    onClick={() => {
+                      if (index < 13) {
+                        const keys = [
+                          "IdEquiposTecnologicos",
+                          "Cuentadante",
+                          "Nombre",
+                          "Regional",
+                          "Costo",
+                          "Modelo",
+                          "Descripcion",
+                          "DescripcionActual",
+                          "Tipo",
+                          "Atributos",
+                          "Fecha",
+                          "Valor",
+                        ];
+                        requestSort(keys[index]);
+                      }
+                    }}
+                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 13 ? "cursor-pointer hover:bg-gray-100" : ""
+                      }`}
+                  >
+                    {header}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -278,29 +293,19 @@ const EquiposTecnologicos = () => {
                     key={equipo.IdEquiposTecnologicos}
                     className="hover:bg-blue-50 transition-colors duration-150"
                   >
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {equipo.IdEquiposTecnologicos}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {equipo.Codigo}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {equipo.Nombre}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {equipo.Marca}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${equipo.Estado === "Activo"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                          }`}
-                      >
-                        {equipo.Estado}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-3">{equipo.IdEquiposTecnologicos}</td>
+                    <td className="px-4 py-3">{equipo.Cuentadante}</td>
+                    <td className="px-4 py-3">{equipo.Nombre}</td>
+                    <td className="px-4 py-3">{equipo.Regional}</td>
+                    <td className="px-4 py-3">{equipo.Costo}</td>
+                    <td className="px-4 py-3">{equipo.Modelo}</td>
+                    <td className="px-4 py-3">{equipo.Descripcion}</td>
+                    <td className="px-4 py-3">{equipo.DescripcionActual}</td>
+                    <td className="px-4 py-3">{equipo.Tipo}</td>
+                    <td className="px-4 py-3">{equipo.Atributos}</td>
+                    <td className="px-4 py-3">{equipo.Fecha ? equipo.Fecha.substring(0,10) : ""}</td>
+                    <td className="px-4 py-3">{equipo.Valor}</td>
+                    <td className="px-4 py-3">
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleEditEquipo(equipo)}
@@ -325,7 +330,7 @@ const EquiposTecnologicos = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan="14"
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     No se encontraron equipos tecnológicos
@@ -395,18 +400,18 @@ const EquiposTecnologicos = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Código
+                  Cuentadante
                 </label>
                 <input
                   type="text"
-                  value={newEquipo.Codigo}
+                  value={newEquipo.Cuentadante}
                   onChange={(e) =>
                     setNewEquipo({
                       ...newEquipo,
-                      Codigo: e.target.value,
+                      Cuentadante: e.target.value,
                     })
                   }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="border border-gray-300 p-2 rounded-lg w-full"
                 />
               </div>
               <div>
@@ -422,87 +427,151 @@ const EquiposTecnologicos = () => {
                       Nombre: e.target.value,
                     })
                   }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="border border-gray-300 p-2 rounded-lg w-full"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Marca
+                  Regional
                 </label>
                 <input
                   type="text"
-                  value={newEquipo.Marca}
+                  value={newEquipo.Regional}
                   onChange={(e) =>
                     setNewEquipo({
                       ...newEquipo,
-                      Marca: e.target.value,
+                      Regional: e.target.value,
                     })
                   }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="border border-gray-300 p-2 rounded-lg w-full"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Estado
+                  Costo
                 </label>
                 <input
-                  type="text"
-                  value={newEquipo.Estado}
+                  type="number"
+                  value={newEquipo.Costo}
                   onChange={(e) =>
                     setNewEquipo({
                       ...newEquipo,
-                      Estado: e.target.value,
+                      Costo: e.target.value,
                     })
                   }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="border border-gray-300 p-2 rounded-lg w-full"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ID Estado
+                  Modelo
                 </label>
                 <input
                   type="text"
-                  value={newEquipo.IdEstado}
+                  value={newEquipo.Modelo}
                   onChange={(e) =>
                     setNewEquipo({
                       ...newEquipo,
-                      IdEstado: e.target.value,
+                      Modelo: e.target.value,
                     })
                   }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="border border-gray-300 p-2 rounded-lg w-full"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ID Código Barras
+                  Descripción
                 </label>
                 <input
                   type="text"
-                  value={newEquipo.IdCodigoBarras}
+                  value={newEquipo.Descripcion}
                   onChange={(e) =>
                     setNewEquipo({
                       ...newEquipo,
-                      IdCodigoBarras: e.target.value,
+                      Descripcion: e.target.value,
                     })
                   }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="border border-gray-300 p-2 rounded-lg w-full"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ID Grupo
+                  Descripción Actual
                 </label>
                 <input
                   type="text"
-                  value={newEquipo.IdGrupo}
+                  value={newEquipo.DescripcionActual}
                   onChange={(e) =>
                     setNewEquipo({
                       ...newEquipo,
-                      IdGrupo: e.target.value,
+                      DescripcionActual: e.target.value,
                     })
                   }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="border border-gray-300 p-2 rounded-lg w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tipo
+                </label>
+                <input
+                  type="text"
+                  value={newEquipo.Tipo}
+                  onChange={(e) =>
+                    setNewEquipo({
+                      ...newEquipo,
+                      Tipo: e.target.value,
+                    })
+                  }
+                  className="border border-gray-300 p-2 rounded-lg w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Atributos
+                </label>
+                <input
+                  type="text"
+                  value={newEquipo.Atributos}
+                  onChange={(e) =>
+                    setNewEquipo({
+                      ...newEquipo,
+                      Atributos: e.target.value,
+                    })
+                  }
+                  className="border border-gray-300 p-2 rounded-lg w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Fecha
+                </label>
+                <input
+                  type="date"
+                  value={newEquipo.Fecha ? newEquipo.Fecha.substring(0, 10) : ""}
+                  onChange={(e) =>
+                    setNewEquipo({
+                      ...newEquipo,
+                      Fecha: e.target.value,
+                    })
+                  }
+                  className="border border-gray-300 p-2 rounded-lg w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Valor
+                </label>
+                <input
+                  type="number"
+                  value={newEquipo.Valor}
+                  onChange={(e) =>
+                    setNewEquipo({
+                      ...newEquipo,
+                      Valor: e.target.value,
+                    })
+                  }
+                  className="border border-gray-300 p-2 rounded-lg w-full"
                 />
               </div>
             </div>

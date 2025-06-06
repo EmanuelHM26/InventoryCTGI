@@ -8,32 +8,52 @@ const EquiposTecnologicos = sequelize.define('EquiposTecnologicos', {
     autoIncrement: true,
     allowNull: false,
   },
-  Codigo: {
-    type: DataTypes.BIGINT(12),
+  Cuentadante: {
+    type: DataTypes.BIGINT(20),
     allowNull: false,
   },
   Nombre: {
     type: DataTypes.STRING(100),
     allowNull: false,
   },
-  Marca: {
+  Regional: {
     type: DataTypes.STRING(100),
     allowNull: false,
   },
-  Estado: {
-    type: DataTypes.STRING(45),
+  Costo: {
+    type: DataTypes.BIGINT(15),
     allowNull: false,
   },
-  IdEstado: {
-    type: DataTypes.BIGINT(9),
+  Modelo: {
+    type: DataTypes.STRING(20),
     allowNull: false,
   },
   IdCodigoBarras: {
     type: DataTypes.INTEGER(11),
     allowNull: false,
   },
-  IdGrupo: {
-    type: DataTypes.INTEGER(11),
+  Descripcion: {
+    type: DataTypes.STRING(100),
+    allowNull: false,
+  },
+  DescripcionActual: {
+    type: DataTypes.STRING(300),
+    allowNull: false,
+  },
+  Tipo: {
+    type: DataTypes.BIGINT(10),
+    allowNull: false,
+  },
+  Atributos: {
+    type: DataTypes.STRING(200),
+    allowNull: false,
+  },
+  Fecha: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
+  Valor: {
+    type: DataTypes.BIGINT(20),
     allowNull: false,
   },
 }, {
