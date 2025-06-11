@@ -79,7 +79,7 @@ export const getAsignacionesByDays = async (req, res) => {
 export const confirmarDevolucion = async (req, res) => {
   try {
     const { idAsignaciones } = req.params;
-    const asignacion = await confirmarDevolucionService(idAsignaciones);
+    const asignacion = await confirmarDevolucionService(idAsignaciones, req.body);
     res.status(200).json(asignacion);
   } catch (error) {
     res.status(500).json({ message: `Error al confirmar la devolución: ${error.message}` });

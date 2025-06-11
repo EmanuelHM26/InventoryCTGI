@@ -16,16 +16,24 @@ const Asignaciones = () => {
   const [asignaciones, setAsignaciones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [showNovedadModal, setShowNovedadModal] = useState(false);
+  const [selectedNovedad, setSelectedNovedad] = useState('');
+  const [formTouched, setFormTouched] = useState(false);
   const [newAsignacion, setNewAsignacion] = useState({
     IdUsuario: "",
+    Nombre: "",
+    Apellido: "",
+    Documento: "",
     FechaAsignacion: "",
+    HoraAsignacion: "",
     Observacion: "",
     FechaDevolucion: "",
+    HoraDevolucion: "",
+    Novedad: "",
     Cantidad: "",
     Item: "",
     Estado: "Activo",
   });
-
   // Estados para paginación y búsqueda
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,12 +50,7 @@ const Asignaciones = () => {
 
   const fetchAsignaciones = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/asignaciones",
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.get("http://localhost:3000/api/asignaciones", { withCredentials: true });
       setAsignaciones(response.data);
     } catch (error) {
       console.error("Error al obtener asignaciones:", error);
@@ -57,55 +60,94 @@ const Asignaciones = () => {
   // Función para obtener los usuarios
   const fetchUsuarios = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/usuarios",
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.get("http://localhost:3000/api/usuarios", { withCredentials: true });
       setUsuarios(response.data);
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
     }
   };
 
+  // Llenar automáticamente Nombre, Apellido y Documento al seleccionar usuario
+  const handleUsuarioChange = (e) => {
+    const selectedId = e.target.value;
+    const usuario = usuarios.find((u) => u.IdUsuario.toString() === selectedId);
+    setNewAsignacion({
+      ...newAsignacion,
+      IdUsuario: selectedId,
+      Nombre: usuario ? usuario.Nombre : "",
+      Apellido: usuario ? usuario.Apellido : "",
+      Documento: usuario ? usuario.NumeroDocumento || "" : "",
+    });
+  };
+
   const handleCreateAsignacion = async () => {
+    // Validación de campos obligatorios
+    const requiredFields = {
+      IdUsuario: 'Usuario',
+      Nombre: 'Nombre',
+      Apellido: 'Apellido',
+      Documento: 'Documento',
+      Observacion: 'Observación',
+      Cantidad: 'Cantidad',
+      Item: 'Item',
+      Estado: 'Estado'
+    };
+
+    const missingFields = [];
+    for (const [field, label] of Object.entries(requiredFields)) {
+      if (!newAsignacion[field] || (field === 'Cantidad' && newAsignacion[field] <= 0)) {
+        missingFields.push(label);
+      }
+    }
+
+    if (missingFields.length > 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos requeridos',
+        text: `Por favor complete los siguientes campos: ${missingFields.join(', ')}`,
+        confirmButtonColor: '#3085d6'
+      });
+      return;
+    }
+
+    // Validación de fecha de devolución
+    if (newAsignacion.FechaDevolucion && newAsignacion.FechaAsignacion) {
+      if (new Date(newAsignacion.FechaDevolucion) < new Date(newAsignacion.FechaAsignacion)) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Fecha inválida',
+          text: 'La fecha de devolución no puede ser anterior a la fecha de asignación.',
+          confirmButtonColor: '#3085d6'
+        });
+        return;
+      }
+    }
+
     try {
       if (newAsignacion.IdAsignaciones) {
-        await axios.put(
-          `http://localhost:3000/api/asignaciones/${newAsignacion.IdAsignaciones}`,
-          newAsignacion,
-          { withCredentials: true }
-        );
-        Swal.fire({
-          icon: "success",
-          title: "Asignación actualizada",
-          text: "La asignación se actualizó correctamente.",
-          timer: 1800,
-          showConfirmButton: false,
-        });
+        await axios.put(`http://localhost:3000/api/asignaciones/${newAsignacion.IdAsignaciones}`, newAsignacion, { withCredentials: true });
+        Swal.fire({ icon: "success", title: "Asignación actualizada", text: "La asignación se actualizó correctamente.", timer: 1800, showConfirmButton: false });
       } else {
-        await axios.post(
-          "http://localhost:3000/api/asignaciones",
-          newAsignacion,
-          {
-            withCredentials: true,
-          }
-        );
-        Swal.fire({
-          icon: "success",
-          title: "Asignación creada",
-          text: "La asignación se creó correctamente.",
-          showConfirmButton: true,
-        });
+        const now = new Date();
+        newAsignacion.FechaAsignacion = newAsignacion.FechaAsignacion || now.toISOString().split("T")[0];
+        newAsignacion.HoraAsignacion = newAsignacion.HoraAsignacion || now.toTimeString().split(" ")[0];
+
+        await axios.post("http://localhost:3000/api/asignaciones", newAsignacion, { withCredentials: true });
+        Swal.fire({ icon: "success", title: "Asignación creada", text: "La asignación se creó correctamente.", showConfirmButton: true });
       }
       setShowModal(false);
       fetchAsignaciones();
       setNewAsignacion({
         IdUsuario: "",
+        Nombre: "",
+        Apellido: "",
+        Documento: "",
         FechaAsignacion: "",
+        HoraAsignacion: "",
         Observacion: "",
         FechaDevolucion: "",
+        HoraDevolucion: "",
+        Novedad: "",
         Cantidad: "",
         Item: "",
         Estado: "Activo",
@@ -114,14 +156,9 @@ const Asignaciones = () => {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Ocurrió un error al guardar la asignación.",
+        text: error.response?.data?.message || "Ocurrió un error al guardar la asignación."
       });
-      console.error(
-        newAsignacion.IdAsignaciones
-          ? "Error al actualizar asignación:"
-          : "Error al crear asignación:",
-        error
-      );
+      console.error(error);
     }
   };
 
@@ -160,6 +197,7 @@ const Asignaciones = () => {
       }
     });
   };
+
   const handleDeleteAsignacion = async (id) => {
     const result = await Swal.fire({
       title: "¿Estás seguro?",
@@ -201,61 +239,86 @@ const Asignaciones = () => {
 
   // Función para confirmar devolución de una asignación
   const handleConfirmarDevolucion = async (id) => {
-    const result = await Swal.fire({
-      title: "¿Confirmar devolución?",
-      text: "Se establecerá la fecha actual como fecha de devolución y el estado cambiará a 'Inactivo'.",
+    const { isConfirmed } = await Swal.fire({
+      title: "¿Hay alguna novedad que reportar?",
       icon: "question",
       showCancelButton: true,
-      confirmButtonColor: "#10b981",
-      cancelButtonColor: "#6b7280",
-      confirmButtonText: "Sí, confirmar",
-      cancelButtonText: "Cancelar",
+      confirmButtonText: "Sí",
+      cancelButtonText: "No",
     });
 
-    if (result.isConfirmed) {
-      try {
-        // IMPORTANTE: Hacer la petición PATCH sin datos en el body
-        const response = await axios.patch(
-          `http://localhost:3000/api/asignaciones/${id}/confirmar-devolucion`,
-          {}, // Body vacío - el backend maneja todo
-          { withCredentials: true }
-        );
+    let novedad = "";
+    if (isConfirmed) {
+      const { value: texto } = await Swal.fire({
+        title: "Describe la novedad",
+        input: "textarea",
+        inputPlaceholder: "Escribe aquí la novedad...",
+        showCancelButton: true,
+        confirmButtonText: "Guardar",
+      });
 
-        console.log('Respuesta del servidor:', response.data); // Para debug
-
-        // Recargar las asignaciones para mostrar los cambios
-        await fetchAsignaciones();
-
-        Swal.fire({
-          icon: "success",
-          title: "Devolución confirmada",
-          text: "La devolución se registró correctamente con la fecha actual.",
-          timer: 1800,
-          showConfirmButton: false,
-        });
-      } catch (error) {
-        console.error("Error completo:", error.response?.data || error.message);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: error.response?.data?.message || "Ocurrió un error al confirmar la devolución.",
-        });
+      if (texto) {
+        novedad = texto;
+      } else {
+        return;
       }
+    }
+
+    try {
+      const now = new Date();
+      const FechaDevolucion = getTodayLocal();
+      // Cambiar esta línea para formato HH:MM:SS
+      const HoraDevolucion = now.toTimeString().split(" ")[0].substring(0, 8);
+
+      await axios.patch(`http://localhost:3000/api/asignaciones/${id}/confirmar-devolucion`, {
+        FechaDevolucion,
+        HoraDevolucion,
+        Estado: "Inactivo",
+        Novedad: novedad || null, // Asegurar que se envíe null si está vacío
+      }, { withCredentials: true });
+
+      await fetchAsignaciones();
+
+      Swal.fire({
+        icon: "success",
+        title: "Devolución confirmada",
+        text: "La devolución fue registrada exitosamente.",
+        timer: 1800,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error("Error completo:", error.response?.data); // Para debug
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.response?.data?.message || "Error al confirmar devolución."
+      });
     }
   };
 
   // Formatear fecha para mostrar en formato legible
   const formatDate = (dateString) => {
     if (!dateString) return "";
-    // Mostrar la fecha tal cual viene (YYYY-MM-DD)
     return dateString;
   };
 
   function getTodayLocal() {
     const today = new Date();
     today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-    return today.toISOString().split('T')[0]; // Retorna la fecha en formato YYYY-MM-DD
+    return today.toISOString().split('T')[0];
   }
+
+  const truncateText = (text, maxLength = 10) => {
+    if (!text) return '';
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+  };
+
+  const handleShowNovedad = (novedad) => {
+    setSelectedNovedad(novedad || 'Sin novedad registrada');
+    setShowNovedadModal(true);
+  };
+
+
 
   // Funciones para la tabla mejorada
   const requestSort = (key) => {
@@ -317,7 +380,7 @@ const Asignaciones = () => {
   };
 
   return (
-    <div className="px-4 py-20 md:px-8 lg:px-10 max-w-full bg-gray-50 min-h-screen">
+    <div className="px-4 py-20 md:px-8 lg:px-2 max-w-full bg-gray-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
@@ -351,9 +414,15 @@ const Asignaciones = () => {
               onClick={() => {
                 setNewAsignacion({
                   IdUsuario: "",
+                  Nombre: "",
+                  Apellido: "",
+                  Documento: "",
                   FechaAsignacion: getTodayLocal(),
+                  HoraAsignacion: "",
                   Observacion: "",
-                  FechaDevolucion: getTodayLocal(),
+                  FechaDevolucion: "",
+                  HoraDevolucion: "",
+                  Novedad: "",
                   Cantidad: "",
                   Item: "",
                   Estado: "Activo",
@@ -375,9 +444,15 @@ const Asignaciones = () => {
                 {[
                   "ID",
                   "Usuario",
+                  "Nombre",
+                  "Apellido",
+                  "Documento",
                   "Fecha Asignación",
+                  "Hora Asignación",
                   "Observación",
                   "Fecha Devolución",
+                  "Hora Devolución",
+                  "Novedad",
                   "Cantidad",
                   "Item",
                   "Estado",
@@ -385,22 +460,7 @@ const Asignaciones = () => {
                 ].map((header, index) => (
                   <th
                     key={index}
-                    onClick={() => {
-                      if (index < 7) {
-                        const keys = [
-                          "IdAsignaciones",
-                          "IdUsuario",
-                          "FechaAsignacion",
-                          "Observacion",
-                          "FechaDevolucion",
-                          "Cantidad",
-                          "Item",
-                        ];
-                        requestSort(keys[index]);
-                      }
-                    }}
-                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 7 ? "cursor-pointer hover:bg-gray-100" : ""
-                      }`}
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
                     {header}
                   </th>
@@ -414,40 +474,67 @@ const Asignaciones = () => {
                     key={asignacion.IdAsignaciones}
                     className="hover:bg-blue-50 transition-colors duration-150"
                   >
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.IdAsignaciones}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.Usuario?.Usuario || 'N/A'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                      {asignacion.Nombre}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                      {asignacion.Apellido}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                      {asignacion.Documento}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(asignacion.FechaAsignacion)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                      {asignacion.HoraAsignacion}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.Observacion}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(asignacion.FechaDevolucion)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                      {asignacion.HoraDevolucion}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                      {asignacion.Novedad ? (
+                        <button
+                          onClick={() => handleShowNovedad(asignacion.Novedad)}
+                          className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left"
+                          title="Click para ver novedad completa"
+                        >
+                          {truncateText(asignacion.Novedad)}
+                        </button>
+                      ) : (
+                        <span className="text-gray-400">Sin novedad</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.Cantidad}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.Item}
                     </td>
-                    {/* ESTADO CON COLORES */}
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
+                    <td className="px-3 py-2 whitespace-nowrap text-sm">
                       <span
                         className={
                           asignacion.Estado === "Activo"
-                            ? "bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold"
-                            : "bg-red-100 text-red-700 px-3 py-1 rounded-full font-semibold"
+                            ? "bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold"
+                            : "bg-red-100 text-red-700 px-2 py-1 rounded-full font-semibold"
                         }
                       >
                         {asignacion.Estado}
                       </span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleEditAsignacion(asignacion)}
@@ -467,7 +554,6 @@ const Asignaciones = () => {
                         >
                           <Trash2 size={16} />
                         </button>
-
                         {asignacion.Estado === "Activo" && (
                           <button
                             onClick={() => handleConfirmarDevolucion(asignacion.IdAsignaciones)}
@@ -484,7 +570,7 @@ const Asignaciones = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="9"
+                    colSpan="15"
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     No se encontraron asignaciones
@@ -554,17 +640,14 @@ const Asignaciones = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Usuario
+                  Usuario <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={newAsignacion.IdUsuario}
-                  onChange={(e) =>
-                    setNewAsignacion({
-                      ...newAsignacion,
-                      IdUsuario: e.target.value,
-                    })
-                  }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={handleUsuarioChange}
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.IdUsuario ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
+                  required
                 >
                   <option value="">Seleccione un usuario</option>
                   {usuarios.map((usuario) => (
@@ -573,26 +656,85 @@ const Asignaciones = () => {
                     </option>
                   ))}
                 </select>
+                {!newAsignacion.IdUsuario && formTouched && (
+                  <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+                )}
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha Asignación
+                  Nombre <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="date"
-                  value={newAsignacion.FechaAsignacion}
+                  type="text"
+                  value={newAsignacion.Nombre}
                   onChange={(e) =>
                     setNewAsignacion({
                       ...newAsignacion,
-                      FechaAsignacion: e.target.value,
+                      Nombre: e.target.value,
                     })
                   }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Nombre ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
+                  disabled
+                  required
                 />
+                {!newAsignacion.Nombre && formTouched && (
+                  <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+                )}
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Observación
+                  Apellido <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newAsignacion.Apellido}
+                  onChange={(e) =>
+                    setNewAsignacion({
+                      ...newAsignacion,
+                      Apellido: e.target.value,
+                    })
+                  }
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Apellido ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
+                  disabled
+                  required
+                />
+                {!newAsignacion.Apellido && formTouched && (
+                  <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Documento <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={newAsignacion.Documento}
+                  onChange={(e) =>
+                    setNewAsignacion({
+                      ...newAsignacion,
+                      Documento: e.target.value,
+                    })
+                  }
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Documento ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
+                  disabled
+                  required
+                />
+                {!newAsignacion.Documento && formTouched && (
+                  <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+                )}
+              </div>
+
+        
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Observación <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -603,28 +745,22 @@ const Asignaciones = () => {
                       Observacion: e.target.value,
                     })
                   }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Observacion ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
+                  placeholder="Ingrese una observación"
+                  required
+                  maxLength={500}
                 />
+                {!newAsignacion.Observacion && formTouched && (
+                  <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+                )}
               </div>
+
+            
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Fecha Devolución
-                </label>
-                <input
-                  type="date"
-                  value={newAsignacion.FechaDevolucion}
-                  onChange={(e) =>
-                    setNewAsignacion({
-                      ...newAsignacion,
-                      FechaDevolucion: e.target.value,
-                    })
-                  }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Cantidad
+                  Cantidad <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -635,15 +771,23 @@ const Asignaciones = () => {
                       Cantidad: e.target.value,
                     })
                   }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Cantidad || newAsignacion.Cantidad <= 0 ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
+                  min="1"
+                  max="9999"
+                  placeholder="Ingrese la cantidad"
+                  required
                 />
+                {(!newAsignacion.Cantidad || newAsignacion.Cantidad <= 0) && formTouched && (
+                  <p className="text-red-500 text-xs mt-1">Debe ingresar una cantidad válida (mayor a 0)</p>
+                )}
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Item
+                  Item <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   value={newAsignacion.Item}
                   onChange={(e) =>
                     setNewAsignacion({
@@ -651,14 +795,23 @@ const Asignaciones = () => {
                       Item: e.target.value,
                     })
                   }
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Item ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
+                  required
+                >
+                  <option value="">Seleccione un item</option>
+                  <option value="Equipo Tecnologico">Equipo Tecnológico</option>
+                  <option value="Producto Consumible">Producto Consumible</option>
+                </select>
+                {!newAsignacion.Item && formTouched && (
+                  <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+                )}
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Estado
+                Estado <span className="text-red-500">*</span>
               </label>
               <select
                 value={newAsignacion.Estado}
@@ -668,12 +821,16 @@ const Asignaciones = () => {
                     Estado: e.target.value,
                   })
                 }
-                className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Estado ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
+                required
               >
+                <option value="">Seleccione un estado</option>
                 <option value="Activo">Activo</option>
-                <option value="Inactivo">Inactivo</option>
-                <option value="Devuelto">Devuelto</option>
               </select>
+              {!newAsignacion.Estado && formTouched && (
+                <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
@@ -684,8 +841,33 @@ const Asignaciones = () => {
                 Cancelar
               </button>
               <button
-                onClick={handleCreateAsignacion}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                onClick={() => {
+                  setFormTouched(true);
+                  handleCreateAsignacion();
+                }}
+                disabled={
+                  !newAsignacion.IdUsuario ||
+                  !newAsignacion.Nombre ||
+                  !newAsignacion.Apellido ||
+                  !newAsignacion.Documento ||
+                  !newAsignacion.Observacion ||
+                  !newAsignacion.Cantidad ||
+                  newAsignacion.Cantidad <= 0 ||
+                  !newAsignacion.Item ||
+                  !newAsignacion.Estado
+                }
+                className={`px-4 py-2 rounded-lg transition-colors duration-200 ${!newAsignacion.IdUsuario ||
+                  !newAsignacion.Nombre ||
+                  !newAsignacion.Apellido ||
+                  !newAsignacion.Documento ||
+                  !newAsignacion.Observacion ||
+                  !newAsignacion.Cantidad ||
+                  newAsignacion.Cantidad <= 0 ||
+                  !newAsignacion.Item ||
+                  !newAsignacion.Estado
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
               >
                 {newAsignacion.IdAsignaciones ? "Actualizar" : "Crear"}
               </button>
@@ -693,6 +875,43 @@ const Asignaciones = () => {
           </div>
         </div>
       )}
+
+
+
+      {/* Modal para mostrar novedad completa */}
+      {showNovedadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">
+                Novedad Completa
+              </h3>
+              <button
+                onClick={() => setShowNovedadModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="mb-6">
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <p className="text-gray-700 whitespace-pre-wrap break-words">
+                  {selectedNovedad}
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowNovedadModal(false)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

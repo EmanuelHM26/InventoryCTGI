@@ -162,7 +162,8 @@ export const getAsignacionesByDaysService = async (days = 7) => {
 //Confirmar una asignación
 
 //Confirmar una asignación - VERSIÓN CORREGIDA
-export const confirmarDevolucionService = async (idAsignaciones) => {
+//Confirmar una asignación - VERSIÓN CORREGIDA
+export const confirmarDevolucionService = async (idAsignaciones, { FechaDevolucion, HoraDevolucion, Novedad }) => {
   try {
     const asignacion = await Asignaciones.findOne({
       where: {
@@ -178,14 +179,11 @@ export const confirmarDevolucionService = async (idAsignaciones) => {
       throw new Error("Esta asignación ya ha sido devuelta");
     }
 
-    // CORRECCIÓN 1: Crear fecha actual sin ajustes de timezone
-    const fechaActual = new Date();
-    fechaActual.setMinutes(fechaActual.getMinutes() - fechaActual.getTimezoneOffset());
-    const fechaFormateada = fechaActual.toISOString().slice(0, 10);
-
     await asignacion.update({
-      FechaDevolucion: fechaFormateada,
-      Estado: 'Inactivo'
+      FechaDevolucion,
+      HoraDevolucion,
+      Estado: 'Inactivo',
+      Novedad: Novedad || null
     });
 
     // Retornar la asignación actualizada con los datos del usuario

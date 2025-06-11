@@ -1,4 +1,4 @@
-import { DataTypes, STRING } from 'sequelize';
+import { DataTypes } from 'sequelize';
 import sequelize from "../config/database.js";
 
 const Asignaciones = sequelize.define('Asignaciones', {
@@ -9,17 +9,32 @@ const Asignaciones = sequelize.define('Asignaciones', {
     allowNull: false,
   },
   IdUsuario: {
-    type: DataTypes.BIGINT(12),
+    type: DataTypes.BIGINT(20),
     allowNull: false,
     references: {
-      model: 'usuarios', // Nombre de la tabla referenciada
-      key: 'IdUsuario',  // Llave primaria de la tabla referenciada
+      model: 'usuarios',
+      key: 'IdUsuario',
     },
+  },
+  Nombre: {
+    type: DataTypes.STRING(50),
+    allowNull: false,
+  },
+  Apellido: {
+    type: DataTypes.STRING(50),
+    allowNull: false,
+  },
+  Documento: {
+    type: DataTypes.STRING(20),
+    allowNull: false,
   },
   FechaAsignacion: {
     type: DataTypes.DATEONLY,
     allowNull: false,
-
+  },
+  HoraAsignacion: {
+    type: DataTypes.TIME,
+    allowNull: false,
   },
   Observacion: {
     type: DataTypes.STRING(45),
@@ -27,29 +42,39 @@ const Asignaciones = sequelize.define('Asignaciones', {
   },
   FechaDevolucion: {
     type: DataTypes.DATEONLY,
-    allowNull: false,
+    allowNull: true,
+    defaultValue: null,
   },
-  Cantidad:{
+  HoraDevolucion: {
+    type: DataTypes.TIME,
+    allowNull: true,
+    defaultValue: null,
+  },
+  Novedad: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    defaultValue: null,
+  },
+  Cantidad: {
     type: DataTypes.STRING(100),
     allowNull: false,
   },
-  Estado: {
-  type: DataTypes.STRING(45),
-  allowNull: false,
-  defaultValue: 'Activo', // Puedes cambiar el valor por defecto si lo deseas
-},
   Item: {
     type: DataTypes.STRING(100),
     allowNull: false,
   },
+  Estado: {
+    type: DataTypes.STRING(45),
+    allowNull: false,
+    defaultValue: 'Activo',
+  },
 }, {
   tableName: 'asignaciones',
-  timestamps: false, // Desactiva createdAt y updatedAt si no están en la tabla
+  timestamps: false,
   charset: 'utf8',
   collate: 'utf8_general_ci',
 });
 
-// Esta función se llamará después de definir todos los modelos
 export const setupAsignacionesAssociations = (models) => {
   Asignaciones.belongsTo(models.Usuario, {
     foreignKey: 'IdUsuario',
