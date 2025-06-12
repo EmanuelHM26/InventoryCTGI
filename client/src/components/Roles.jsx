@@ -347,14 +347,32 @@ const Roles = () => {
             </h2>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre del Rol</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nombre del Rol <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 value={newRole.NombreRol}
-                onChange={(e) => setNewRole({ ...newRole, NombreRol: e.target.value })}
+                onChange={(e) => {
+                  // Solo permite letras, espacios y acentos, elimina números
+                  const value = e.target.value.replace(/[0-9]/g, "");
+                  setNewRole({ ...newRole, NombreRol: value });
+                }}
                 className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Ingrese el nombre del rol"
+                maxLength={50}
               />
+              {showModal && !newRole.NombreRol.trim() && (
+                <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+              )}
+              {showModal && /[0-9]/.test(newRole.NombreRol) && (
+                <p className="text-red-500 text-xs mt-1">No se permiten números en el nombre del rol</p>
+              )}
+              {showModal && !!newRole.NombreRol && !/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(newRole.NombreRol.trim()) && (
+                <p className="text-red-500 text-xs mt-1">
+                  El nombre del rol solo puede contener letras y espacios, no solo caracteres especiales.
+                </p>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">

@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, UserPlus, X, Save, Eye, EyeOff, Check } from "lucide-react";
 import Swal from "sweetalert2";
+import { useForm } from "react-hook-form";
 
 const UsuariosSoftware = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -20,6 +22,12 @@ const UsuariosSoftware = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formVisible, setFormVisible] = useState(false);
   const itemsPerPage = 10;
+  const { register, handleSubmit, reset, formState: { errors }, watch, setValue } = useForm();
+
+  // Estados para validaciones en tiempo real
+  const [validationErrors, setValidationErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editErrors, setEditErrors] = useState({});
 
   useEffect(() => {
     fetchUsuarios();
@@ -46,6 +54,12 @@ const UsuariosSoftware = () => {
       setFilteredUsuarios(response.data);
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
+      await Swal.fire({
+        icon: "error",
+        title: "Error de conexión",
+        text: "No se pudieron cargar los usuarios. Verifique su conexión.",
+        confirmButtonText: "Aceptar"
+      });
     }
   };
 
@@ -55,22 +69,179 @@ const UsuariosSoftware = () => {
       setRoles(response.data);
     } catch (error) {
       console.error("Error al obtener roles:", error);
+      await Swal.fire({
+        icon: "error",
+        title: "Error de conexión",
+        text: "No se pudieron cargar los roles. Verifique su conexión.",
+        confirmButtonText: "Aceptar"
+      });
     }
   };
 
-  const handleCreateUser = async () => {
-    if (!newUser.Usuario || !newUser.Correo || !newUser.PasswordTexto || !newUser.IdRol) {
-      Swal.fire({
-        icon: "warning",
-        title: "Campos obligatorios",
-        text: "Todos los campos son obligatorios.",
-        confirmButtonText: "Aceptar"
-      });
-      return;
+  // Validaciones en tiempo real
+  const validateField = (fieldName, value) => {
+    const errors = {};
+
+    switch (fieldName) {
+      case 'Usuario':
+        if (!value.trim()) {
+          errors.Usuario = "El usuario es obligatorio";
+        } else if (value.length < 3) {
+          errors.Usuario = "El usuario debe tener al menos 3 caracteres";
+        } else if (value.length > 20) {
+          errors.Usuario = "El usuario no puede tener más de 20 caracteres";
+        } else if (!/^[A-Za-z0-9_]+$/.test(value)) {
+          errors.Usuario = "Solo se permiten letras, números y guión bajo";
+        } else if (/^\d+$/.test(value)) {
+          errors.Usuario = "El usuario no puede ser solo números";
+        } else if (/^_+$/.test(value)) {
+          errors.Usuario = "El usuario no puede ser solo guiones bajos";
+        }
+        break;
+
+      case 'Correo':
+        if (!value.trim()) {
+          errors.Correo = "El correo es obligatorio";
+        } else if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value)) {
+          errors.Correo = "Formato de correo inválido";
+        } else if (value.length > 100) {
+          errors.Correo = "El correo es demasiado largo";
+        }
+        break;
+
+      case 'PasswordTexto':
+        if (!value) {
+          errors.PasswordTexto = "La contraseña es obligatoria";
+        } else if (value.length < 6) {
+          errors.PasswordTexto = "La contraseña debe tener al menos 6 caracteres";
+        } else if (value.length > 50) {
+          errors.PasswordTexto = "La contraseña es demasiado larga";
+        } else if (!/[A-Za-z]/.test(value)) {
+          errors.PasswordTexto = "La contraseña debe contener al menos una letra";
+        } else if (!/\d/.test(value)) {
+          errors.PasswordTexto = "La contraseña debe contener al menos un número";
+        } else if (/\s/.test(value)) {
+          errors.PasswordTexto = "La contraseña no puede contener espacios";
+        }
+        break;
+
+      case 'IdRol':
+        if (!value) {
+          errors.IdRol = "Debe seleccionar un rol";
+        }
+        break;
+
+      default:
+        break;
     }
+
+    return errors;
+  };
+
+  // Validación completa del formulario
+  const validateForm = (data) => {
+    let allErrors = {};
+
+    Object.keys(data).forEach(field => {
+      const fieldErrors = validateField(field, data[field]);
+      allErrors = { ...allErrors, ...fieldErrors };
+    });
+
+    return allErrors;
+  };
+
+  // Verificar duplicados
+  const checkDuplicates = async (data, isEdit = false, currentId = null) => {
+    const duplicateErrors = {};
+
+    // Verificar usuario duplicado
+    const userExists = usuarios.find(user =>
+      user.Usuario.toLowerCase() === data.Usuario.toLowerCase() &&
+      (!isEdit || user.IdRegistroLogin !== currentId)
+    );
+
+    if (userExists) {
+      duplicateErrors.Usuario = "Este nombre de usuario ya existe";
+    }
+
+    // Verificar correo duplicado
+    const emailExists = usuarios.find(user =>
+      user.Correo.toLowerCase() === data.Correo.toLowerCase() &&
+      (!isEdit || user.IdRegistroLogin !== currentId)
+    );
+
+    if (emailExists) {
+      duplicateErrors.Correo = "Este correo ya está registrado";
+    }
+
+    return duplicateErrors;
+  };
+
+  // Validaciones para edición en línea
+  const validateEditField = (fieldName, value, userId) => {
+    const fieldErrors = validateField(fieldName, value);
+
+    // Verificar duplicados para edición
+    if (fieldName === 'Usuario' && !fieldErrors.Usuario) {
+      const userExists = usuarios.find(user =>
+        user.Usuario.toLowerCase() === value.toLowerCase() &&
+        user.IdRegistroLogin !== userId
+      );
+      if (userExists) {
+        fieldErrors.Usuario = "Este nombre de usuario ya existe";
+      }
+    }
+
+    if (fieldName === 'Correo' && !fieldErrors.Correo) {
+      const emailExists = usuarios.find(user =>
+        user.Correo.toLowerCase() === value.toLowerCase() &&
+        user.IdRegistroLogin !== userId
+      );
+      if (emailExists) {
+        fieldErrors.Correo = "Este correo ya está registrado";
+      }
+    }
+
+    return fieldErrors;
+  };
+
+  const handleCreateUser = async (data) => {
+    setIsSubmitting(true);
+
     try {
-      await axios.post("http://localhost:3000/api/register", newUser);
-      setNewUser({ Usuario: "", Correo: "", PasswordTexto: "", IdRol: "" });
+      // Validaciones del formulario
+      const formErrors = validateForm(data);
+      if (Object.keys(formErrors).length > 0) {
+        setValidationErrors(formErrors);
+        await Swal.fire({
+          icon: "warning",
+          title: "Errores de validación",
+          text: "Por favor, corrija los errores en el formulario.",
+          confirmButtonText: "Aceptar"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Verificar duplicados
+      const duplicateErrors = await checkDuplicates(data);
+      if (Object.keys(duplicateErrors).length > 0) {
+        setValidationErrors(duplicateErrors);
+        await Swal.fire({
+          icon: "warning",
+          title: "Datos duplicados",
+          text: Object.values(duplicateErrors).join(". "),
+          confirmButtonText: "Aceptar"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Limpiar errores de validación
+      setValidationErrors({});
+
+      await axios.post("http://localhost:3000/api/register", data);
+      reset();
       setFormVisible(false);
       fetchUsuarios();
       await Swal.fire({
@@ -80,20 +251,44 @@ const UsuariosSoftware = () => {
         confirmButtonText: "Aceptar"
       });
     } catch (error) {
+      let errorMessage = "Ocurrió un error al crear el usuario.";
+
+      if (error.response) {
+        if (error.response.status === 400) {
+          errorMessage = "Datos inválidos. Verifique la información ingresada.";
+        } else if (error.response.status === 409) {
+          errorMessage = "El usuario o correo ya existe.";
+        } else if (error.response.status === 500) {
+          errorMessage = "Error interno del servidor.";
+        }
+      }
+
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Ocurrió un error al crear el usuario.",
+        text: errorMessage,
         confirmButtonText: "Aceptar"
       });
       console.error("Error al crear usuario:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDeleteUser = async (id) => {
+    if (!id) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Error",
+        text: "ID de usuario inválido.",
+        confirmButtonText: "Aceptar"
+      });
+      return;
+    }
+
     const result = await Swal.fire({
       title: "¿Estás seguro?",
-      text: "Esta acción eliminará el usuario. ¿Deseas continuar?",
+      text: "Esta acción eliminará el usuario permanentemente. ¿Deseas continuar?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -113,10 +308,22 @@ const UsuariosSoftware = () => {
           confirmButtonText: "Aceptar"
         });
       } catch (error) {
+        let errorMessage = "Ocurrió un error al eliminar el usuario.";
+
+        if (error.response) {
+          if (error.response.status === 404) {
+            errorMessage = "Usuario no encontrado.";
+          } else if (error.response.status === 403) {
+            errorMessage = "No tiene permisos para eliminar este usuario.";
+          } else if (error.response.status === 500) {
+            errorMessage = "Error interno del servidor.";
+          }
+        }
+
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: "Ocurrió un error al eliminar el usuario.",
+          text: errorMessage,
           confirmButtonText: "Aceptar"
         });
         console.error("Error al eliminar usuario:", error);
@@ -135,14 +342,53 @@ const UsuariosSoftware = () => {
       return;
     }
 
+    // Validar campos editados
+    let hasErrors = false;
+    const newEditErrors = {};
+
+    // Validar Usuario
+    const userErrors = validateEditField('Usuario', editingUser.Usuario, editingUser.IdRegistroLogin);
+    if (Object.keys(userErrors).length > 0) {
+      newEditErrors.Usuario = userErrors.Usuario;
+      hasErrors = true;
+    }
+
+    // Validar Correo
+    const emailErrors = validateEditField('Correo', editingUser.Correo, editingUser.IdRegistroLogin);
+    if (Object.keys(emailErrors).length > 0) {
+      newEditErrors.Correo = emailErrors.Correo;
+      hasErrors = true;
+    }
+
+    // Validar Rol
+    const rolErrors = validateEditField('IdRol', editingUser.IdRol, editingUser.IdRegistroLogin);
+    if (Object.keys(rolErrors).length > 0) {
+      newEditErrors.IdRol = rolErrors.IdRol;
+      hasErrors = true;
+    }
+
+    setEditErrors(newEditErrors);
+
+    if (hasErrors) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Errores de validación",
+        text: "Por favor, corrija los errores antes de guardar.",
+        confirmButtonText: "Aceptar"
+      });
+      return;
+    }
+
+    const originalUser = usuarios.find((u) => u.IdRegistroLogin === editingUser.IdRegistroLogin);
     const updatedFields = {};
-    if (editingUser.Usuario !== usuarios.find((u) => u.IdRegistroLogin === editingUser.IdRegistroLogin)?.Usuario) {
+
+    if (editingUser.Usuario !== originalUser?.Usuario) {
       updatedFields.Usuario = editingUser.Usuario;
     }
-    if (editingUser.Correo !== usuarios.find((u) => u.IdRegistroLogin === editingUser.IdRegistroLogin)?.Correo) {
+    if (editingUser.Correo !== originalUser?.Correo) {
       updatedFields.Correo = editingUser.Correo;
     }
-    if (editingUser.IdRol !== usuarios.find((u) => u.IdRegistroLogin === editingUser.IdRegistroLogin)?.IdRol) {
+    if (editingUser.IdRol !== originalUser?.IdRol) {
       updatedFields.IdRol = editingUser.IdRol;
     }
 
@@ -153,12 +399,15 @@ const UsuariosSoftware = () => {
         text: "No se han realizado cambios.",
         confirmButtonText: "Aceptar"
       });
+      setEditingUser(null);
+      setEditErrors({});
       return;
     }
 
     try {
       await axios.put(`http://localhost:3000/api/users/${editingUser.IdRegistroLogin}`, updatedFields);
       setEditingUser(null);
+      setEditErrors({});
       fetchUsuarios();
       await Swal.fire({
         icon: "success",
@@ -167,10 +416,24 @@ const UsuariosSoftware = () => {
         confirmButtonText: "Aceptar"
       });
     } catch (error) {
+      let errorMessage = "Ocurrió un error al actualizar el usuario.";
+
+      if (error.response) {
+        if (error.response.status === 400) {
+          errorMessage = "Datos inválidos. Verifique la información ingresada.";
+        } else if (error.response.status === 404) {
+          errorMessage = "Usuario no encontrado.";
+        } else if (error.response.status === 409) {
+          errorMessage = "El usuario o correo ya existe.";
+        } else if (error.response.status === 500) {
+          errorMessage = "Error interno del servidor.";
+        }
+      }
+
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Ocurrió un error al actualizar el usuario.",
+        text: errorMessage,
         confirmButtonText: "Aceptar"
       });
       console.error("Error al actualizar usuario:", error);
@@ -179,6 +442,24 @@ const UsuariosSoftware = () => {
 
   const cancelEdit = () => {
     setEditingUser(null);
+    setEditErrors({});
+  };
+
+  const handleEditFieldChange = (field, value) => {
+    const updatedUser = { ...editingUser, [field]: value };
+    setEditingUser(updatedUser);
+
+    // Validar en tiempo real
+    const fieldErrors = validateEditField(field, value, editingUser.IdRegistroLogin);
+    const newEditErrors = { ...editErrors };
+
+    if (Object.keys(fieldErrors).length > 0) {
+      newEditErrors[field] = fieldErrors[field];
+    } else {
+      delete newEditErrors[field];
+    }
+
+    setEditErrors(newEditErrors);
   };
 
   // Ordenamiento
@@ -227,6 +508,7 @@ const UsuariosSoftware = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                maxLength={50}
               />
               <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
               {searchTerm && (
@@ -240,7 +522,13 @@ const UsuariosSoftware = () => {
             </div>
 
             <button
-              onClick={() => setFormVisible(!formVisible)}
+              onClick={() => {
+                setFormVisible(!formVisible);
+                if (!formVisible) {
+                  setValidationErrors({});
+                  reset();
+                }
+              }}
               className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
             >
               <UserPlus size={18} className="mr-2" />
@@ -253,73 +541,148 @@ const UsuariosSoftware = () => {
         {formVisible && (
           <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
             <h2 className="text-lg font-semibold mb-4 text-gray-700">Crear Nuevo Usuario</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
-                <input
-                  type="text"
-                  value={newUser.Usuario}
-                  onChange={(e) => setNewUser({ ...newUser, Usuario: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Nombre de usuario"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Correo</label>
-                <input
-                  type="email"
-                  value={newUser.Correo}
-                  onChange={(e) => setNewUser({ ...newUser, Correo: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="correo@ejemplo.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                <div className="relative">
+            <form onSubmit={handleSubmit(handleCreateUser)}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Usuario */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Usuario <span className="text-red-500">*</span>
+                  </label>
                   <input
-                    type={showPassword ? "text" : "password"}
-                    value={newUser.PasswordTexto}
-                    onChange={(e) => setNewUser({ ...newUser, PasswordTexto: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Contraseña"
+                    type="text"
+                    {...register("Usuario", {
+                      required: "El usuario es obligatorio",
+                      minLength: { value: 3, message: "Mínimo 3 caracteres" },
+                      maxLength: { value: 20, message: "Máximo 20 caracteres" },
+                      pattern: {
+                        value: /^[A-Za-z0-9_]+$/,
+                        message: "Solo letras, números y guión bajo"
+                      },
+                      validate: {
+                        notOnlyNumbers: value => !/^\d+$/.test(value) || "No puede ser solo números",
+                        notOnlyUnderscores: value => !/^_+$/.test(value) || "No puede ser solo guiones bajos"
+                      }
+                    })}
+                    className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.Usuario || validationErrors.Usuario ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    placeholder="Nombre de usuario"
+                    maxLength={20}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-2.5 text-gray-500"
+                  {(errors.Usuario || validationErrors.Usuario) && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.Usuario?.message || validationErrors.Usuario}
+                    </p>
+                  )}
+                </div>
+
+                {/* Correo */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Correo <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    {...register("Correo", {
+                      required: "El correo es obligatorio",
+                      maxLength: { value: 100, message: "Máximo 100 caracteres" },
+                      pattern: {
+                        value: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/,
+                        message: "Correo no válido"
+                      }
+                    })}
+                    className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.Correo || validationErrors.Correo ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    placeholder="correo@ejemplo.com"
+                    maxLength={100}
+                  />
+                  {(errors.Correo || validationErrors.Correo) && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.Correo?.message || validationErrors.Correo}
+                    </p>
+                  )}
+                </div>
+
+                {/* Contraseña */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Contraseña <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      {...register("PasswordTexto", {
+                        required: "La contraseña es obligatoria",
+                        minLength: { value: 6, message: "Mínimo 6 caracteres" },
+                        maxLength: { value: 50, message: "Máximo 50 caracteres" },
+                        validate: {
+                          hasLetter: value => /[A-Za-z]/.test(value) || "Debe contener al menos una letra",
+                          hasNumber: value => /\d/.test(value) || "Debe contener al menos un número",
+                          noSpaces: value => !/\s/.test(value) || "No puede contener espacios"
+                        }
+                      })}
+                      className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${errors.PasswordTexto || validationErrors.PasswordTexto ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                      placeholder="Contraseña"
+                      maxLength={50}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2 top-2.5 text-gray-500 hover:text-gray-700"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  {(errors.PasswordTexto || validationErrors.PasswordTexto) && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.PasswordTexto?.message || validationErrors.PasswordTexto}
+                    </p>
+                  )}
+                </div>
+
+                {/* Rol */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Rol <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    {...register("IdRol", {
+                      required: "Debe seleccionar un rol"
+                    })}
+                    className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.IdRol || validationErrors.IdRol ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   >
-                    {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
-                  </button>
+                    <option value="">Seleccionar Rol</option>
+                    {roles.map((role) => (
+                      <option key={role.IdRol} value={role.IdRol}>
+                        {role.NombreRol}
+                      </option>
+                    ))}
+                  </select>
+                  {(errors.IdRol || validationErrors.IdRol) && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.IdRol?.message || validationErrors.IdRol}
+                    </p>
+                  )}
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-                <select
-                  value={newUser.IdRol}
-                  onChange={(e) => setNewUser({ ...newUser, IdRol: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <div className="mt-4 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`px-4 py-2 rounded-lg transition-colors duration-200 flex items-center ${isSubmitting
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-green-600 hover:bg-green-700'
+                    } text-white`}
                 >
-                  <option value="">Seleccionar Rol</option>
-                  {roles.map((role) => (
-                    <option key={role.IdRol} value={role.IdRol}>
-                      {role.NombreRol}
-                    </option>
-                  ))}
-                </select>
+                  <Plus size={18} className="mr-2" />
+                  {isSubmitting ? "Creando..." : "Crear Usuario"}
+                </button>
               </div>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={handleCreateUser}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center"
-              >
-                <Plus size={18} className="mr-2" />
-                Crear Usuario
-              </button>
-            </div>
+            </form>
           </div>
         )}
+
 
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
