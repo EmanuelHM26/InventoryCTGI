@@ -9,8 +9,10 @@ import {
   Plus,
   X,
   Check,
+  Eye,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import BarcodeReader from './BarcodeReader';
 
 const Asignaciones = () => {
   const [asignaciones, setAsignaciones] = useState([]);
@@ -18,9 +20,12 @@ const Asignaciones = () => {
   const [showModal, setShowModal] = useState(false);
   const [showNovedadModal, setShowNovedadModal] = useState(false);
   const [selectedNovedad, setSelectedNovedad] = useState('');
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedAsignacion, setSelectedAsignacion] = useState(null);
   const [formTouched, setFormTouched] = useState(false);
   const [newAsignacion, setNewAsignacion] = useState({
     IdUsuario: "",
+    Usuario: "",
     Nombre: "",
     Apellido: "",
     Documento: "",
@@ -42,6 +47,11 @@ const Asignaciones = () => {
     direction: "ascending",
   });
   const itemsPerPage = 8;
+
+  //Estados para el lector de código de barras
+  const [barcodeMode, setBarcodeMode] = useState('user'); // 'user' o 'equipment'
+  const [scannedEquipment, setScannedEquipment] = useState([]);
+  const [showBarcodeInstructions, setShowBarcodeInstructions] = useState(false);
 
   useEffect(() => {
     fetchAsignaciones();
@@ -67,6 +77,92 @@ const Asignaciones = () => {
     }
   };
 
+  // Función para manejar el escaneo de código de barras
+  // Función para manejar códigos de barras escaneados
+  const handleBarcodeScan = async (scannedCode) => {
+    if (!showModal) return; // Solo procesar si el modal está abierto
+
+    try {
+      if (barcodeMode === 'user') {
+        // Buscar usuario por documento
+        const usuario = usuarios.find(
+          u => String(u.NumeroDocumento).trim() === String(scannedCode).trim()
+        );
+
+        if (usuario) {
+          setNewAsignacion({
+            ...newAsignacion,
+            IdUsuario: usuario.IdUsuario.toString(),
+            Nombre: usuario.Nombre,
+            Apellido: usuario.Apellido,
+            Documento: usuario.NumeroDocumento || "",
+            Usuario: usuario.Usuario || "", // Agregar esta línea
+          });
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Usuario encontrado',
+            text: `${usuario.Nombre} ${usuario.Apellido}`,
+            timer: 1500,
+            showConfirmButton: false
+          });
+
+          // Cambiar automáticamente a modo equipo después de escanear usuario
+          setBarcodeMode('equipment');
+          setShowBarcodeInstructions(true);
+          setTimeout(() => setShowBarcodeInstructions(false), 3000);
+        } else {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Usuario no encontrado',
+            text: 'No se encontró un usuario con ese documento',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
+      } else if (barcodeMode === 'equipment') {
+        // Agregar equipo escaneado a la lista
+        const existingEquipment = scannedEquipment.find(eq => eq.code === scannedCode);
+
+        if (existingEquipment) {
+          // Incrementar cantidad si ya existe
+          setScannedEquipment(prev =>
+            prev.map(eq =>
+              eq.code === scannedCode
+                ? { ...eq, quantity: eq.quantity + 1 }
+                : eq
+            )
+          );
+        } else {
+          // Agregar nuevo equipo
+          setScannedEquipment(prev => [...prev, { code: scannedCode, quantity: 1 }]);
+        }
+
+        // Actualizar cantidad total
+        const totalQuantity = scannedEquipment.reduce((sum, eq) => sum + eq.quantity, 0) + 1;
+        setNewAsignacion({
+          ...newAsignacion,
+          Cantidad: totalQuantity.toString()
+        });
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Equipo escaneado',
+          text: `Código: ${scannedCode}`,
+          timer: 1000,
+          showConfirmButton: false
+        });
+      }
+    } catch (error) {
+      console.error('Error al procesar código de barras:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error al procesar el código escaneado'
+      });
+    }
+  };
+
   // Llenar automáticamente Nombre, Apellido y Documento al seleccionar usuario
   const handleUsuarioChange = (e) => {
     const selectedId = e.target.value;
@@ -77,6 +173,7 @@ const Asignaciones = () => {
       Nombre: usuario ? usuario.Nombre : "",
       Apellido: usuario ? usuario.Apellido : "",
       Documento: usuario ? usuario.NumeroDocumento || "" : "",
+      Usuario: usuario ? usuario.Usuario || "" : "", // Agregar esta línea también
     });
   };
 
@@ -135,6 +232,8 @@ const Asignaciones = () => {
         await axios.post("http://localhost:3000/api/asignaciones", newAsignacion, { withCredentials: true });
         Swal.fire({ icon: "success", title: "Asignación creada", text: "La asignación se creó correctamente.", showConfirmButton: true });
       }
+      setScannedEquipment([]); // Limpiar equipos escaneados
+      setBarcodeMode('user'); // Resetear modo
       setShowModal(false);
       fetchAsignaciones();
       setNewAsignacion({
@@ -318,7 +417,10 @@ const Asignaciones = () => {
     setShowNovedadModal(true);
   };
 
-
+  const handleShowDetails = (asignacion) => {
+    setSelectedAsignacion(asignacion);
+    setShowDetailsModal(true);
+  };
 
   // Funciones para la tabla mejorada
   const requestSort = (key) => {
@@ -414,6 +516,7 @@ const Asignaciones = () => {
               onClick={() => {
                 setNewAsignacion({
                   IdUsuario: "",
+                  Usuario: "",
                   Nombre: "",
                   Apellido: "",
                   Documento: "",
@@ -427,7 +530,11 @@ const Asignaciones = () => {
                   Item: "",
                   Estado: "Activo",
                 });
+                setScannedEquipment([]); // Limpiar equipos escaneados
+                setBarcodeMode('user'); // Iniciar en modo usuario
                 setShowModal(true);
+                setShowBarcodeInstructions(true);
+                setTimeout(() => setShowBarcodeInstructions(false), 5000);
               }}
               className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
             >
@@ -450,12 +557,6 @@ const Asignaciones = () => {
                   "Fecha Asignación",
                   "Hora Asignación",
                   "Observación",
-                  "Fecha Devolución",
-                  "Hora Devolución",
-                  "Novedad",
-                  "Cantidad",
-                  "Item",
-                  "Estado",
                   "Acciones",
                 ].map((header, index) => (
                   <th
@@ -474,68 +575,39 @@ const Asignaciones = () => {
                     key={asignacion.IdAsignaciones}
                     className="hover:bg-blue-50 transition-colors duration-150"
                   >
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.IdAsignaciones}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.Usuario?.Usuario || 'N/A'}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.Nombre}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.Apellido}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.Documento}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(asignacion.FechaAsignacion)}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                      {asignacion.HoraAsignacion}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                      {asignacion.Observacion}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(asignacion.FechaDevolucion)}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                      {asignacion.HoraDevolucion}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                      {asignacion.Novedad ? (
-                        <button
-                          onClick={() => handleShowNovedad(asignacion.Novedad)}
-                          className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer text-left"
-                          title="Click para ver novedad completa"
-                        >
-                          {truncateText(asignacion.Novedad)}
-                        </button>
-                      ) : (
-                        <span className="text-gray-400">Sin novedad</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                      {asignacion.Cantidad}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
-                      {asignacion.Item}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap text-sm">
-                      <span
-                        className={
-                          asignacion.Estado === "Activo"
-                            ? "bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold"
-                            : "bg-red-100 text-red-700 px-2 py-1 rounded-full font-semibold"
-                        }
-                      >
-                        {asignacion.Estado}
-                      </span>
+                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                      {asignacion.Observacion}
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleShowDetails(asignacion)}
+                          className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors duration-200"
+                          title="Ver detalles completos"
+                        >
+                          <Eye size={16} />
+                        </button>
                         <button
                           onClick={() => handleEditAsignacion(asignacion)}
                           className="p-1 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors duration-200"
@@ -570,7 +642,7 @@ const Asignaciones = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="15"
+                    colSpan="9"
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     No se encontraron asignaciones
@@ -636,6 +708,69 @@ const Asignaciones = () => {
                 ? "Editar Asignación"
                 : "Crear Nueva Asignación"}
             </h2>
+
+            {/* Controles de modo de código de barras */}
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h4 className="font-semibold text-blue-900 mb-2">Modo de Escaneo</h4>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setBarcodeMode('user')}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${barcodeMode === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                        }`}
+                    >
+                      Escanear Usuario
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBarcodeMode('equipment')}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${barcodeMode === 'equipment'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-green-100 text-green-700 hover:bg-green-200'
+                        }`}
+                    >
+                      Escanear Equipos
+                    </button>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600">
+                  <p className="font-medium">
+                    Modo actual:
+                    <span className={`ml-1 ${barcodeMode === 'user' ? 'text-blue-600' : 'text-green-600'}`}>
+                      {barcodeMode === 'user' ? 'Escaneando Usuario' : 'Escaneando Equipos'}
+                    </span>
+                  </p>
+                  {showBarcodeInstructions && (
+                    <p className="text-xs mt-1 text-blue-600 animate-pulse">
+                      {barcodeMode === 'user'
+                        ? 'Escanee el documento del usuario...'
+                        : 'Escanee los códigos de los equipos...'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Mostrar equipos escaneados */}
+            {scannedEquipment.length > 0 && (
+              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <h4 className="font-semibold text-green-900 mb-2">Equipos Escaneados</h4>
+                <div className="space-y-2">
+                  {scannedEquipment.map((equipment, index) => (
+                    <div key={index} className="flex justify-between items-center bg-white p-2 rounded border">
+                      <span className="text-sm font-mono">{equipment.code}</span>
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">
+                        x{equipment.quantity}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
@@ -730,7 +865,7 @@ const Asignaciones = () => {
                 )}
               </div>
 
-        
+
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -756,7 +891,7 @@ const Asignaciones = () => {
                 )}
               </div>
 
-            
+
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -912,6 +1047,175 @@ const Asignaciones = () => {
         </div>
       )}
 
+      {/* Modal para mostrar detalles completos */}
+      {showDetailsModal && selectedAsignacion && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-0 w-full max-w-5xl mx-4 max-h-screen overflow-hidden">
+            {/* Header con gradiente gris elegante */}
+            <div className="bg-green-800 px-8 py-6 text-white relative overflow-hidden rounded-t-2xl">
+              <div className="relative flex justify-between items-center">
+                <div>
+                  <h3 className="text-2xl font-bold mb-1">
+                    Detalles de Asignación
+                  </h3>
+                  <p className="text-slate-300 text-sm">
+                    ID: #{selectedAsignacion.IdAsignaciones}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-all duration-200"
+                >
+                  <X size={24} className="text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Contenido scrolleable */}
+            <div className="overflow-y-auto max-h-[calc(100vh-200px)] p-8 bg-gray-50">
+              {/* Información del usuario - Tarjeta destacada */}
+              <div className="bg-gray-100 rounded-xl p-6 mb-8 shadow-lg border border-gray-200">
+                <h4 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+                  <div className="w-3 h-3 bg-green-600 rounded-full mr-3"></div>
+                  Información del Usuario
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Usuario</label>
+                    <p className="text-gray-900 font-bold text-xl">{selectedAsignacion.Usuario?.Usuario || 'N/A'}</p>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Nombre Completo</label>
+                    <p className="text-gray-900 font-bold text-xl">{selectedAsignacion.Nombre} {selectedAsignacion.Apellido}</p>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Documento</label>
+                    <p className="text-gray-900 font-bold text-xl">{selectedAsignacion.Documento}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fechas y horarios */}
+              <div className="bg-gray-100 rounded-xl p-6 mb-8 shadow-lg border border-gray-200">
+                <h4 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+                  <div className="w-3 h-3 bg-green-600 rounded-full mr-3"></div>
+                  Fechas y Horarios
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Fecha de Asignación</label>
+                    <p className="text-gray-900 font-bold text-lg">{formatDate(selectedAsignacion.FechaAsignacion)}</p>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Hora de Asignación</label>
+                    <p className="text-gray-900 font-bold text-lg">{selectedAsignacion.HoraAsignacion || 'N/A'}</p>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Fecha de Devolución</label>
+                    <p className={`font-bold text-lg ${selectedAsignacion.FechaDevolucion ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+                      {formatDate(selectedAsignacion.FechaDevolucion) || 'No devuelto'}
+                    </p>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Hora de Devolución</label>
+                    <p className={`font-bold text-lg ${selectedAsignacion.HoraDevolucion ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+                      {selectedAsignacion.HoraDevolucion || 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detalles del item */}
+              <div className="bg-gray-100 rounded-xl p-6 mb-8 shadow-lg border border-gray-200">
+                <h4 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+                  <div className="w-3 h-3 bg-green-600 rounded-full mr-3"></div>
+                  Detalles del Item
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Item</label>
+                    <p className="text-gray-900 font-bold text-xl">{selectedAsignacion.Item}</p>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Cantidad</label>
+                    <div className="flex items-center">
+                      <div className="bg-green-100 text-green-800 px-4 py-3 rounded-full font-bold text-2xl shadow-md">
+                        {selectedAsignacion.Cantidad}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">Estado</label>
+                    <span
+                      className={
+                        selectedAsignacion.Estado === "Activo"
+                          ? "bg-green-100 text-green-800 px-4 py-3 rounded-full font-bold text-sm inline-flex items-center shadow-md border border-green-200"
+                          : "bg-red-100 text-red-800 px-4 py-3 rounded-full font-bold text-sm inline-flex items-center shadow-md border border-red-200"
+                      }
+                    >
+                      <div className={`w-2 h-2 rounded-full mr-2 ${selectedAsignacion.Estado === "Activo" ? "bg-green-500" : "bg-red-500"}`}></div>
+                      {selectedAsignacion.Estado}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Observación */}
+              <div className="bg-gray-100 rounded-xl p-6 mb-8 shadow-lg border border-gray-200">
+                <h4 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+                  <div className="w-3 h-3 bg-green-600 rounded-full mr-3"></div>
+                  Observación
+                </h4>
+                <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                  <p className="text-gray-800 leading-relaxed whitespace-pre-wrap break-words text-base">
+                    {selectedAsignacion.Observacion}
+                  </p>
+                </div>
+              </div>
+
+              {/* Novedad (solo si existe) */}
+              {selectedAsignacion.Novedad && (
+                <div className="bg-gray-100 rounded-xl p-6 shadow-lg border border-gray-200">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+                    <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
+                    Novedad Reportada
+                  </h4>
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-red-100">
+                    <p className="text-gray-800 leading-relaxed whitespace-pre-wrap break-words text-base">
+                      {selectedAsignacion.Novedad}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer con gradiente gris elegante (igual que el header) */}
+            <div className="bg-gradient-to-r from-gray-100 to-gray-200 px-8 py-4 border-t border-gray-300">
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Componente lector de códigos de barras */}
+      <BarcodeReader
+        onScan={handleBarcodeScan}
+        isActive={showModal} // Solo activo cuando el modal está abierto
+      />
     </div>
   );
 };
