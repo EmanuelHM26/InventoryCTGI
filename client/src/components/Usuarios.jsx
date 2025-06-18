@@ -14,7 +14,7 @@ const Usuarios = () => {
     Usuario: "",
     Correo: "",
     IdTiposDocumentos: "",
-    IdRol: "",
+    IdRol: 3,
   });
 
   // Estados para paginación y búsqueda
@@ -38,12 +38,28 @@ const Usuarios = () => {
     }
   };
 
+  const getIdTipoDocumento = (tipoDoc) => {
+    const tiposDocumento = {
+      'CC': 1,  // Cédula de Ciudadanía
+      'TI': 2,  // Tarjeta de Identidad
+      'TIE': 3, // Tarjeta de Extranjería
+      'CE': 4   // Cédula de Extranjería
+    };
+    return tiposDocumento[tipoDoc] || 1; // Por defecto CC si no encuentra el tipo
+  };
+
   const handleCreateUser = async () => {
     try {
+      // Establecer automáticamente el IdTiposDocumentos basado en TipoDocumento
+      const userData = {
+        ...newUser,
+        IdTiposDocumentos: getIdTipoDocumento(newUser.TipoDocumento)
+      };
+
       if (newUser.IdUsuario) {
         await axios.put(
           `http://localhost:3000/api/usuarios/${newUser.IdUsuario}`,
-          newUser,
+          userData,
           { withCredentials: true }
         );
         Swal.fire({
@@ -53,7 +69,7 @@ const Usuarios = () => {
           showConfirmButton: true,
         });
       } else {
-        await axios.post("http://localhost:3000/api/usuarios", newUser, {
+        await axios.post("http://localhost:3000/api/usuarios", userData, {
           withCredentials: true,
         });
         Swal.fire({
@@ -204,7 +220,7 @@ const Usuarios = () => {
                   Usuario: "",
                   Correo: "",
                   IdTiposDocumentos: "",
-                  IdRol: "",
+                  IdRol: 3,
                 });
                 setShowModal(true);
               }}
@@ -380,12 +396,17 @@ const Usuarios = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Documento</label>
-                <input
-                  type="text"
+                <select
                   value={newUser.TipoDocumento}
                   onChange={(e) => setNewUser({ ...newUser, TipoDocumento: e.target.value })}
                   className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                >
+                  <option value="">Seleccionar tipo</option>
+                  <option value="CC">CC - Cédula de Ciudadanía</option>
+                  <option value="TI">TI - Tarjeta de Identidad</option>
+                  <option value="TIE">TIE - Tarjeta de Extranjería</option>
+                  <option value="CE">CE - Cédula de Extranjería</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Número de Documento</label>
@@ -414,24 +435,7 @@ const Usuarios = () => {
                   className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ID Tipo Documento</label>
-                <input
-                  type="number"
-                  value={newUser.IdTiposDocumentos}
-                  onChange={(e) => setNewUser({ ...newUser, IdTiposDocumentos: e.target.value })}
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ID Rol</label>
-                <input
-                  type="number"
-                  value={newUser.IdRol}
-                  onChange={(e) => setNewUser({ ...newUser, IdRol: e.target.value })}
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+              
             </div>
 
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
