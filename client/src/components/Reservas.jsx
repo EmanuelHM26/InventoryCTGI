@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import BarcodeReader from "./BarcodeReader";
 import axios from "axios";
 import {
   Search,
@@ -9,6 +10,7 @@ import {
   Plus,
   X,
   Check,
+  Eye,
 } from "lucide-react";
 
 const Reservas = () => {
@@ -25,6 +27,11 @@ const Reservas = () => {
     direction: "ascending",
   });
   const itemsPerPage = 8;
+  const [barcodeMode, setBarcodeMode] = useState('user'); // 'user' o 'equipment'
+  const [scannedEquipment, setScannedEquipment] = useState([]);
+  const [showBarcodeInstructions, setShowBarcodeInstructions] = useState(false);
+  const [scanBuffer, setScanBuffer] = useState(""); // Para acumular el código escaneado
+  const scanTimeout = useRef(null);
 
   useEffect(() => {
     fetchReservasFijas();
@@ -82,7 +89,7 @@ const Reservas = () => {
         const endpoint = "http://localhost:3000/api/reservasfijas";
         const reservaFija = {
           ...newReserva,
-          Estado: "Disponible", // Siempre enviar Disponible
+          Estado: "Disponible",
         };
         if (newReserva.idReservaFija) {
           await axios.put(
@@ -95,7 +102,6 @@ const Reservas = () => {
         }
         fetchReservasFijas();
       } else {
-        // Validación para diarias
         if (
           !newReserva.IdUsuario ||
           !newReserva.ficha ||
@@ -119,6 +125,9 @@ const Reservas = () => {
       }
       setShowModal(false);
       setNewReserva({});
+      setBarcodeMode('user');
+      setScannedEquipment([]);
+      setShowBarcodeInstructions(false);
     } catch (error) {
       console.error("Error al procesar reserva:", error);
       alert("Error al procesar reserva: " + (error.response?.data?.message || error.message));
@@ -238,6 +247,9 @@ const Reservas = () => {
     setCurrentPage(1);
     setSearchTerm("");
     setNewReserva({});
+    setBarcodeMode('user');
+    setScannedEquipment([]);
+    setShowBarcodeInstructions(false);
   };
 
   const getTableHeaders = () => {
@@ -245,6 +257,106 @@ const Reservas = () => {
       return ["ID", "Nombre Programa", "Ficha", "Material Reservado", "Estado", "Acciones"];
     } else {
       return ["ID", "Usuario", "Ficha", "Material Reservado", "Fecha", "Acciones"];
+    }
+  };
+
+  // Escucha global de teclado SOLO cuando el modal está abierto y hay modo de escaneo
+  useEffect(() => {
+    if (!showModal || !barcodeMode) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Enter") {
+        if (scanBuffer.length > 0) {
+          handleScan(scanBuffer);
+          setScanBuffer("");
+        }
+      } else if (/^[a-zA-Z0-9]$/.test(e.key)) {
+        setScanBuffer((prev) => prev + e.key);
+        clearTimeout(scanTimeout.current);
+        scanTimeout.current = setTimeout(() => setScanBuffer(""), 500);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      clearTimeout(scanTimeout.current);
+    };
+  }, [showModal, barcodeMode, scanBuffer]);
+
+  // Función para procesar el código escaneado
+  const handleScan = (codigo) => {
+    if (barcodeMode === "user") {
+      const usuarioEncontrado = usuarios.find(u => String(u.NumeroDocumento) === codigo);
+      if (usuarioEncontrado) {
+        setNewReserva({
+          ...newReserva,
+          IdUsuario: usuarioEncontrado.IdUsuario
+        });
+        setBarcodeMode('equipment');
+        setShowBarcodeInstructions(true);
+        setTimeout(() => setShowBarcodeInstructions(false), 2000);
+      } else {
+        alert("Usuario no encontrado");
+      }
+    } else if (barcodeMode === "equipment") {
+      const existingEquipment = scannedEquipment.find(eq => eq.code === codigo);
+      let nuevosEquipos;
+      if (existingEquipment) {
+        nuevosEquipos = scannedEquipment.map(eq =>
+          eq.code === codigo
+            ? { ...eq, quantity: eq.quantity + 1 }
+            : eq
+        );
+      } else {
+        nuevosEquipos = [...scannedEquipment, { code: codigo, quantity: 1 }];
+      }
+      setScannedEquipment(nuevosEquipos);
+      setNewReserva({
+        ...newReserva,
+        materialReservado: nuevosEquipos.map(eq => eq.code).join(", "),
+        cantidadMaterial: nuevosEquipos.reduce((sum, eq) => sum + eq.quantity, 0)
+      });
+    }
+  };
+
+  // Para el BarcodeReader (por compatibilidad)
+  const handleBarcodeScan = (scannedCode) => {
+    if (!showModal) return;
+    if (barcodeMode === 'user') {
+      const usuario = usuarios.find(
+        u => String(u.NumeroDocumento).trim() === String(scannedCode).trim()
+      );
+      if (usuario) {
+        setNewReserva({
+          ...newReserva,
+          IdUsuario: usuario.IdUsuario
+        });
+        setBarcodeMode('equipment');
+        setShowBarcodeInstructions(true);
+        setTimeout(() => setShowBarcodeInstructions(false), 2000);
+      } else {
+        setShowBarcodeInstructions(true);
+        setTimeout(() => setShowBarcodeInstructions(false), 2000);
+      }
+    } else if (barcodeMode === 'equipment') {
+      const existingEquipment = scannedEquipment.find(eq => eq.code === scannedCode);
+      let nuevosEquipos;
+      if (existingEquipment) {
+        nuevosEquipos = scannedEquipment.map(eq =>
+          eq.code === scannedCode
+            ? { ...eq, quantity: eq.quantity + 1 }
+            : eq
+        );
+      } else {
+        nuevosEquipos = [...scannedEquipment, { code: scannedCode, quantity: 1 }];
+      }
+      setScannedEquipment(nuevosEquipos);
+      const totalQuantity = nuevosEquipos.reduce((sum, eq) => sum + eq.quantity, 0);
+      setNewReserva({
+        ...newReserva,
+        Cantidad: totalQuantity.toString()
+      });
     }
   };
 
@@ -305,13 +417,68 @@ const Reservas = () => {
     } else {
       return (
         <>
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex gap-2 mb-2">
+              <button
+                type="button"
+                onClick={() => setBarcodeMode('user')}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${barcodeMode === 'user'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  }`}
+              >
+                Escanear Usuario
+              </button>
+              <button
+                type="button"
+                onClick={() => setBarcodeMode('equipment')}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${barcodeMode === 'equipment'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+                  }`}
+              >
+                Escanear Material
+              </button>
+              <span className="ml-2 text-sm text-gray-500">
+                Modo actual:
+                <span className={`ml-1 ${barcodeMode === 'user' ? 'text-blue-600' : 'text-green-600'}`}>
+                  {barcodeMode === 'user' ? 'Escaneando Usuario' : 'Escaneando Material'}
+                </span>
+              </span>
+            </div>
+            {showBarcodeInstructions && (
+              <p className="text-xs mt-1 text-blue-600 animate-pulse">
+                {barcodeMode === 'user'
+                  ? 'Escanee el documento del usuario...'
+                  : 'Escanee los códigos de los materiales...'}
+              </p>
+            )}
+          </div>
+
+          {scannedEquipment.length > 0 && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h4 className="font-semibold text-green-900 mb-2">Materiales Escaneados</h4>
+              <div className="space-y-2">
+                {scannedEquipment.map((equipment, index) => (
+                  <div key={index} className="flex justify-between items-center bg-white p-2 rounded border">
+                    <span className="text-sm font-mono">{equipment.code}</span>
+                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">
+                      x{equipment.quantity}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Resto de campos */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Usuario
             </label>
             <select
               value={newReserva.IdUsuario || ""}
-              onChange={(e) =>
+              onChange={e =>
                 setNewReserva({
                   ...newReserva,
                   IdUsuario: e.target.value,
@@ -334,7 +501,7 @@ const Reservas = () => {
             <input
               type="text"
               value={newReserva.ficha || ""}
-              onChange={(e) =>
+              onChange={e =>
                 setNewReserva({
                   ...newReserva,
                   ficha: e.target.value,
@@ -349,14 +516,9 @@ const Reservas = () => {
             </label>
             <input
               type="text"
-              value={newReserva.materialReservado || ""}
-              onChange={(e) =>
-                setNewReserva({
-                  ...newReserva,
-                  materialReservado: e.target.value,
-                })
-              }
-              className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={scannedEquipment.reduce((sum, eq) => sum + eq.quantity, 0)}
+              readOnly
+              className="border border-gray-300 p-2 rounded-lg w-full bg-gray-100"
             />
           </div>
           <div>
@@ -366,7 +528,7 @@ const Reservas = () => {
             <input
               type="date"
               value={newReserva.fecha || ""}
-              onChange={(e) =>
+              onChange={e =>
                 setNewReserva({
                   ...newReserva,
                   fecha: e.target.value,
@@ -453,7 +615,7 @@ const Reservas = () => {
             )}
           </div>
         </div>
-        {/* Table */}
+        {/* Tabla de Reservas */}
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -657,7 +819,12 @@ const Reservas = () => {
             </div>
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false);
+                  setBarcodeMode('user');
+                  setScannedEquipment([]);
+                  setShowBarcodeInstructions(false);
+                }}
                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
               >
                 Cancelar
@@ -674,6 +841,11 @@ const Reservas = () => {
           </div>
         </div>
       )}
+
+      <BarcodeReader
+        onScan={handleBarcodeScan}
+        isActive={showModal}
+      />
     </div>
   );
 };
