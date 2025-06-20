@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import Swal from "sweetalert2";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { FileText, Download } from "lucide-react";
 
 const Roles = () => {
   const [roles, setRoles] = useState([]);
@@ -169,6 +173,136 @@ const Roles = () => {
     }
   };
 
+  const exportToPDF = async () => {
+    try {
+      if (!sortedRoles || !Array.isArray(sortedRoles) || sortedRoles.length === 0) {
+        Swal.fire({ icon: 'info', title: 'Sin datos', text: 'No hay roles para exportar.' });
+        return;
+      }
+      // Cargar el logo y convertirlo a base64
+      const getBase64FromUrl = async (url) => {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      };
+
+      const senaLogoBase64 = await getBase64FromUrl('/logosena.png');
+      const doc = new jsPDF();
+
+      // --- LOGO SENA ---
+      doc.addImage(senaLogoBase64, 'PNG', 15, 10, 30, 25);
+
+      // --- TÍTULO EN VERDE CENTRADO ---
+      doc.setFontSize(22);
+      doc.setTextColor(57, 181, 74); // Verde SENA
+      doc.setFont(undefined, 'bold');
+      doc.text('Inventario CTGI', 105, 25, { align: 'center' });
+
+      // --- SUBTÍTULO EN NEGRO ---
+      doc.setFontSize(18);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont(undefined, 'bold');
+      doc.text('Gestión de Roles', 15, 45);
+
+      // --- FECHA Y TOTAL ---
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text(`Fecha:`, 15, 55);
+      doc.text(`Total:`, 15, 63);
+
+      doc.setFont(undefined, 'normal');
+      doc.text(`${new Date().toLocaleDateString('es-ES')}`, 40, 55);
+      doc.text(`${sortedRoles.length}`, 40, 63);
+
+      // --- DESCRIPCIÓN ---
+      doc.setFontSize(13);
+      doc.setFont(undefined, 'bold');
+      doc.text('Descripción:', 15, 73);
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text('Este reporte contiene la lista de roles registrados en el sistema, los cuales definen los permisos y accesos de los usuarios.', 15, 80, { maxWidth: 180 });
+
+      // --- TABLA ---
+      const tableData = sortedRoles.map(role => [
+        String(role.IdRol || ''),
+        role.NombreRol || ''
+      ]);
+
+      autoTable(doc, {
+        head: [['ID', 'Nombre del Rol']],
+        body: tableData,
+        startY: 90,
+        styles: {
+          fontSize: 9,
+          cellPadding: 2
+        },
+        headStyles: {
+          fillColor: [57, 181, 74], // Verde SENA
+          textColor: 255,
+          fontStyle: 'bold'
+        }
+      });
+
+      const fileName = `roles_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'PDF generado',
+        text: 'El archivo PDF se ha descargado correctamente.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al generar PDF',
+        text: error.message,
+        showConfirmButton: true
+      });
+    }
+  };
+
+  const exportToExcel = () => {
+    try {
+      const wsData = [
+        ['ID', 'Nombre del Rol'],
+        ...sortedRoles.map(role => [
+          role.IdRol || '',
+          role.NombreRol || ''
+        ])
+      ];
+
+      const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Roles");
+
+      const fileName = `roles_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Excel generado',
+        text: 'El archivo Excel se ha descargado correctamente.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al generar Excel',
+        text: error.message,
+        showConfirmButton: true
+      });
+    }
+  };
+
   return (
     <div className="px-4 py-20 md:px-8 lg:px-10 max-w-full bg-gray-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -176,6 +310,7 @@ const Roles = () => {
           <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Gestión de Roles</h1>
 
           <div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
+            {/* Buscador */}
             <div className="relative">
               <input
                 type="text"
@@ -195,6 +330,27 @@ const Roles = () => {
               )}
             </div>
 
+            {/* Botones de exportar */}
+            <div className="flex gap-2">
+              <button
+                onClick={exportToPDF}
+                className="flex items-center justify-center bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-sm"
+                title="Exportar a PDF"
+              >
+                <FileText size={16} className="mr-2" />
+                PDF
+              </button>
+              <button
+                onClick={exportToExcel}
+                className="flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm"
+                title="Exportar a Excel"
+              >
+                <Download size={16} className="mr-2" />
+                Excel
+              </button>
+            </div>
+
+            {/* Botón Nuevo Rol */}
             <button
               onClick={() => {
                 setNewRole({ IdRol: "", NombreRol: "" });

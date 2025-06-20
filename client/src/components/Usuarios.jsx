@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, Filter, X } from "lucide-react";
+import { Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, X, FileText, Download } from "lucide-react";
 import Swal from "sweetalert2";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 const Usuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -40,17 +43,16 @@ const Usuarios = () => {
 
   const getIdTipoDocumento = (tipoDoc) => {
     const tiposDocumento = {
-      'CC': 1,  // Cédula de Ciudadanía
-      'TI': 2,  // Tarjeta de Identidad
-      'TIE': 3, // Tarjeta de Extranjería
-      'CE': 4   // Cédula de Extranjería
+      'CC': 1,
+      'TI': 2,
+      'TIE': 3,
+      'CE': 4
     };
-    return tiposDocumento[tipoDoc] || 1; // Por defecto CC si no encuentra el tipo
+    return tiposDocumento[tipoDoc] || 1;
   };
 
   const handleCreateUser = async () => {
     try {
-      // Establecer automáticamente el IdTiposDocumentos basado en TipoDocumento
       const userData = {
         ...newUser,
         IdTiposDocumentos: getIdTipoDocumento(newUser.TipoDocumento)
@@ -80,6 +82,16 @@ const Usuarios = () => {
         });
       }
       setShowModal(false);
+      setNewUser({
+        Nombre: "",
+        Apellido: "",
+        TipoDocumento: "",
+        NumeroDocumento: "",
+        Usuario: "",
+        Correo: "",
+        IdTiposDocumentos: "",
+        IdRol: 3,
+      });
       fetchUsuarios();
     } catch (error) {
       Swal.fire({
@@ -154,19 +166,21 @@ const Usuarios = () => {
 
   const filteredUsuarios = usuarios.filter((user) => {
     return (
-      user.Nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.Apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.Usuario.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.Correo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.NumeroDocumento.toString().includes(searchTerm)
+      user.Nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.Apellido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.Usuario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.Correo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.NumeroDocumento?.toString().includes(searchTerm)
     );
   });
 
   const sortedUsuarios = [...filteredUsuarios].sort((a, b) => {
-    if (a[sortConfig.key] < b[sortConfig.key]) {
+    const aVal = a[sortConfig.key] || '';
+    const bVal = b[sortConfig.key] || '';
+    if (aVal < bVal) {
       return sortConfig.direction === "ascending" ? -1 : 1;
     }
-    if (a[sortConfig.key] > b[sortConfig.key]) {
+    if (aVal > bVal) {
       return sortConfig.direction === "ascending" ? 1 : -1;
     }
     return 0;
@@ -181,6 +195,145 @@ const Usuarios = () => {
   const paginate = (pageNumber) => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
+    }
+  };
+
+  // CORREGIDO: Usar autoTable(doc, {...}) en vez de doc.autoTable({...})
+  const exportToPDF = async () => {
+    try {
+      // Cargar el logo y convertirlo a base64
+      const getBase64FromUrl = async (url) => {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      };
+
+      const senaLogoBase64 = await getBase64FromUrl('/logosena.png');
+      const doc = new jsPDF();
+
+      // --- LOGO SENA ---
+      doc.addImage(senaLogoBase64, 'PNG', 15, 10, 30, 25);
+
+      // --- TÍTULO EN VERDE CENTRADO ---
+      doc.setFontSize(22);
+      doc.setTextColor(57, 181, 74); // Verde SENA
+      doc.setFont(undefined, 'bold');
+      doc.text('Inventario CTGI', 105, 25, { align: 'center' });
+
+      // --- SUBTÍTULO EN NEGRO ---
+      doc.setFontSize(18);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont(undefined, 'bold');
+      doc.text('Lista de usuarios', 15, 45);
+
+      // --- FECHA Y TOTAL ---
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text(`Fecha:`, 15, 55);
+      doc.text(`Total:`, 15, 63);
+
+      doc.setFont(undefined, 'normal');
+      doc.text(`${new Date().toLocaleDateString('es-ES')}`, 40, 55);
+      doc.text(`${sortedUsuarios.length}`, 40, 63);
+
+      // --- DESCRIPCIÓN ---
+      doc.setFontSize(13);
+      doc.setFont(undefined, 'bold');
+      doc.text('Descripción:', 15, 73);
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text('Este reporte contiene la lista de usuarios registrados en el sistema, incluyendo información básica y de contacto.', 15, 80, { maxWidth: 180 });
+
+      // --- TABLA ---
+      const tableData = sortedUsuarios.map(user => [
+        String(user.IdUsuario || ''),
+        String(user.Nombre || ''),
+        String(user.Apellido || ''),
+        String(user.TipoDocumento || ''),
+        String(user.NumeroDocumento || ''),
+        String(user.Usuario || ''),
+        String(user.Correo || '')
+      ]);
+
+      autoTable(doc, {
+        head: [['ID', 'Nombre', 'Apellido', 'Tipo Doc.', 'Núm. Doc.', 'Usuario', 'Correo']],
+        body: tableData,
+        startY: 90,
+        styles: {
+          fontSize: 9,
+          cellPadding: 2
+        },
+        headStyles: {
+          fillColor: [57, 181, 74], // Verde SENA
+          textColor: 255,
+          fontStyle: 'bold'
+        }
+      });
+
+      const fileName = `usuarios_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'PDF generado',
+        text: 'El archivo PDF se ha descargado correctamente.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+    } catch (error) {
+      console.error('Error detallado al generar PDF:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al generar PDF',
+        text: `Error: ${error.message}`,
+        showConfirmButton: true
+      });
+    }
+  };
+
+  const exportToExcel = () => {
+    try {
+      const wsData = [
+        ['ID', 'Nombre', 'Apellido', 'Tipo Doc.', 'Número Doc.', 'Usuario', 'Correo'],
+        ...sortedUsuarios.map(user => [
+          user.IdUsuario || '',
+          user.Nombre || '',
+          user.Apellido || '',
+          user.TipoDocumento || '',
+          user.NumeroDocumento || '',
+          user.Usuario || '',
+          user.Correo || ''
+        ])
+      ];
+
+      const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Usuarios");
+
+      const fileName = `usuarios_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Excel generado',
+        text: 'El archivo Excel se ha descargado correctamente.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('Error al generar Excel:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al generar Excel',
+        text: `Error: ${error.message}`,
+        showConfirmButton: true
+      });
     }
   };
 
@@ -208,6 +361,26 @@ const Usuarios = () => {
                   <X size={18} />
                 </button>
               )}
+            </div>
+
+            {/* Botones de exportación con iconos de Lucide */}
+            <div className="flex gap-2">
+              <button
+                onClick={exportToPDF}
+                className="flex items-center justify-center bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-sm"
+                title="Exportar a PDF"
+              >
+                <FileText size={16} className="mr-2" />
+                PDF
+              </button>
+              <button
+                onClick={exportToExcel}
+                className="flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm"
+                title="Exportar a Excel"
+              >
+                <Download size={16} className="mr-2" />
+                Excel
+              </button>
             </div>
 
             <button
@@ -240,12 +413,12 @@ const Usuarios = () => {
                   <th
                     key={index}
                     onClick={() => {
-                      if (index < 7) { // No permitir ordenar por la columna de acciones
+                      if (index < 7) {
                         const keys = ["IdUsuario", "Nombre", "Apellido", "TipoDocumento", "NumeroDocumento", "Usuario", "Correo"];
                         requestSort(keys[index]);
                       }
                     }}
-                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 ${index < 7 ? "cursor-pointer" : ""
+                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 7 ? "cursor-pointer hover:bg-gray-100" : ""
                       }`}
                   >
                     <div className="flex items-center">
@@ -270,13 +443,13 @@ const Usuarios = () => {
                     className={`hover:bg-blue-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
                       }`}
                   >
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.IdUsuario}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.Nombre}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.Apellido}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.TipoDocumento}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.NumeroDocumento}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.Usuario}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{user.Correo}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.IdUsuario || ''}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.Nombre || ''}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.Apellido || ''}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.TipoDocumento || ''}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.NumeroDocumento || ''}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{user.Usuario || ''}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{user.Correo || ''}</td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
                         <button
@@ -435,7 +608,6 @@ const Usuarios = () => {
                   className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
-              
             </div>
 
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">

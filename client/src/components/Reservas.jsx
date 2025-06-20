@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import BarcodeReader from "./BarcodeReader";
 import axios from "axios";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { FileText, Download } from "lucide-react";
 import {
   Search,
   Edit,
@@ -12,6 +16,7 @@ import {
   Check,
   Eye,
 } from "lucide-react";
+import Swal from 'sweetalert2';
 
 const Reservas = () => {
   const [reservasFijas, setReservasFijas] = useState([]);
@@ -542,6 +547,177 @@ const Reservas = () => {
     }
   };
 
+  const exportToPDF = async () => {
+    try {
+      // Cargar el logo y convertirlo a base64
+      const getBase64FromUrl = async (url) => {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      };
+
+      const senaLogoBase64 = await getBase64FromUrl('/logosena.png');
+      const doc = new jsPDF();
+
+      // --- LOGO SENA ---
+      doc.addImage(senaLogoBase64, 'PNG', 15, 10, 30, 25);
+
+      // --- TÍTULO EN VERDE CENTRADO ---
+      doc.setFontSize(22);
+      doc.setTextColor(57, 181, 74); // Verde SENA
+      doc.setFont(undefined, 'bold');
+      doc.text('Inventario CTGI', 105, 25, { align: 'center' });
+
+      // --- SUBTÍTULO EN NEGRO ---
+      doc.setFontSize(18);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont(undefined, 'bold');
+      doc.text(
+        activeTab === "fijas" ? "Reservas Fijas" : "Reservas Diarias",
+        15,
+        45
+      );
+
+      // --- FECHA Y TOTAL ---
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text(`Fecha:`, 15, 55);
+      doc.text(`Total:`, 15, 63);
+
+      doc.setFont(undefined, 'normal');
+      doc.text(`${new Date().toLocaleDateString('es-ES')}`, 40, 55);
+      doc.text(`${sortedReservas.length}`, 40, 63);
+
+      // --- DESCRIPCIÓN ---
+      doc.setFontSize(13);
+      doc.setFont(undefined, 'bold');
+      doc.text('Descripción:', 15, 73);
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text(
+        activeTab === "fijas"
+          ? "Este reporte contiene la lista de reservas fijas de materiales, incluyendo programa, ficha, material y estado."
+          : "Este reporte contiene la lista de reservas diarias de materiales, incluyendo usuario, ficha, material y fecha.",
+        15,
+        80,
+        { maxWidth: 180 }
+      );
+
+      // --- TABLA ---
+      let tableData, head;
+      if (activeTab === "fijas") {
+        head = [['ID', 'Nombre Programa', 'Ficha', 'Material Reservado', 'Estado']];
+        tableData = sortedReservas.map(reserva => [
+          reserva.idReservaFija || '',
+          reserva.nombrePrograma || '',
+          reserva.ficha || '',
+          reserva.materialReservado || '',
+          reserva.Estado || ''
+        ]);
+      } else {
+        head = [['ID', 'Usuario', 'Ficha', 'Material Reservado', 'Fecha']];
+        tableData = sortedReservas.map(reserva => [
+          reserva.idReservaDiaria || '',
+          reserva.Usuario?.Usuario || '',
+          reserva.ficha || '',
+          reserva.materialReservado || '',
+          reserva.fecha ? new Date(reserva.fecha).toLocaleDateString('es-ES') : ''
+        ]);
+      }
+
+      autoTable(doc, {
+        head,
+        body: tableData,
+        startY: 90,
+        styles: {
+          fontSize: 9,
+          cellPadding: 2
+        },
+        headStyles: {
+          fillColor: [57, 181, 74], // Verde SENA
+          textColor: 255,
+          fontStyle: 'bold'
+        }
+      });
+
+      const fileName = `reservas_${activeTab}_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'PDF generado',
+        text: 'El archivo PDF se ha descargado correctamente.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al generar PDF',
+        text: error.message,
+        showConfirmButton: true
+      });
+    }
+  };
+
+  const exportToExcel = () => {
+    try {
+      let wsData;
+      if (activeTab === "fijas") {
+        wsData = [
+          ['ID', 'Nombre Programa', 'Ficha', 'Material Reservado', 'Estado'],
+          ...sortedReservas.map(reserva => [
+            reserva.idReservaFija || '',
+            reserva.nombrePrograma || '',
+            reserva.ficha || '',
+            reserva.materialReservado || '',
+            reserva.Estado || ''
+          ])
+        ];
+      } else {
+        wsData = [
+          ['ID', 'Usuario', 'Ficha', 'Material Reservado', 'Fecha'],
+          ...sortedReservas.map(reserva => [
+            reserva.idReservaDiaria || '',
+            reserva.Usuario?.Usuario || '',
+            reserva.ficha || '',
+            reserva.materialReservado || '',
+            reserva.fecha ? new Date(reserva.fecha).toLocaleDateString('es-ES') : ''
+          ])
+        ];
+      }
+
+      const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, activeTab === "fijas" ? "ReservasFijas" : "ReservasDiarias");
+
+      const fileName = `reservas_${activeTab}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Excel generado',
+        text: 'El archivo Excel se ha descargado correctamente.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al generar Excel',
+        text: error.message,
+        showConfirmButton: true
+      });
+    }
+  };
+
   return (
     <div className="px-4 py-20 md:px-8 lg:px-10 max-w-full bg-gray-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -580,16 +756,59 @@ const Reservas = () => {
               Reservas Diarias
             </button>
           </div>
-          <button
-            onClick={() => {
-              setNewReserva({});
-              setShowModal(true);
-            }}
-            className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
-          >
-            <Plus size={18} className="mr-2" />
-            Nueva Reserva
-          </button>
+          <div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
+            {/* Buscador */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={`Buscar ${activeTab === "fijas" ? "reserva fija" : "reserva diaria"}...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+              />
+              <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+
+            {/* Botones de exportar */}
+            <div className="flex gap-2">
+              <button
+                onClick={exportToPDF}
+                className="flex items-center justify-center bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-sm"
+                title="Exportar a PDF"
+              >
+                <FileText size={16} className="mr-2" />
+                PDF
+              </button>
+              <button
+                onClick={exportToExcel}
+                className="flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm"
+                title="Exportar a Excel"
+              >
+                <Download size={16} className="mr-2" />
+                Excel
+              </button>
+            </div>
+
+            {/* Botón Nueva Reserva */}
+            <button
+              onClick={() => {
+                setNewReserva({});
+                setShowModal(true);
+              }}
+              className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+            >
+              <Plus size={18} className="mr-2" />
+              Nueva Reserva
+            </button>
+          </div>
         </div>
         {/* Search Bar */}
         <div className="mb-6">
