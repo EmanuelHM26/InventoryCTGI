@@ -3,58 +3,37 @@ import sequelize from '../config/database.js';
 
 const EquiposTecnologicos = sequelize.define('EquiposTecnologicos', {
   IdEquiposTecnologicos: {
-    type: DataTypes.BIGINT(9),
+    type: DataTypes.BIGINT(20),
     primaryKey: true,
     autoIncrement: true,
     allowNull: false,
   },
-  Cuentadante: {
-    type: DataTypes.BIGINT(20),
+  Codigo: {
+    type: DataTypes.STRING, // Cambia de BIGINT a STRING
     allowNull: false,
+    unique: true
   },
   Nombre: {
-    type: DataTypes.STRING(100),
+    type: DataTypes.STRING(45),
     allowNull: false,
   },
-  Regional: {
+  Marca: {
     type: DataTypes.STRING(100),
-    allowNull: false,
-  },
-  Costo: {
-    type: DataTypes.BIGINT(15),
     allowNull: false,
   },
   Modelo: {
-    type: DataTypes.STRING(20),
+    type: DataTypes.STRING(45),
     allowNull: false,
   },
   IdCodigoBarras: {
     type: DataTypes.INTEGER(11),
-    allowNull: false,
+    allowNull: true,
+    defaultValue: null,
   },
-  Descripcion: {
-    type: DataTypes.STRING(100),
-    allowNull: false,
-  },
-  DescripcionActual: {
-    type: DataTypes.STRING(300),
-    allowNull: false,
-  },
-  Tipo: {
-    type: DataTypes.BIGINT(10),
-    allowNull: false,
-  },
-  Atributos: {
-    type: DataTypes.STRING(200),
-    allowNull: false,
-  },
-  Fecha: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-  Valor: {
+  IdEstado: {
     type: DataTypes.BIGINT(20),
-    allowNull: false,
+    allowNull: true,
+    defaultValue: null,
   },
 }, {
   tableName: 'equipostecnologicos',
