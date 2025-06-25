@@ -22,6 +22,8 @@ import EquiposTecnologicos from "./components/EquiposTecnologicos";
 import ProductosConsumibles from "./components/ProductosConsumibles";
 import Grupos from "./components/Grupos";
 import Reservas from "./components/Reservas";
+import Reportes from "./components/Reportes";
+
 
 const App = () => {
   return (
@@ -56,6 +58,8 @@ const App = () => {
             <Route path="productos-consumibles" element={<ProductosConsumibles />} />
             <Route path="grupo" element={<Grupos />} />
             <Route path="reservas" element={<Reservas />} />
+            <Route path="reportes" element={<Reportes />} />
+            
 
           </Route>
         </Routes>

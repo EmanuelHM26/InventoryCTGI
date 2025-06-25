@@ -13,6 +13,9 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import BarcodeReader from './BarcodeReader';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 const Asignaciones = () => {
   const [asignaciones, setAsignaciones] = useState([]);
@@ -481,6 +484,152 @@ const Asignaciones = () => {
     }
   };
 
+  const exportToPDF = async () => {
+    try {
+      // Cargar el logo y convertirlo a base64
+      const getBase64FromUrl = async (url) => {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      };
+
+      const senaLogoBase64 = await getBase64FromUrl('/logosena.png');
+      const doc = new jsPDF();
+
+      // --- LOGO SENA ---
+      doc.addImage(senaLogoBase64, 'PNG', 15, 10, 30, 25);
+
+      // --- TÍTULO EN VERDE CENTRADO ---
+      doc.setFontSize(22);
+      doc.setTextColor(57, 181, 74); // Verde SENA
+      doc.setFont(undefined, 'bold');
+      doc.text('Inventario CTGI', 105, 25, { align: 'center' });
+
+      // --- SUBTÍTULO EN NEGRO ---
+      doc.setFontSize(18);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont(undefined, 'bold');
+      doc.text('Historial de asignaciones', 15, 45);
+
+      // --- FECHA Y TOTAL ---
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text(`Fecha:`, 15, 55);
+      doc.text(`Total:`, 15, 63);
+
+      doc.setFont(undefined, 'normal');
+      doc.text(`${new Date().toLocaleDateString('es-ES')}`, 40, 55);
+      doc.text(`${sortedAsignaciones.length}`, 40, 63);
+
+      // --- DESCRIPCIÓN ---
+      doc.setFontSize(13);
+      doc.setFont(undefined, 'bold');
+      doc.text('Descripción:', 15, 73);
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text('Este reporte contiene el historial de asignaciones de equipos y productos a los usuarios, incluyendo fechas, cantidades, observaciones y estado.', 15, 80, { maxWidth: 180 });
+
+      // --- TABLA ---
+      const tableData = sortedAsignaciones.map(asig => [
+        String(asig.IdAsignaciones || ''),
+        asig.Usuario?.Usuario || '',
+        asig.Nombre || '',
+        asig.Apellido || '',
+        asig.Documento || '',
+        asig.FechaAsignacion || '',
+        asig.HoraAsignacion || '',
+        asig.Observacion || '',
+        asig.Item || '',
+        asig.Cantidad || '',
+        asig.Estado || ''
+      ]);
+
+      autoTable(doc, {
+        head: [['ID', 'Usuario', 'Nombre', 'Apellido', 'Documento', 'Fecha Asign.', 'Hora Asign.', 'Observación', 'Item', 'Cantidad', 'Estado']],
+        body: tableData,
+        startY: 90,
+        styles: {
+          fontSize: 9,
+          cellPadding: 2
+        },
+        headStyles: {
+          fillColor: [57, 181, 74], // Verde SENA
+          textColor: 255,
+          fontStyle: 'bold'
+        }
+      });
+
+      const fileName = `asignaciones_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'PDF generado',
+        text: 'El archivo PDF se ha descargado correctamente.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+    } catch (error) {
+      console.error('Error detallado al generar PDF:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al generar PDF',
+        text: `Error: ${error.message}`,
+        showConfirmButton: true
+      });
+    }
+  };
+
+  const exportToExcel = () => {
+    try {
+      const wsData = [
+        ['ID', 'Usuario', 'Nombre', 'Apellido', 'Documento', 'Fecha Asign.', 'Hora Asign.', 'Observación', 'Item', 'Cantidad', 'Estado'],
+        ...sortedAsignaciones.map(asig => [
+          asig.IdAsignaciones || '',
+          asig.Usuario?.Usuario || '',
+          asig.Nombre || '',
+          asig.Apellido || '',
+          asig.Documento || '',
+          asig.FechaAsignacion || '',
+          asig.HoraAsignacion || '',
+          asig.Observacion || '',
+          asig.Item || '',
+          asig.Cantidad || '',
+          asig.Estado || ''
+        ])
+      ];
+
+      const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Asignaciones");
+
+      const fileName = `asignaciones_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Excel generado',
+        text: 'El archivo Excel se ha descargado correctamente.',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('Error al generar Excel:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al generar Excel',
+        text: `Error: ${error.message}`,
+        showConfirmButton: true
+      });
+    }
+  };
+
   return (
     <div className="px-4 py-20 md:px-8 lg:px-2 max-w-full bg-gray-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -511,7 +660,24 @@ const Asignaciones = () => {
                 </button>
               )}
             </div>
-
+            <div className="flex gap-2">
+              <button
+                onClick={exportToPDF}
+                className="flex items-center justify-center bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-sm"
+                title="Exportar a PDF"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 16v-8m0 8l-3-3m3 3l3-3M4 4h16v16H4V4z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                PDF
+              </button>
+              <button
+                onClick={exportToExcel}
+                className="flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm"
+                title="Exportar a Excel"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 4h16v16H4V4zm8 4v8m0 0l-3-3m3 3l3-3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Excel
+              </button>
+            </div>
             <button
               onClick={() => {
                 setNewAsignacion({
