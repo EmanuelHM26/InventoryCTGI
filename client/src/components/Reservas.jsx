@@ -107,16 +107,44 @@ const Reservas = () => {
         }
         fetchReservasFijas();
       } else {
+        const { IdUsuario, ficha, materialReservado, fecha } = newReserva;
+        console.log("Validación:", {
+          IdUsuario: newReserva.IdUsuario,
+          ficha: newReserva.ficha,
+          materialReservado: newReserva.materialReservado,
+          fecha: newReserva.fecha,
+          scannedEquipment // si tienes este campo en tu lógica
+        });
+
         if (
-          !newReserva.IdUsuario ||
-          !newReserva.ficha ||
-          !newReserva.materialReservado ||
-          !newReserva.fecha
+          !IdUsuario ||
+          !ficha ||
+          !materialReservado ||
+          !fecha
         ) {
           alert("Por favor, completa todos los campos de la reserva diaria.");
           return;
         }
         const endpoint = "http://localhost:3000/api/reservas-diarias";
+
+        
+        // Formatear la fecha al enviar la reserva
+        const fechaOriginal = newReserva.fecha;
+        let fechaFormateada = fechaOriginal;
+
+        if (fechaOriginal && fechaOriginal.includes("/")) {
+          const [dia, mes, anio] = fechaOriginal.split("/");
+          if (dia && mes && anio) {
+            fechaFormateada = `${anio}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
+          } else {
+            fechaFormateada = "";
+          }
+        }
+        const reservaData = {
+          ...newReserva,
+          fecha: fechaFormateada,
+          materialesEscaneados: scannedEquipment
+        };
         if (newReserva.idReservaDiaria) {
           await axios.put(
             `${endpoint}/${newReserva.idReservaDiaria}`,
@@ -124,14 +152,15 @@ const Reservas = () => {
             { withCredentials: true }
           );
         } else {
-          await axios.post(endpoint, newReserva, { withCredentials: true });
+          await axios.post(endpoint, reservaData, { withCredentials: true });
         }
         fetchReservasDiarias();
       }
       setShowModal(false);
       setNewReserva({});
-      setBarcodeMode('user');
       setScannedEquipment([]);
+      setScanBuffer("");
+      setBarcodeMode('user');
       setShowBarcodeInstructions(false);
     } catch (error) {
       console.error("Error al procesar reserva:", error);
@@ -145,45 +174,120 @@ const Reservas = () => {
   };
 
   const handleDeleteReserva = async (id) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar esta reserva?")) {
-      try {
-        if (activeTab === "fijas") {
-          await axios.delete(
-            `http://localhost:3000/api/reservasfijas/${id}`,
-            { withCredentials: true }
-          );
-          fetchReservasFijas();
-        } else {
-          await axios.delete(
-            `http://localhost:3000/api/reservas-diarias/${id}`,
-            { withCredentials: true }
-          );
-          fetchReservasDiarias();
+    if (activeTab === "fijas") {
+      Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡Esta acción no se puede deshacer!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            await axios.delete(
+              `http://localhost:3000/api/reservasfijas/${id}`,
+              { withCredentials: true }
+            );
+            fetchReservasFijas();
+            Swal.fire(
+              '¡Eliminado!',
+              'La reserva fija ha sido eliminada.',
+              'success'
+            );
+          } catch {
+            Swal.fire(
+              'Error',
+              'No se pudo eliminar la reserva fija.',
+              'error'
+            );
+          }
         }
-      } catch (error) {
-        console.error("Error al eliminar reserva:", error);
-      }
+      });
+    } else {
+      // ALERTA BONITA PARA RESERVAS DIARIAS
+      Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¡Esta acción no se puede deshacer!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            await axios.delete(
+              `http://localhost:3000/api/reservas-diarias/${id}`,
+              { withCredentials: true }
+            );
+            fetchReservasDiarias();
+            Swal.fire(
+              '¡Eliminado!',
+              'La reserva diaria ha sido eliminada.',
+              'success'
+            );
+          } catch {
+            Swal.fire(
+              'Error',
+              'No se pudo eliminar la reserva diaria.',
+              'error'
+            );
+          }
+        }
+      });
     }
   };
 
   // Alterna el estado entre Disponible y Asignado
   const handleCheckReservaFija = async (reserva) => {
-    try {
-      const nuevoEstado = reserva.Estado === "Disponible" ? "Asignado" : "Disponible";
-      await axios.put(
-        `http://localhost:3000/api/reservasfijas/${reserva.idReservaFija}`,
-        { ...reserva, Estado: nuevoEstado },
-        { withCredentials: true }
-      );
-      fetchReservasFijas();
-    } catch (error) {
-      alert("No se pudo cambiar el estado.");
-      console.error(error);
-    }
+    const nuevoEstado = reserva.Estado === "Disponible" ? "Asignado" : "Disponible";
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: `¿Quieres cambiar el estado a "${nuevoEstado}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, cambiar',
+      cancelButtonText: 'Cancelar'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.put(
+            `http://localhost:3000/api/reservasfijas/${reserva.idReservaFija}`,
+            { ...reserva, Estado: nuevoEstado },
+            { withCredentials: true }
+          );
+          fetchReservasFijas();
+          Swal.fire(
+            '¡Actualizado!',
+            `La reserva ahora está como "${nuevoEstado}".`,
+            'success'
+          );
+        } catch (error) {
+          Swal.fire(
+            'Error',
+            'No se pudo cambiar el estado.',
+            'error'
+          );
+          console.error(error);
+        }
+      }
+    });
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
+    // Si el formato es YYYY-MM-DD, sepáralo y muéstralo manualmente
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [year, month, day] = dateString.split("-");
+      return `${day}/${month}/${year}`;
+    }
+    // Si es otro formato, usa el Date normal
     const date = new Date(dateString);
     return date.toLocaleDateString();
   };
@@ -267,7 +371,10 @@ const Reservas = () => {
 
   // Escucha global de teclado SOLO cuando el modal está abierto y hay modo de escaneo
   useEffect(() => {
-    if (!showModal || !barcodeMode) return;
+    if (!showModal) return;
+    
+    // Solo permitir teclado en modo 'user', no en modo 'equipment'
+    if (barcodeMode !== 'user') return;
 
     const handleKeyDown = (e) => {
       if (e.key === "Enter") {
@@ -317,11 +424,12 @@ const Reservas = () => {
         nuevosEquipos = [...scannedEquipment, { code: codigo, quantity: 1 }];
       }
       setScannedEquipment(nuevosEquipos);
-      setNewReserva({
-        ...newReserva,
-        materialReservado: nuevosEquipos.map(eq => eq.code).join(", "),
-        cantidadMaterial: nuevosEquipos.reduce((sum, eq) => sum + eq.quantity, 0)
-      });
+
+      // Actualiza el campo Material Reservado con el resumen de materiales escaneados
+      setNewReserva(prev => ({
+        ...prev,
+        materialReservado: nuevosEquipos.map(eq => `${eq.code} (x${eq.quantity})`).join(", ")
+      }));
     }
   };
 
@@ -382,6 +490,7 @@ const Reservas = () => {
                   nombrePrograma: e.target.value,
                 })
               }
+              placeholder="Ingrese el nombre del programa"
               className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -398,6 +507,7 @@ const Reservas = () => {
                   ficha: e.target.value,
                 })
               }
+              placeholder="ingrese el número de ficha"
               className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -408,12 +518,13 @@ const Reservas = () => {
             <input
               type="text"
               value={newReserva.materialReservado || ""}
-              onChange={(e) =>
+              onChange={e =>
                 setNewReserva({
                   ...newReserva,
                   materialReservado: e.target.value,
                 })
               }
+              placeholder="Escriba manualmente o use el escáner"
               className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -483,18 +594,13 @@ const Reservas = () => {
             </label>
             <select
               value={newReserva.IdUsuario || ""}
-              onChange={e =>
-                setNewReserva({
-                  ...newReserva,
-                  IdUsuario: e.target.value,
-                })
-              }
+              onChange={e => setNewReserva({ ...newReserva, IdUsuario: e.target.value })}
               className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Seleccione un usuario</option>
-              {usuarios.map((usuario) => (
-                <option key={usuario.IdUsuario} value={usuario.IdUsuario}>
-                  {usuario.Usuario}
+              {usuarios.map(u => (
+                <option key={u.IdUsuario} value={u.IdUsuario}>
+                  {u.Usuario}
                 </option>
               ))}
             </select>
@@ -512,6 +618,7 @@ const Reservas = () => {
                   ficha: e.target.value,
                 })
               }
+              placeholder="Ingresa el numero de la ficha"
               className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -519,12 +626,18 @@ const Reservas = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Material Reservado
             </label>
-            <input
-              type="text"
-              value={scannedEquipment.reduce((sum, eq) => sum + eq.quantity, 0)}
-              readOnly
-              className="border border-gray-300 p-2 rounded-lg w-full bg-gray-100"
-            />
+           <input
+            type="text"
+            value={newReserva.materialReservado || ""}
+            onChange={e =>
+              setNewReserva({
+                ...newReserva,
+                materialReservado: e.target.value,
+              })
+            }
+            placeholder="Escriba manualmente o use el escáner"
+            className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -724,7 +837,7 @@ const Reservas = () => {
         {/* Header */}
         <div className="flex items-center mb-6">
           <div className="flex items-center mr-8">
-            <div className="bg-orange-500 text-white px-2 py-1 rounded text-sm font-bold mr-2">
+            <div className="bg-green-500 text-white px-2 py-1 rounded text-sm font-bold mr-2">
               SENA
             </div>
             <h1 className="text-2xl font-bold text-gray-800">
@@ -1026,17 +1139,35 @@ const Reservas = () => {
       </div>
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-4 max-h-screen overflow-y-auto">
-            <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg mx-4 max-h-[95vh] overflow-y-auto border border-blue-100 relative animate-fade-in">
+         
+            <button
+              onClick={() => {
+                setShowModal(false);
+                setBarcodeMode('user');
+                setScannedEquipment([]);
+                setShowBarcodeInstructions(false);
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors"
+              title="Cerrar"
+            >
+              <X size={24} />
+            </button>
+            <h2 className="text-2xl font-bold mb-2 text-center text-blue-700 mt-8">
               {activeTab === "fijas"
                 ? (newReserva.idReservaFija ? "Editar Reserva Fija" : "Crear Nueva Reserva Fija")
                 : (newReserva.idReservaDiaria ? "Editar Reserva Diaria" : "Crear Nueva Reserva Diaria")}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <p className="text-gray-500 text-center mb-6">
+              {activeTab === "fijas"
+                ? "Completa los datos para la reserva fija."
+                : "Completa los datos para la reserva diaria."}
+            </p>
+            <div className="grid grid-cols-1 gap-5 mb-6">
               {getFormFields()}
             </div>
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+            <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
               <button
                 onClick={() => {
                   setShowModal(false);
@@ -1044,13 +1175,13 @@ const Reservas = () => {
                   setScannedEquipment([]);
                   setShowBarcodeInstructions(false);
                 }}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                className="px-5 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-semibold"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleCreateReserva}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold shadow"
               >
                 {activeTab === "fijas"
                   ? (newReserva.idReservaFija ? "Actualizar" : "Crear")
