@@ -1,28 +1,16 @@
-import { useState } from 'react';
+import React from 'react';
 import { PlusCircle, UserPlus, Laptop, Monitor, Package } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useAccionesRapidas } from '../hooks/useAccionesRapidas';
+
 
 const AccionesRapidas = () => {
-  const navigate = useNavigate();
-  const [isHovering, setIsHovering] = useState({
-    asignacion: false,
-    usuario: false,
-    equipoTecnologico: false,
-    productoConsumible: false
-  });
-
-  const handleMouseEnter = (button) => {
-    setIsHovering(prev => ({ ...prev, [button]: true }));
-  };
-
-  const handleMouseLeave = (button) => {
-    setIsHovering(prev => ({ ...prev, [button]: false }));
-  };
-
-  const handleClick = (route) => {
-    navigate(route);
-  };
-
+  const {
+    isHovering,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleClick,
+  } = useAccionesRapidas();
+  
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6">
       <div className="flex items-center mb-4">
