@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -58,6 +58,10 @@ export const useAsignaciones = () => {
       setAsignaciones(response.data);
     } catch (error) {
       console.error("Error al obtener asignaciones:", error);
+      toast.error("Error al cargar las asignaciones", {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
 
@@ -70,10 +74,13 @@ export const useAsignaciones = () => {
       setUsuarios(response.data);
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
+      toast.error("Error al cargar los usuarios", {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
 
-  // Función para manejar el escaneo de código de barras
   // Función para manejar códigos de barras escaneados
   const handleBarcodeScan = async (scannedCode) => {
     if (!showModal) return; // Solo procesar si el modal está abierto
@@ -92,15 +99,12 @@ export const useAsignaciones = () => {
             Nombre: usuario.Nombre,
             Apellido: usuario.Apellido,
             Documento: usuario.NumeroDocumento || "",
-            Usuario: usuario.Usuario || "", // Agregar esta línea
+            Usuario: usuario.Usuario || "",
           });
 
-          Swal.fire({
-            icon: "success",
-            title: "Usuario encontrado",
-            text: `${usuario.Nombre} ${usuario.Apellido}`,
-            timer: 1500,
-            showConfirmButton: false,
+          toast.success(`Usuario encontrado: ${usuario.Nombre} ${usuario.Apellido}`, {
+            position: "top-right",
+            autoClose: 2000,
           });
 
           // Cambiar automáticamente a modo equipo después de escanear usuario
@@ -108,12 +112,9 @@ export const useAsignaciones = () => {
           setShowBarcodeInstructions(true);
           setTimeout(() => setShowBarcodeInstructions(false), 3000);
         } else {
-          Swal.fire({
-            icon: "warning",
-            title: "Usuario no encontrado",
-            text: "No se encontró un usuario con ese documento",
-            timer: 2000,
-            showConfirmButton: false,
+          toast.warning("No se encontró un usuario con ese documento", {
+            position: "top-right",
+            autoClose: 2500,
           });
         }
       } else if (barcodeMode === "equipment") {
@@ -147,20 +148,16 @@ export const useAsignaciones = () => {
           Cantidad: totalQuantity.toString(),
         });
 
-        Swal.fire({
-          icon: "success",
-          title: "Equipo escaneado",
-          text: `Código: ${scannedCode}`,
-          timer: 1000,
-          showConfirmButton: false,
+        toast.success(`Equipo escaneado: ${scannedCode}`, {
+          position: "top-right",
+          autoClose: 1500,
         });
       }
     } catch (error) {
       console.error("Error al procesar código de barras:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Error al procesar el código escaneado",
+      toast.error("Error al procesar el código escaneado", {
+        position: "top-right",
+        autoClose: 3000,
       });
     }
   };
@@ -175,7 +172,7 @@ export const useAsignaciones = () => {
       Nombre: usuario ? usuario.Nombre : "",
       Apellido: usuario ? usuario.Apellido : "",
       Documento: usuario ? usuario.NumeroDocumento || "" : "",
-      Usuario: usuario ? usuario.Usuario || "" : "", // Agregar esta línea también
+      Usuario: usuario ? usuario.Usuario || "" : "",
     });
   };
 
@@ -203,13 +200,9 @@ export const useAsignaciones = () => {
     }
 
     if (missingFields.length > 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "Campos requeridos",
-        text: `Por favor complete los siguientes campos: ${missingFields.join(
-          ", "
-        )}`,
-        confirmButtonColor: "#3085d6",
+      toast.warning(`Por favor complete los siguientes campos: ${missingFields.join(", ")}`, {
+        position: "top-right",
+        autoClose: 4000,
       });
       return;
     }
@@ -220,11 +213,9 @@ export const useAsignaciones = () => {
         new Date(newAsignacion.FechaDevolucion) <
         new Date(newAsignacion.FechaAsignacion)
       ) {
-        Swal.fire({
-          icon: "warning",
-          title: "Fecha inválida",
-          text: "La fecha de devolución no puede ser anterior a la fecha de asignación.",
-          confirmButtonColor: "#3085d6",
+        toast.warning("La fecha de devolución no puede ser anterior a la fecha de asignación", {
+          position: "top-right",
+          autoClose: 4000,
         });
         return;
       }
@@ -237,12 +228,9 @@ export const useAsignaciones = () => {
           newAsignacion,
           { withCredentials: true }
         );
-        Swal.fire({
-          icon: "success",
-          title: "Asignación actualizada",
-          text: "La asignación se actualizó correctamente.",
-          timer: 1800,
-          showConfirmButton: false,
+        toast.success("Asignación actualizada correctamente", {
+          position: "top-right",
+          autoClose: 2500,
         });
       } else {
         const now = new Date();
@@ -256,11 +244,9 @@ export const useAsignaciones = () => {
           newAsignacion,
           { withCredentials: true }
         );
-        Swal.fire({
-          icon: "success",
-          title: "Asignación creada",
-          text: "La asignación se creó correctamente.",
-          showConfirmButton: true,
+        toast.success("Asignación creada correctamente", {
+          position: "top-right",
+          autoClose: 2500,
         });
       }
       setScannedEquipment([]); // Limpiar equipos escaneados
@@ -283,83 +269,101 @@ export const useAsignaciones = () => {
         Estado: "Activo",
       });
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text:
-          error.response?.data?.message ||
-          "Ocurrió un error al guardar la asignación.",
+      toast.error(error.response?.data?.message || "Ocurrió un error al guardar la asignación", {
+        position: "top-right",
+        autoClose: 4000,
       });
       console.error(error);
     }
   };
 
-  const handleEditAsignacion = (asignacion) => {
-    Swal.fire({
-      title: "¿Deseas editar esta asignación?",
-      text: "Podrás modificar los datos de la asignación seleccionada.",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, editar",
-      cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Formatear las fechas para el input date
-        const formatDateForInput = (dateString) => {
-          if (!dateString) return "";
-          const date = new Date(dateString);
-          return date.toISOString().split("T")[0];
-        };
+  const handleEditAsignacion = async (asignacion) => {
+    // Formatear las fechas para el input date
+    const formatDateForInput = (dateString) => {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      return date.toISOString().split("T")[0];
+    };
 
-        setNewAsignacion({
-          ...asignacion,
-          FechaAsignacion: formatDateForInput(asignacion.FechaAsignacion),
-          FechaDevolucion: formatDateForInput(asignacion.FechaDevolucion),
-        });
-        setShowModal(true);
-        Swal.fire({
-          icon: "info",
-          title: "Modo edición",
-          text: "Ahora puedes editar la asignación.",
-          timer: 2000,
-          showConfirmButton: false,
-        });
-      }
+    setNewAsignacion({
+      ...asignacion,
+      FechaAsignacion: formatDateForInput(asignacion.FechaAsignacion),
+      FechaDevolucion: formatDateForInput(asignacion.FechaDevolucion),
+    });
+
+    setShowModal(true);
+
+    toast.info("Modo edición activado", {
+      position: "top-right",
+      autoClose: 2000,
     });
   };
-
+  
   const handleDeleteAsignacion = async (id) => {
-    const result = await Swal.fire({
-      title: "¿Estás seguro?",
-      text: "Esta acción eliminará la asignación. ¿Deseas continuar?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
+    const confirmDelete = await new Promise((resolve) => {
+      toast.warning(
+        ({ closeToast }) => (
+          <div>
+            <p>¿Estás seguro de eliminar esta asignación?</p>
+            <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => {
+                  resolve(true);
+                  closeToast();
+                }}
+                style={{
+                  backgroundColor: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Sí, eliminar
+              </button>
+              <button
+                onClick={() => {
+                  resolve(false);
+                  closeToast();
+                }}
+                style={{
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        ),
+        {
+          position: "top-right",
+          autoClose: false,
+          closeOnClick: false,
+          draggable: false,
+        }
+      );
     });
 
-    if (result.isConfirmed) {
+    if (confirmDelete) {
       try {
         await axios.delete(`http://localhost:3000/api/asignaciones/${id}`, {
           withCredentials: true,
         });
         fetchAsignaciones();
-        Swal.fire({
-          icon: "success",
-          title: "Eliminado",
-          text: "La asignación fue eliminada correctamente.",
-          timer: 1800,
-          showConfirmButton: true,
+        toast.success("Asignación eliminada correctamente", {
+          position: "top-right",
+          autoClose: 2500,
         });
       } catch (error) {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Ocurrió un error al eliminar la asignación.",
+        toast.error("Ocurrió un error al eliminar la asignación", {
+          position: "top-right",
+          autoClose: 3000,
         });
         console.error("Error al eliminar asignación:", error);
       }
@@ -368,35 +372,127 @@ export const useAsignaciones = () => {
 
   // Función para confirmar devolución de una asignación
   const handleConfirmarDevolucion = async (id) => {
-    const { isConfirmed } = await Swal.fire({
-      title: "¿Hay alguna novedad que reportar?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sí",
-      cancelButtonText: "No",
+    const hasNovedad = await new Promise((resolve) => {
+      toast.info(
+        ({ closeToast }) => (
+          <div>
+            <p>¿Hay alguna novedad que reportar?</p>
+            <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => {
+                  resolve(true);
+                  closeToast();
+                }}
+                style={{
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Sí
+              </button>
+              <button
+                onClick={() => {
+                  resolve(false);
+                  closeToast();
+                }}
+                style={{
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                No
+              </button>
+            </div>
+          </div>
+        ),
+        {
+          position: "top-right",
+          autoClose: false,
+          closeOnClick: false,
+          draggable: false,
+        }
+      );
     });
 
     let novedad = "";
-    if (isConfirmed) {
-      const { value: texto } = await Swal.fire({
-        title: "Describe la novedad",
-        input: "textarea",
-        inputPlaceholder: "Escribe aquí la novedad...",
-        showCancelButton: true,
-        confirmButtonText: "Guardar",
+    if (hasNovedad) {
+      novedad = await new Promise((resolve) => {
+        let inputValue = "";
+        toast.info(
+          ({ closeToast }) => (
+            <div>
+              <p>Describe la novedad:</p>
+              <textarea
+                placeholder="Escribe aquí la novedad..."
+                style={{
+                  width: '100%',
+                  minHeight: '60px',
+                  margin: '10px 0',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc'
+                }}
+                onChange={(e) => { inputValue = e.target.value; }}
+              />
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button
+                  onClick={() => {
+                    resolve(inputValue);
+                    closeToast();
+                  }}
+                  style={{
+                    backgroundColor: '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Guardar
+                </button>
+                <button
+                  onClick={() => {
+                    resolve(null);
+                    closeToast();
+                  }}
+                  style={{
+                    backgroundColor: '#6c757d',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ),
+          {
+            position: "top-right",
+            autoClose: false,
+            closeOnClick: false,
+            draggable: false,
+          }
+        );
       });
 
-      if (texto) {
-        novedad = texto;
-      } else {
-        return;
-      }
+      if (novedad === null) return; // Usuario canceló
     }
 
     try {
       const now = new Date();
       const FechaDevolucion = getTodayLocal();
-      // Cambiar esta línea para formato HH:MM:SS
       const HoraDevolucion = now.toTimeString().split(" ")[0].substring(0, 8);
 
       await axios.patch(
@@ -405,26 +501,22 @@ export const useAsignaciones = () => {
           FechaDevolucion,
           HoraDevolucion,
           Estado: "Inactivo",
-          Novedad: novedad || null, // Asegurar que se envíe null si está vacío
+          Novedad: novedad || null,
         },
         { withCredentials: true }
       );
 
       await fetchAsignaciones();
 
-      Swal.fire({
-        icon: "success",
-        title: "Devolución confirmada",
-        text: "La devolución fue registrada exitosamente.",
-        timer: 1800,
-        showConfirmButton: false,
+      toast.success("Devolución registrada exitosamente", {
+        position: "top-right",
+        autoClose: 2500,
       });
     } catch (error) {
-      console.error("Error completo:", error.response?.data); // Para debug
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: error.response?.data?.message || "Error al confirmar devolución.",
+      console.error("Error completo:", error.response?.data);
+      toast.error(error.response?.data?.message || "Error al confirmar devolución", {
+        position: "top-right",
+        autoClose: 3000,
       });
     }
   };
@@ -475,8 +567,7 @@ export const useAsignaciones = () => {
     }
 
     const fullName = asignacion.Usuario
-      ? `${asignacion.Usuario.Nombre || ""} ${
-          asignacion.Usuario.Apellido || ""
+      ? `${asignacion.Usuario.Nombre || ""} ${asignacion.Usuario.Apellido || ""
         }`.toLowerCase()
       : "";
 
@@ -618,25 +709,19 @@ export const useAsignaciones = () => {
         },
       });
 
-      const fileName = `asignaciones_${
-        new Date().toISOString().split("T")[0]
-      }.pdf`;
+      const fileName = `asignaciones_${new Date().toISOString().split("T")[0]
+        }.pdf`;
       doc.save(fileName);
 
-      Swal.fire({
-        icon: "success",
-        title: "PDF generado",
-        text: "El archivo PDF se ha descargado correctamente.",
-        timer: 2000,
-        showConfirmButton: false,
+      toast.success("PDF generado y descargado correctamente", {
+        position: "top-right",
+        autoClose: 2500,
       });
     } catch (error) {
       console.error("Error detallado al generar PDF:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error al generar PDF",
-        text: `Error: ${error.message}`,
-        showConfirmButton: true,
+      toast.error(`Error al generar PDF: ${error.message}`, {
+        position: "top-right",
+        autoClose: 4000,
       });
     }
   };
@@ -676,25 +761,19 @@ export const useAsignaciones = () => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Asignaciones");
 
-      const fileName = `asignaciones_${
-        new Date().toISOString().split("T")[0]
-      }.xlsx`;
+      const fileName = `asignaciones_${new Date().toISOString().split("T")[0]
+        }.xlsx`;
       XLSX.writeFile(workbook, fileName);
 
-      Swal.fire({
-        icon: "success",
-        title: "Excel generado",
-        text: "El archivo Excel se ha descargado correctamente.",
-        timer: 2000,
-        showConfirmButton: false,
+      toast.success("Excel generado y descargado correctamente", {
+        position: "top-right",
+        autoClose: 2500,
       });
     } catch (error) {
       console.error("Error al generar Excel:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error al generar Excel",
-        text: `Error: ${error.message}`,
-        showConfirmButton: true,
+      toast.error(`Error al generar Excel: ${error.message}`, {
+        position: "top-right",
+        autoClose: 4000,
       });
     }
   };

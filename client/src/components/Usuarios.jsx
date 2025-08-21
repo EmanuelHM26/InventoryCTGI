@@ -11,6 +11,10 @@ import {
   Download,
 } from "lucide-react";
 import { useUsuarios } from "../hooks/useUsuarios";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useAuth } from "../context/authContext";
+
 
 const Usuarios = () => {
   const {
@@ -49,57 +53,83 @@ const Usuarios = () => {
     itemsPerPage,
   } = useUsuarios();
 
+  const { user } = useAuth();
+
   return (
     <div className="px-4 py-20 md:px-8 lg:px-10 max-w-full bg-gray-50 min-h-screen">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
-            Usuarios Registrados
-          </h1>
 
-          <div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Buscar usuario..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <Search
-                size={18}
-                className="absolute left-3 top-2.5 text-gray-400"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm("")}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                >
-                  <X size={18} />
-                </button>
-              )}
-            </div>
+    <ToastContainer
+      position="top-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="light"
+      style={{
+        top: '80px',
+        right: '20px',
+        zIndex: 9999
+      }}
+      toastStyle={{
+        fontSize: '14px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+      }}
+    />
 
-            {/* Botones de exportación con iconos de Lucide */}
-            <div className="flex gap-2">
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
+          Usuarios Registrados
+        </h1>
+
+        <div className="flex flex-col sm:flex-row w-full md:w-auto gap-4">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar usuario..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <Search
+              size={18}
+              className="absolute left-3 top-2.5 text-gray-400"
+            />
+            {searchTerm && (
               <button
-                onClick={exportToPDF}
-                className="flex items-center justify-center bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-sm"
-                title="Exportar a PDF"
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
               >
-                <FileText size={16} className="mr-2" />
-                PDF
+                <X size={18} />
               </button>
-              <button
-                onClick={exportToExcel}
-                className="flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm"
-                title="Exportar a Excel"
-              >
-                <Download size={16} className="mr-2" />
-                Excel
-              </button>
-            </div>
+            )}
+          </div>
 
+          <div className="flex gap-2">
+            <button
+              onClick={exportToPDF}
+              className="flex items-center justify-center bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-sm"
+              title="Exportar a PDF"
+            >
+              <FileText size={16} className="mr-2" />
+              PDF
+            </button>
+            <button
+              onClick={exportToExcel}
+              className="flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm"
+              title="Exportar a Excel"
+            >
+              <Download size={16} className="mr-2" />
+              Excel
+            </button>
+          </div>
+
+          {user?.rol === "Administrador" && (
             <button
               onClick={handleOpenNewUserModal}
               className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
@@ -107,214 +137,211 @@ const Usuarios = () => {
               <Plus size={18} className="mr-2" />
               Nuevo Usuario
             </button>
-          </div>
+          )}
         </div>
+      </div>
 
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                {[
-                  "ID",
-                  "Nombre",
-                  "Apellido",
-                  "Tipo Doc.",
-                  "Número Doc.",
-                  "Usuario",
-                  "Correo",
-                  "Rol",
-                  "Acciones",
-                ].map((header, index) => (
-                  <th
-                    key={index}
-                    onClick={() => {
-                      if (index < 8) {
-                        // Actualizar para incluir la nueva columna
-                        const keys = [
-                          "IdUsuario",
-                          "Nombre",
-                          "Apellido",
-                          "TipoDocumento",
-                          "NumeroDocumento",
-                          "Usuario",
-                          "Correo",
-                          "IdRol",
-                        ];
-                        requestSort(keys[index]);
-                      }
-                    }}
-                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                      index < 8 ? "cursor-pointer hover:bg-gray-100" : ""
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              {[
+                "ID",
+                "Nombre",
+                "Apellido",
+                "Tipo Doc.",
+                "Número Doc.",
+                "Usuario",
+                "Correo",
+                "Rol",
+                "Acciones",
+              ].map((header, index) => (
+                <th
+                  key={index}
+                  onClick={() => {
+                    if (index < 8) {
+                      const keys = [
+                        "IdUsuario",
+                        "Nombre",
+                        "Apellido",
+                        "TipoDocumento",
+                        "NumeroDocumento",
+                        "Usuario",
+                        "Correo",
+                        "IdRol",
+                      ];
+                      requestSort(keys[index]);
+                    }
+                  }}
+                  className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 8 ? "cursor-pointer hover:bg-gray-100" : ""
                     }`}
-                  >
-                    <div className="flex items-center">
-                      {header}
-                      {index < 8 && (
-                        <span className="ml-1">
-                          {sortConfig.key ===
-                            [
-                              "IdUsuario",
-                              "Nombre",
-                              "Apellido",
-                              "TipoDocumento",
-                              "NumeroDocumento",
-                              "Usuario",
-                              "Correo",
-                              "IdRol",
-                            ][index] &&
-                            (sortConfig.direction === "ascending" ? "↑" : "↓")}
-                        </span>
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {currentUsuarios.length > 0 ? (
-                currentUsuarios.map((user, index) => (
-                  <tr
-                    key={user.IdUsuario}
-                    className={`hover:bg-blue-50 transition-colors duration-150 ${
-                      index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                >
+                  <div className="flex items-center">
+                    {header}
+                    {index < 8 && (
+                      <span className="ml-1">
+                        {sortConfig.key ===
+                          [
+                            "IdUsuario",
+                            "Nombre",
+                            "Apellido",
+                            "TipoDocumento",
+                            "NumeroDocumento",
+                            "Usuario",
+                            "Correo",
+                            "IdRol",
+                          ][index] &&
+                          (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                      </span>
+                    )}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {currentUsuarios.length > 0 ? (
+              currentUsuarios.map((userItem, index) => (
+                <tr
+                  key={userItem.IdUsuario}
+                  className={`hover:bg-blue-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
                     }`}
-                  >
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {user.IdUsuario || ""}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {user.Nombre || ""}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {user.Apellido || ""}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {user.TipoDocumento || ""}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {user.NumeroDocumento || ""}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {user.Usuario || ""}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                      {user.Correo || ""}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          user.IdRol === 1
-                            ? "bg-red-100 text-red-800"
-                            : user.IdRol === 2
-                            ? "bg-blue-100 text-blue-800"
-                            : user.IdRol === 3
+                >
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    {userItem.IdUsuario || ""}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    {userItem.Nombre || ""}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    {userItem.Apellido || ""}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    {userItem.TipoDocumento || ""}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    {userItem.NumeroDocumento || ""}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    {userItem.Usuario || ""}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    {userItem.Correo || ""}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${userItem.IdRol === 1
+                        ? "bg-red-100 text-red-800"
+                        : userItem.IdRol === 2
+                          ? "bg-blue-100 text-blue-800"
+                          : userItem.IdRol === 3
                             ? "bg-green-100 text-green-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
-                      >
-                        {getRolName(user.IdRol)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEditUser(user)}
-                          className="p-1 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors duration-200"
-                          title="Editar usuario"
-                        >
-                          <Edit size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user.IdUsuario)}
-                          className="p-1 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition-colors duration-200"
-                          title="Eliminar usuario"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="9"
-                    className="px-4 py-8 text-center text-gray-500"
-                  >
-                    No se encontraron usuarios
+                    >
+                      {getRolName(userItem.IdRol)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex space-x-2">
+                      {user?.rol === "Administrador" && (
+                        <>
+                          <button
+                            onClick={() => handleEditUser(userItem)}
+                            className="p-1 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors duration-200"
+                            title="Editar usuario"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(userItem.IdUsuario)}
+                            className="p-1 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition-colors duration-200"
+                            title="Eliminar usuario"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Paginación */}
-        {sortedUsuarios.length > 0 && (
-          <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
-            <div>
-              Mostrando {indexOfFirstItem + 1} a{" "}
-              {Math.min(indexOfLastItem, sortedUsuarios.length)} de{" "}
-              {sortedUsuarios.length} usuarios
-            </div>
-            <div className="flex space-x-1">
-              <button
-                onClick={() => paginate(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`p-2 rounded-md ${
-                  currentPage === 1
-                    ? "text-gray-300 cursor-not-allowed"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                <ChevronLeft size={18} />
-              </button>
-
-              {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
-                let pageNumber;
-                if (totalPages <= 5) {
-                  pageNumber = idx + 1;
-                } else if (currentPage <= 3) {
-                  pageNumber = idx + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNumber = totalPages - 4 + idx;
-                } else {
-                  pageNumber = currentPage - 2 + idx;
-                }
-
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => paginate(pageNumber)}
-                    className={`w-10 h-10 rounded-md ${
-                      currentPage === pageNumber
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-600 hover:bg-gray-100"
-                    }`}
-                  >
-                    {pageNumber}
-                  </button>
-                );
-              })}
-
-              <button
-                onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`p-2 rounded-md ${
-                  currentPage === totalPages
-                    ? "text-gray-300 cursor-not-allowed"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
-          </div>
-        )}
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="9"
+                  className="px-4 py-8 text-center text-gray-500"
+                >
+                  No se encontraron usuarios
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
+      {sortedUsuarios.length > 0 && (
+        <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
+          <div>
+            Mostrando {indexOfFirstItem + 1} a{" "}
+            {Math.min(indexOfLastItem, sortedUsuarios.length)} de{" "}
+            {sortedUsuarios.length} usuarios
+          </div>
+          <div className="flex space-x-1">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`p-2 rounded-md ${currentPage === 1
+                ? "text-gray-300 cursor-not-allowed"
+                : "text-gray-600 hover:bg-gray-100"
+                }`}
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            {Array.from({ length: Math.min(5, totalPages) }).map((_, idx) => {
+              let pageNumber;
+              if (totalPages <= 5) {
+                pageNumber = idx + 1;
+              } else if (currentPage <= 3) {
+                pageNumber = idx + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNumber = totalPages - 4 + idx;
+              } else {
+                pageNumber = currentPage - 2 + idx;
+              }
+
+              return (
+                <button
+                  key={idx}
+                  onClick={() => paginate(pageNumber)}
+                  className={`w-10 h-10 rounded-md ${currentPage === pageNumber
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                >
+                  {pageNumber}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`p-2 rounded-md ${currentPage === totalPages
+                ? "text-gray-300 cursor-not-allowed"
+                : "text-gray-600 hover:bg-gray-100"
+                }`}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+
       {/* Modal para crear o editar un usuario */}
-      {showModal && (
+      {showModal && user?.rol === "Adminnistrador" && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-screen overflow-y-auto">
             <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">
@@ -344,11 +371,10 @@ const Usuarios = () => {
                         "El nombre solo puede contener letras y espacios",
                     },
                   })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
-                    errors.Nombre
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.Nombre
                       ? "border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:ring-blue-500"
-                  }`}
+                    }`}
                 />
                 {errors.Nombre && (
                   <p className="text-red-500 text-xs mt-1">
@@ -378,11 +404,10 @@ const Usuarios = () => {
                         "El apellido solo puede contener letras y espacios",
                     },
                   })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
-                    errors.Apellido
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.Apellido
                       ? "border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:ring-blue-500"
-                  }`}
+                    }`}
                 />
                 {errors.Apellido && (
                   <p className="text-red-500 text-xs mt-1">
@@ -398,11 +423,10 @@ const Usuarios = () => {
                   {...register("TipoDocumento", {
                     required: "Debe seleccionar un tipo de documento",
                   })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
-                    errors.TipoDocumento
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.TipoDocumento
                       ? "border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:ring-blue-500"
-                  }`}
+                    }`}
                 >
                   <option value="">Seleccionar tipo</option>
                   <option value="CC">CC - Cédula de Ciudadanía</option>
@@ -430,11 +454,10 @@ const Usuarios = () => {
                         "El número de documento debe tener entre 6 y 15 dígitos",
                     },
                   })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
-                    errors.NumeroDocumento
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.NumeroDocumento
                       ? "border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:ring-blue-500"
-                  }`}
+                    }`}
                 />
                 {errors.NumeroDocumento && (
                   <p className="text-red-500 text-xs mt-1">
@@ -464,11 +487,10 @@ const Usuarios = () => {
                         "El usuario solo puede contener letras, números y guiones bajos",
                     },
                   })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
-                    errors.Usuario
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.Usuario
                       ? "border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:ring-blue-500"
-                  }`}
+                    }`}
                 />
                 {errors.Usuario && (
                   <p className="text-red-500 text-xs mt-1">
@@ -489,11 +511,10 @@ const Usuarios = () => {
                       message: "Ingrese un correo electrónico válido",
                     },
                   })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
-                    errors.Correo
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.Correo
                       ? "border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:ring-blue-500"
-                  }`}
+                    }`}
                 />
                 {errors.Correo && (
                   <p className="text-red-500 text-xs mt-1">
@@ -510,11 +531,10 @@ const Usuarios = () => {
                   {...register("IdRol", {
                     required: "Debe seleccionar un rol",
                   })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
-                    errors.IdRol
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.IdRol
                       ? "border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:ring-blue-500"
-                  }`}
+                    }`}
                 >
                   {roles.map((rol) => (
                     <option key={rol.IdRol} value={rol.IdRol}>
@@ -540,11 +560,10 @@ const Usuarios = () => {
               <button
                 onClick={handleCreateUser}
                 disabled={Object.keys(errors).length > 0}
-                className={`px-4 py-2 text-white rounded-lg transition-colors duration-200 ${
-                  Object.keys(errors).length > 0
+                className={`px-4 py-2 text-white rounded-lg transition-colors duration-200 ${Object.keys(errors).length > 0
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-blue-600 hover:bg-blue-700"
-                }`}
+                  }`}
               >
                 {newUser.IdUsuario ? "Actualizar" : "Crear"}
               </button>
