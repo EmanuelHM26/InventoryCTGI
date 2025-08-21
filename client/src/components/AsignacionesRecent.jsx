@@ -1,61 +1,22 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { useAsignacionesRecent } from "../hooks/useAsignacionesRecent";
 
 const AsignacionesRecent = () => {
-  const [asignaciones, setAsignaciones] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [diasFiltro, setDiasFiltro] = useState(7); // Por defecto últimos 7 días
-  const itemsPerPage = 6;
-
-  useEffect(() => {
-    fetchRecentAsignaciones();
-  }, [diasFiltro]);
-
-  const fetchRecentAsignaciones = async () => {
-    try {
-      const response = await axios.get(
-        `http://localhost:3000/api/asignaciones/recent?days=${diasFiltro}`,
-        { withCredentials: true }
-      );
-      setAsignaciones(response.data);
-      setCurrentPage(1); // Resetear a la primera página cuando cambie el filtro
-    } catch (error) {
-      console.error("Error al obtener asignaciones recientes:", error);
-    }
-  };
-
-  // Paginación
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentAsignaciones = asignaciones.slice(
+  const {
+    asignaciones,
+    currentPage,
+    totalPages,
+    diasFiltro,
+    setDiasFiltro,
+    paginate,
+    formatDate,
+    filtroOpciones,
+    itemsPerPage,
     indexOfFirstItem,
-    indexOfLastItem
-  );
-  const totalPages = Math.ceil(asignaciones.length / itemsPerPage);
-
-  const paginate = (pageNumber) => {
-    if (pageNumber > 0 && pageNumber <= totalPages) {
-      setCurrentPage(pageNumber);
-    }
-  };
-
-  // Formatear fecha para mostrar en formato legible
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  };
-
-  // Opciones de filtro por días
-  const filtroOpciones = [
-    { value: 1, label: "Hoy" },
-    { value: 3, label: "Últimos 3 días" },
-    { value: 7, label: "Última semana" },
-    { value: 15, label: "Últimos 15 días" },
-    { value: 30, label: "Último mes" }
-  ];
-
+    indexOfLastItem,
+    totalAsignaciones
+  } = useAsignacionesRecent();
+  
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-4">
@@ -97,8 +58,8 @@ const AsignacionesRecent = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {currentAsignaciones.length > 0 ? (
-              currentAsignaciones.map((asignacion) => (
+            {asignaciones.length > 0 ? (
+              asignaciones.map((asignacion) => (
                 <tr
                   key={asignacion.IdAsignaciones}
                   className="hover:bg-blue-50 transition-colors duration-150"
@@ -150,19 +111,19 @@ const AsignacionesRecent = () => {
       </div>
 
       {/* Información adicional */}
-      {asignaciones.length > 0 && (
+      {totalAsignaciones > 0 && (
         <div className="mt-4 text-sm text-gray-600">
-          <p>Mostrando {asignaciones.length} asignaciones de los últimos {diasFiltro} días</p>
+          <p>Mostrando {totalAsignaciones} asignaciones de los últimos {diasFiltro} días</p>
         </div>
       )}
 
       {/* Paginación */}
-      {asignaciones.length > itemsPerPage && (
+      {totalAsignaciones > itemsPerPage && (
         <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
           <div>
             Mostrando {indexOfFirstItem + 1} a{" "}
-            {Math.min(indexOfLastItem, asignaciones.length)} de{" "}
-            {asignaciones.length} asignaciones
+            {Math.min(indexOfLastItem, totalAsignaciones)} de{" "}
+            {totalAsignaciones} asignaciones
           </div>
           <div className="flex space-x-1">
             <button
