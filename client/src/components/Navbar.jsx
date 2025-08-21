@@ -59,12 +59,12 @@ const Navbar = () => {
               >
                 Asignaciones
               </Link>
-              <Link
+              {/* <Link
                 to="/dashboard/grupo"
                 className="flex items-center py-1 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
               >
                 Grupo
-              </Link>
+              </Link> */}
 
                    <Link
                 to="/dashboard/reservas"
@@ -108,10 +108,6 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Reportes */}
-        <Link to="/dashboard/reportes" className={linkClasses}>
-          <FaChartLine className="mr-2" /> Reportes
-        </Link>
 
         <Link to="/dashboard/roles" className={linkClasses}>
           <FaChartLine className="mr-2" /> Roles

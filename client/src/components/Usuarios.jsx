@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Search,
   Edit,
@@ -26,6 +26,7 @@ const Usuarios = () => {
     reset,
     setValue,
     watch,
+    trigger,
     currentPage,
     setCurrentPage,
     searchTerm,
@@ -48,6 +49,15 @@ const Usuarios = () => {
     getRolName,
     itemsPerPage,
   } = useUsuarios();
+
+   // Forzar validación de todos los campos al abrir el modal
+  useEffect(() => {
+    if (showModal) {
+      setValue('IdRol', '');
+      trigger();
+    }
+  }, [showModal, setValue, trigger]);
+
 
   return (
     <div className="px-4 py-20 md:px-8 lg:px-10 max-w-full bg-gray-50 min-h-screen">
@@ -331,17 +341,17 @@ const Usuarios = () => {
                   {...register("Nombre", {
                     required: "El nombre es obligatorio",
                     minLength: {
-                      value: 2,
-                      message: "El nombre debe tener al menos 2 caracteres",
+                      value: 3,
+                      message: "El nombre debe tener al menos 3 caracteres",
                     },
                     maxLength: {
                       value: 50,
                       message: "El nombre no puede exceder 50 caracteres",
                     },
                     pattern: {
-                      value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/,
+                      value: /^(?! )[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/,
                       message:
-                        "El nombre solo puede contener letras y espacios",
+                        "El nombre solo puede contener letras y espacios, y no puede iniciar con espacio",
                     },
                   })}
                   className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
@@ -365,17 +375,17 @@ const Usuarios = () => {
                   {...register("Apellido", {
                     required: "El apellido es obligatorio",
                     minLength: {
-                      value: 2,
-                      message: "El apellido debe tener al menos 2 caracteres",
+                      value: 3,
+                      message: "El apellido debe tener al menos 3 caracteres",
                     },
                     maxLength: {
                       value: 50,
                       message: "El apellido no puede exceder 50 caracteres",
                     },
                     pattern: {
-                      value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/,
+                      value: /^(?! )[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$/,
                       message:
-                        "El apellido solo puede contener letras y espacios",
+                        "El apellido solo puede contener letras y espacios, y no puede iniciar con espacio",
                     },
                   })}
                   className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
@@ -463,6 +473,18 @@ const Usuarios = () => {
                       message:
                         "El usuario solo puede contener letras, números y guiones bajos",
                     },
+                    validate: value => {
+                      if (/^\d+$/.test(value)) {
+                        return "El usuario no puede ser solo números";
+                      }
+                      if (/^[_]+$/.test(value)) {
+                        return "El usuario no puede ser solo guiones bajos";
+                      }
+                      if (/^[^a-zA-Z0-9]+$/.test(value)) {
+                        return "El usuario no puede ser solo caracteres especiales";
+                      }
+                      return true;
+                    },
                   })}
                   className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
                     errors.Usuario
@@ -487,6 +509,13 @@ const Usuarios = () => {
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                       message: "Ingrese un correo electrónico válido",
+                    },
+                    validate: value => {
+                      const username = value.split('@')[0];
+                      if (/^\d+$/.test(username)) {
+                        return "El correo no puede tener solo números antes de la @";
+                      }
+                      return true;
                     },
                   })}
                   className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
@@ -515,12 +544,16 @@ const Usuarios = () => {
                       ? "border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:ring-blue-500"
                   }`}
+                  defaultValue=""
                 >
-                  {roles.map((rol) => (
-                    <option key={rol.IdRol} value={rol.IdRol}>
-                      {rol.NombreRol}
-                    </option>
-                  ))}
+                  <option value="">Seleccione un rol</option>
+                  {roles
+                    .filter((rol) => rol.NombreRol === 'Instructor' || rol.NombreRol === 'Administrativo')
+                    .map((rol) => (
+                      <option key={rol.IdRol} value={rol.IdRol}>
+                        {rol.NombreRol}
+                      </option>
+                    ))}
                 </select>
                 {errors.IdRol && (
                   <p className="text-red-500 text-xs mt-1">

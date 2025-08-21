@@ -28,6 +28,7 @@ export const useUsuarios = () => {
     reset,
     setValue,
     watch,
+    trigger,
   } = useForm({
     mode: "onChange",
     defaultValues: {
@@ -440,6 +441,7 @@ export const useUsuarios = () => {
     reset,
     setValue,
     watch,
+    trigger,
     currentPage,
     setCurrentPage,
     searchTerm,
