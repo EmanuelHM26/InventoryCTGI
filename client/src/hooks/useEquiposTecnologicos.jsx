@@ -33,7 +33,6 @@ export const useEquiposTecnologicos = () => {
 
   useEffect(() => {
     fetchEquipos();
-    // eslint-disable-next-line
   }, []);
 
   const fetchEquipos = async () => {

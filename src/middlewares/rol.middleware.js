@@ -1,9 +1,11 @@
 export const verifyRole = (rolesPermitidos) => {
   return (req, res, next) => {
-    const { rolId } = req.user;
+    if (!req.user || !req.user.rolId) {
+      return res.status(403).json({ message: "Acceso denegado: usuario no autenticado" });
+    }
 
-    if (!rolesPermitidos.includes(rolId)) {
-      return res.status(403).json({ message: "Acceso denegado" });
+    if (!rolesPermitidos.includes(req.user.rolId)) {
+      return res.status(403).json({ message: "Acceso denegado: permisos insuficientes" });
     }
 
     next();

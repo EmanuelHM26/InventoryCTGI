@@ -2,7 +2,6 @@ import { getEstadisticasInicioService } from "../services/estadisticasInicio.ser
 
 export const getEstadisticasInicioController = async (req, res) => {
   try {
-    console.log('Solicitando estadísticas de inicio...');
     const estadisticas = await getEstadisticasInicioService();
     
     // Agregar timestamp para debugging
@@ -11,7 +10,6 @@ export const getEstadisticasInicioController = async (req, res) => {
       timestamp: new Date().toISOString()
     };
     
-    console.log('Estadísticas enviadas:', response);
     res.json(response);
   } catch (error) {
     console.error("Error en el controlador de estadísticas de inicio:", error);

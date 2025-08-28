@@ -14,7 +14,7 @@ import { IoIosArrowDown } from "react-icons/io";
 const Navbar = () => {
   const [isAsignacionesOpen, setIsAsignacionesOpen] = useState(false);
   const [isInventarioOpen, setIsInventarioOpen] = useState(false);
-  const { logout } = useAuth();
+  const { logout, user } = useAuth(); // Añadí 'user' desde el contexto
 
   const linkClasses =
     "flex items-center w-full py-1 px-4 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200";
@@ -30,6 +30,14 @@ const Navbar = () => {
         <Link to="/dashboard/inicio" className={linkClasses}>
           <FaHome className="mr-1" /> Inicio
         </Link>
+
+        {/* Gestión de Usuarios (solo para administradores) */}
+        {user && user.rolId === 1 && (
+          <Link to="/admin/users" className={linkClasses}>
+            <FaUsers className="mr-2" />
+            Gestión de Usuarios
+          </Link>
+        )}
 
         {/* Usuarios */}
         <Link to="/dashboard/usuarios" className={linkClasses}>

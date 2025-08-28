@@ -39,6 +39,9 @@ export const useUsuariosSoftware = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editErrors, setEditErrors] = useState({});
 
+  const [showInactive, setShowInactive] = useState(false);
+  const [activationStatusFilter, setActivationStatusFilter] = useState("all");
+
   useEffect(() => {
     fetchUsuarios();
     fetchRoles();
@@ -54,6 +57,30 @@ export const useUsuariosSoftware = () => {
     setFilteredUsuarios(filtered);
     setCurrentPage(1);
   }, [searchTerm, usuarios]);
+
+  // Filtrar usuarios por estado de activación
+  // En useUsuariosSoftware.jsx, modifica el useEffect de filtrado:
+  useEffect(() => {
+    let filtered = usuarios;
+
+    // Filtro por estado de activación
+    if (activationStatusFilter === "active") {
+      filtered = filtered.filter((user) => user.isVerified === true);
+    } else if (activationStatusFilter === "inactive") {
+      filtered = filtered.filter((user) => user.isVerified === false);
+    }
+
+    // Mantén el filtro de búsqueda también
+    filtered = filtered.filter(
+      (user) =>
+        user.Usuario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.Correo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.IdRegistroLogin?.toString().includes(searchTerm)
+    );
+
+    setFilteredUsuarios(filtered);
+    setCurrentPage(1);
+  }, [activationStatusFilter, searchTerm, usuarios]);
 
   axios.defaults.withCredentials = true;
 
@@ -90,9 +117,12 @@ export const useUsuariosSoftware = () => {
 
   const validateField = (fieldName, value) => {
     let error = "";
-    if (fieldName === "Usuario" && !value.trim()) error = "El usuario es obligatorio";
-    if (fieldName === "Correo" && !value.trim()) error = "El correo es obligatorio";
-    if (fieldName === "PasswordTexto" && !value.trim()) error = "La contraseña es obligatoria";
+    if (fieldName === "Usuario" && !value.trim())
+      error = "El usuario es obligatorio";
+    if (fieldName === "Correo" && !value.trim())
+      error = "El correo es obligatorio";
+    if (fieldName === "PasswordTexto" && !value.trim())
+      error = "La contraseña es obligatoria";
     if (fieldName === "IdRol" && !value) error = "El rol es obligatorio";
     setValidationErrors((prev) => ({ ...prev, [fieldName]: error }));
     return error;
@@ -102,7 +132,8 @@ export const useUsuariosSoftware = () => {
     const errors = {};
     if (!data.Usuario.trim()) errors.Usuario = "El usuario es obligatorio";
     if (!data.Correo.trim()) errors.Correo = "El correo es obligatorio";
-    if (!data.PasswordTexto.trim()) errors.PasswordTexto = "La contraseña es obligatoria";
+    if (!data.PasswordTexto.trim())
+      errors.PasswordTexto = "La contraseña es obligatoria";
     if (!data.IdRol) errors.IdRol = "El rol es obligatorio";
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -196,7 +227,9 @@ export const useUsuariosSoftware = () => {
       setIsSubmitting(false);
       return;
     }
-    if (checkDuplicates(data.Usuario, data.Correo, editingUser.IdRegistroLogin)) {
+    if (
+      checkDuplicates(data.Usuario, data.Correo, editingUser.IdRegistroLogin)
+    ) {
       setEditErrors({
         Usuario: "Usuario o correo ya existe",
         Correo: "Usuario o correo ya existe",
@@ -209,6 +242,16 @@ export const useUsuariosSoftware = () => {
         `http://localhost:3000/api/users/${editingUser.IdRegistroLogin}`,
         data
       );
+
+      // Actualizar el estado local inmediatamente
+      setUsuarios((prevUsuarios) =>
+        prevUsuarios.map((user) =>
+          user.IdRegistroLogin === editingUser.IdRegistroLogin
+            ? { ...user, ...data }
+            : user
+        )
+      );
+
       await Swal.fire({
         icon: "success",
         title: "Usuario actualizado",
@@ -216,10 +259,13 @@ export const useUsuariosSoftware = () => {
         timer: 1500,
         showConfirmButton: false,
       });
-      fetchUsuarios();
+
       setEditingUser(null);
       setFormVisible(false);
       reset();
+
+      // También llamar a fetchUsuarios para asegurar consistencia
+      fetchUsuarios();
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -262,12 +308,116 @@ export const useUsuariosSoftware = () => {
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentUsuarios = sortedUsuarios.slice(indexOfFirstItem, indexOfLastItem);
+  const currentUsuarios = sortedUsuarios.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
   const totalPages = Math.ceil(sortedUsuarios.length / itemsPerPage);
 
   const paginate = (pageNumber) => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
+    }
+  };
+
+  // Función para activar/desactivar usuario
+  const toggleUserActivation = async (userId, isCurrentlyActive) => {
+    try {
+      await axios.put(
+        `http://localhost:3000/api/admin/users/${userId}/activate`,
+        {
+          activate: !isCurrentlyActive,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      // Actualizar el estado local inmediatamente
+      setUsuarios((prevUsuarios) =>
+        prevUsuarios.map((user) =>
+          user.IdRegistroLogin === userId
+            ? { ...user, isVerified: !isCurrentlyActive }
+            : user
+        )
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Estado actualizado",
+        text: `Usuario ${
+          !isCurrentlyActive ? "activado" : "desactivado"
+        } correctamente.`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      // También llamar a fetchUsuarios para asegurar consistencia
+      fetchUsuarios();
+    } catch (error) {
+      console.error("Error al cambiar estado:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo cambiar el estado del usuario.",
+      });
+    }
+  };
+
+  
+
+  // Función para cambiar rol de usuario
+  const changeUserRole = async (userId, newRoleId) => {
+    try {
+      await axios.put(
+        `http://localhost:3000/api/admin/users/${userId}/role`,
+        {
+          newRoleId,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      // Actualizar el estado local inmediatamente - CORREGIDO
+      setUsuarios((prevUsuarios) =>
+        prevUsuarios.map((user) =>
+          user.IdRegistroLogin === userId
+            ? {
+                ...user,
+                IdRol: parseInt(newRoleId), // Asegurar que es número
+                // También actualizar filteredUsuarios
+              }
+            : user
+        )
+      );
+
+      // También actualizar filteredUsuarios
+      setFilteredUsuarios((prev) =>
+        prev.map((user) =>
+          user.IdRegistroLogin === userId
+            ? { ...user, IdRol: parseInt(newRoleId) }
+            : user
+        )
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "Rol actualizado",
+        text: "Rol de usuario actualizado correctamente.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      // También llamar a fetchUsuarios para asegurar consistencia
+      fetchUsuarios();
+    } catch (error) {
+      console.error("Error al cambiar rol:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo cambiar el rol del usuario.",
+      });
     }
   };
 
@@ -342,7 +492,9 @@ export const useUsuariosSoftware = () => {
         },
       });
 
-      const fileName = `usuarios_software_${new Date().toISOString().split("T")[0]}.pdf`;
+      const fileName = `usuarios_software_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
       doc.save(fileName);
 
       Swal.fire({
@@ -378,7 +530,9 @@ export const useUsuariosSoftware = () => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "UsuariosSoftware");
 
-      const fileName = `usuarios_software_${new Date().toISOString().split("T")[0]}.xlsx`;
+      const fileName = `usuarios_software_${
+        new Date().toISOString().split("T")[0]
+      }.xlsx`;
       XLSX.writeFile(workbook, fileName);
 
       Swal.fire({
@@ -445,5 +599,10 @@ export const useUsuariosSoftware = () => {
     exportToExcel,
     fetchUsuarios,
     fetchRoles,
+    toggleUserActivation,
+    showInactive,
+    setShowInactive,
+    activationStatusFilter,
+    setActivationStatusFilter,
   };
 };
