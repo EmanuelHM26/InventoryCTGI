@@ -1,23 +1,64 @@
 import React from "react";
 import { useAsignaciones } from "../hooks/useAsignaciones";
-import BarcodeReader from './BarcodeReader';
-import { Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, X, Check, Eye } from "lucide-react";
+import BarcodeReader from "./BarcodeReader";
+import {
+  Search,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  X,
+  Check,
+  Eye,
+} from "lucide-react";
 
 const Asignaciones = () => {
- const {
-    asignaciones, usuarios, showModal, showNovedadModal, selectedNovedad,
-    showDetailsModal, selectedAsignacion, formTouched, newAsignacion,
-    currentPage, searchTerm, barcodeMode, scannedEquipment,
-    showBarcodeInstructions, currentAsignaciones, sortedAsignaciones,
-    indexOfFirstItem, indexOfLastItem, totalPages,
-    setSearchTerm, setShowModal, setShowNovedadModal, setSelectedNovedad,
-    setShowDetailsModal, setFormTouched, setNewAsignacion,
-    setBarcodeMode, setScannedEquipment, setShowBarcodeInstructions,
-    handleBarcodeScan, handleUsuarioChange, handleCreateAsignacion,
-    handleEditAsignacion, handleDeleteAsignacion, handleConfirmarDevolucion,
-    handleShowNovedad, handleShowDetails, paginate,
-    exportToPDF, exportToExcel, getTodayLocal, formatDate
-  } = useAsignaciones()
+  const {
+    asignaciones,
+    usuarios,
+    showModal,
+    showNovedadModal,
+    selectedNovedad,
+    showDetailsModal,
+    selectedAsignacion,
+    formTouched,
+    newAsignacion,
+    currentPage,
+    searchTerm,
+    barcodeMode,
+    scannedEquipment,
+    showBarcodeInstructions,
+    currentAsignaciones,
+    sortedAsignaciones,
+    indexOfFirstItem,
+    indexOfLastItem,
+    totalPages,
+    setSearchTerm,
+    setShowModal,
+    setShowNovedadModal,
+    setSelectedNovedad,
+    setShowDetailsModal,
+    setFormTouched,
+    setNewAsignacion,
+    setBarcodeMode,
+    setScannedEquipment,
+    setShowBarcodeInstructions,
+    handleBarcodeScan,
+    handleUsuarioChange,
+    handleCreateAsignacion,
+    handleEditAsignacion,
+    handleDeleteAsignacion,
+    handleConfirmarDevolucion,
+    handleShowNovedad,
+    handleShowDetails,
+    paginate,
+    exportToPDF,
+    exportToExcel,
+    getTodayLocal,
+    formatDate,
+    handleRemoveScannedEquipment,
+  } = useAsignaciones();
 
   return (
     <div className="px-4 py-20 md:px-8 lg:px-2 max-w-full bg-gray-50 min-h-screen">
@@ -55,7 +96,22 @@ const Asignaciones = () => {
                 className="flex items-center justify-center bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-sm"
                 title="Exportar a PDF"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 16v-8m0 8l-3-3m3 3l3-3M4 4h16v16H4V4z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="mr-2"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    d="M12 16v-8m0 8l-3-3m3 3l3-3M4 4h16v16H4V4z"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
                 PDF
               </button>
               <button
@@ -63,7 +119,22 @@ const Asignaciones = () => {
                 className="flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm"
                 title="Exportar a Excel"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 4h16v16H4V4zm8 4v8m0 0l-3-3m3 3l3-3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="mr-2"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    d="M4 4h16v16H4V4zm8 4v8m0 0l-3-3m3 3l3-3"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
                 Excel
               </button>
             </div>
@@ -86,7 +157,7 @@ const Asignaciones = () => {
                   Estado: "Activo",
                 });
                 setScannedEquipment([]); // Limpiar equipos escaneados
-                setBarcodeMode('user'); // Iniciar en modo usuario
+                setBarcodeMode("user"); // Iniciar en modo usuario
                 setShowModal(true);
                 setShowBarcodeInstructions(true);
                 setTimeout(() => setShowBarcodeInstructions(false), 5000);
@@ -134,7 +205,7 @@ const Asignaciones = () => {
                       {asignacion.IdAsignaciones}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                      {asignacion.Usuario?.Usuario || 'N/A'}
+                      {asignacion.Usuario?.Usuario || "N/A"}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.Nombre}
@@ -172,9 +243,7 @@ const Asignaciones = () => {
                         </button>
                         <button
                           onClick={() =>
-                            handleDeleteAsignacion(
-                              asignacion.IdAsignaciones
-                            )
+                            handleDeleteAsignacion(asignacion.IdAsignaciones)
                           }
                           className="p-1 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition-colors duration-200"
                           title="Eliminar asignación"
@@ -183,7 +252,11 @@ const Asignaciones = () => {
                         </button>
                         {asignacion.Estado === "Activo" && (
                           <button
-                            onClick={() => handleConfirmarDevolucion(asignacion.IdAsignaciones)}
+                            onClick={() =>
+                              handleConfirmarDevolucion(
+                                asignacion.IdAsignaciones
+                              )
+                            }
                             className="p-1 rounded-full bg-green-100 hover:bg-green-200 text-green-600 transition-colors duration-200"
                             title="Confirmar devolución"
                           >
@@ -220,10 +293,11 @@ const Asignaciones = () => {
               <button
                 onClick={() => paginate(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-md ${currentPage === 1
-                  ? "text-gray-300 cursor-not-allowed"
-                  : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                className={`p-2 rounded-md ${
+                  currentPage === 1
+                    ? "text-gray-300 cursor-not-allowed"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
               >
                 <ChevronLeft size={18} />
               </button>
@@ -231,10 +305,11 @@ const Asignaciones = () => {
                 <button
                   key={idx}
                   onClick={() => paginate(idx + 1)}
-                  className={`w-10 h-10 rounded-md ${currentPage === idx + 1
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                    }`}
+                  className={`w-10 h-10 rounded-md ${
+                    currentPage === idx + 1
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
                 >
                   {idx + 1}
                 </button>
@@ -242,10 +317,11 @@ const Asignaciones = () => {
               <button
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-md ${currentPage === totalPages
-                  ? "text-gray-300 cursor-not-allowed"
-                  : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                className={`p-2 rounded-md ${
+                  currentPage === totalPages
+                    ? "text-gray-300 cursor-not-allowed"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
               >
                 <ChevronRight size={18} />
               </button>
@@ -268,25 +344,29 @@ const Asignaciones = () => {
             <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <h4 className="font-semibold text-blue-900 mb-2">Modo de Escaneo</h4>
+                  <h4 className="font-semibold text-blue-900 mb-2">
+                    Modo de Escaneo
+                  </h4>
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => setBarcodeMode('user')}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${barcodeMode === 'user'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                        }`}
+                      onClick={() => setBarcodeMode("user")}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        barcodeMode === "user"
+                          ? "bg-blue-600 text-white"
+                          : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                      }`}
                     >
                       Escanear Usuario
                     </button>
                     <button
                       type="button"
-                      onClick={() => setBarcodeMode('equipment')}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${barcodeMode === 'equipment'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-green-100 text-green-700 hover:bg-green-200'
-                        }`}
+                      onClick={() => setBarcodeMode("equipment")}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        barcodeMode === "equipment"
+                          ? "bg-green-600 text-white"
+                          : "bg-green-100 text-green-700 hover:bg-green-200"
+                      }`}
                     >
                       Escanear Equipos
                     </button>
@@ -295,37 +375,28 @@ const Asignaciones = () => {
                 <div className="text-sm text-gray-600">
                   <p className="font-medium">
                     Modo actual:
-                    <span className={`ml-1 ${barcodeMode === 'user' ? 'text-blue-600' : 'text-green-600'}`}>
-                      {barcodeMode === 'user' ? 'Escaneando Usuario' : 'Escaneando Equipos'}
+                    <span
+                      className={`ml-1 ${
+                        barcodeMode === "user"
+                          ? "text-blue-600"
+                          : "text-green-600"
+                      }`}
+                    >
+                      {barcodeMode === "user"
+                        ? "Escaneando Usuario"
+                        : "Escaneando Equipos"}
                     </span>
                   </p>
                   {showBarcodeInstructions && (
                     <p className="text-xs mt-1 text-blue-600 animate-pulse">
-                      {barcodeMode === 'user'
-                        ? 'Escanee el documento del usuario...'
-                        : 'Escanee los códigos de los equipos...'}
+                      {barcodeMode === "user"
+                        ? "Escanee el documento del usuario..."
+                        : "Escanee los códigos de los equipos..."}
                     </p>
                   )}
                 </div>
               </div>
             </div>
-
-            {/* Mostrar equipos escaneados */}
-            {scannedEquipment.length > 0 && (
-              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <h4 className="font-semibold text-green-900 mb-2">Equipos Escaneados</h4>
-                <div className="space-y-2">
-                  {scannedEquipment.map((equipment, index) => (
-                    <div key={index} className="flex justify-between items-center bg-white p-2 rounded border">
-                      <span className="text-sm font-mono">{equipment.code}</span>
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">
-                        x{equipment.quantity}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
@@ -335,8 +406,11 @@ const Asignaciones = () => {
                 <select
                   value={newAsignacion.IdUsuario}
                   onChange={handleUsuarioChange}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.IdUsuario ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    !newAsignacion.IdUsuario
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-300"
+                  }`}
                   required
                 >
                   <option value="">Seleccione un usuario</option>
@@ -347,7 +421,9 @@ const Asignaciones = () => {
                   ))}
                 </select>
                 {!newAsignacion.IdUsuario && formTouched && (
-                  <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    Este campo es obligatorio
+                  </p>
                 )}
               </div>
 
@@ -364,13 +440,18 @@ const Asignaciones = () => {
                       Nombre: e.target.value,
                     })
                   }
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Nombre ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    !newAsignacion.Nombre
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-300"
+                  }`}
                   disabled
                   required
                 />
                 {!newAsignacion.Nombre && formTouched && (
-                  <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    Este campo es obligatorio
+                  </p>
                 )}
               </div>
 
@@ -387,13 +468,18 @@ const Asignaciones = () => {
                       Apellido: e.target.value,
                     })
                   }
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Apellido ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    !newAsignacion.Apellido
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-300"
+                  }`}
                   disabled
                   required
                 />
                 {!newAsignacion.Apellido && formTouched && (
-                  <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    Este campo es obligatorio
+                  </p>
                 )}
               </div>
 
@@ -410,21 +496,24 @@ const Asignaciones = () => {
                       Documento: e.target.value,
                     })
                   }
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Documento ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    !newAsignacion.Documento
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-300"
+                  }`}
                   disabled
                   required
                 />
                 {!newAsignacion.Documento && formTouched && (
-                  <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    Este campo es obligatorio
+                  </p>
                 )}
               </div>
 
-
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Observación <span className="text-red-500">*</span>
+                  Observación
                 </label>
                 <input
                   type="text"
@@ -435,18 +524,11 @@ const Asignaciones = () => {
                       Observacion: e.target.value,
                     })
                   }
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Observacion ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className="border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent border-gray-300"
                   placeholder="Ingrese una observación"
-                  required
                   maxLength={500}
                 />
-                {!newAsignacion.Observacion && formTouched && (
-                  <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
-                )}
               </div>
-
-
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -461,16 +543,22 @@ const Asignaciones = () => {
                       Cantidad: e.target.value,
                     })
                   }
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Cantidad || newAsignacion.Cantidad <= 0 ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    !newAsignacion.Cantidad || newAsignacion.Cantidad <= 0
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-300"
+                  }`}
                   min="1"
                   max="9999"
                   placeholder="Ingrese la cantidad"
                   required
                 />
-                {(!newAsignacion.Cantidad || newAsignacion.Cantidad <= 0) && formTouched && (
-                  <p className="text-red-500 text-xs mt-1">Debe ingresar una cantidad válida (mayor a 0)</p>
-                )}
+                {(!newAsignacion.Cantidad || newAsignacion.Cantidad <= 0) &&
+                  formTouched && (
+                    <p className="text-red-500 text-xs mt-1">
+                      Debe ingresar una cantidad válida (mayor a 0)
+                    </p>
+                  )}
               </div>
 
               <div>
@@ -485,16 +573,23 @@ const Asignaciones = () => {
                       Item: e.target.value,
                     })
                   }
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Item ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    !newAsignacion.Item
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-300"
+                  }`}
                   required
                 >
                   <option value="">Seleccione un item</option>
                   <option value="Equipo Tecnologico">Equipo Tecnológico</option>
-                  <option value="Producto Consumible">Producto Consumible</option>
+                  <option value="Producto Consumible">
+                    Producto Consumible
+                  </option>
                 </select>
                 {!newAsignacion.Item && formTouched && (
-                  <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+                  <p className="text-red-500 text-xs mt-1">
+                    Este campo es obligatorio
+                  </p>
                 )}
               </div>
             </div>
@@ -511,17 +606,65 @@ const Asignaciones = () => {
                     Estado: e.target.value,
                   })
                 }
-                className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${!newAsignacion.Estado ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  !newAsignacion.Estado
+                    ? "border-red-300 bg-red-50"
+                    : "border-gray-300"
+                }`}
                 required
               >
                 <option value="">Seleccione un estado</option>
                 <option value="Activo">Activo</option>
               </select>
               {!newAsignacion.Estado && formTouched && (
-                <p className="text-red-500 text-xs mt-1">Este campo es obligatorio</p>
+                <p className="text-red-500 text-xs mt-1">
+                  Este campo es obligatorio
+                </p>
               )}
             </div>
+
+            
+            {/* Mostrar equipos escaneados */}
+            {scannedEquipment.length > 0 && (
+              <div className="mb-4 mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <h4 className="font-semibold text-green-900 mb-2">
+                  Equipos Escaneados
+                </h4>
+                <div className="space-y-2">
+                  {scannedEquipment.map((equipment, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between items-center bg-white p-3 rounded-lg border shadow-sm hover:shadow-md transition-shadow duration-200"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className="text-sm font-mono bg-gray-100 px-3 py-1 rounded-md font-medium">
+                          {equipment.code}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() =>
+                          handleRemoveScannedEquipment(equipment.code)
+                        }
+                        className="p-1.5 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition-colors duration-200 hover:scale-110 transform"
+                        title="Eliminar equipo"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  <div className="mt-3 pt-3 border-t border-green-200">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-green-800 font-semibold">
+                        Total de equipos:
+                      </span>
+                      <span className="bg-green-600 text-white px-3 py-1 rounded-full font-bold">
+                        {scannedEquipment.length}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
               <button
@@ -540,24 +683,23 @@ const Asignaciones = () => {
                   !newAsignacion.Nombre ||
                   !newAsignacion.Apellido ||
                   !newAsignacion.Documento ||
-                  !newAsignacion.Observacion ||
                   !newAsignacion.Cantidad ||
                   newAsignacion.Cantidad <= 0 ||
                   !newAsignacion.Item ||
                   !newAsignacion.Estado
                 }
-                className={`px-4 py-2 rounded-lg transition-colors duration-200 ${!newAsignacion.IdUsuario ||
+                className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
+                  !newAsignacion.IdUsuario ||
                   !newAsignacion.Nombre ||
                   !newAsignacion.Apellido ||
                   !newAsignacion.Documento ||
-                  !newAsignacion.Observacion ||
                   !newAsignacion.Cantidad ||
                   newAsignacion.Cantidad <= 0 ||
                   !newAsignacion.Item ||
                   !newAsignacion.Estado
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                }`}
               >
                 {newAsignacion.IdAsignaciones ? "Actualizar" : "Crear"}
               </button>
@@ -565,8 +707,6 @@ const Asignaciones = () => {
           </div>
         </div>
       )}
-
-
 
       {/* Modal para mostrar novedad completa */}
       {showNovedadModal && (
@@ -636,18 +776,30 @@ const Asignaciones = () => {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">Usuario</label>
-                    <p className="text-gray-900 font-bold text-xl">{selectedAsignacion.Usuario?.Usuario || 'N/A'}</p>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Usuario
+                    </label>
+                    <p className="text-gray-900 font-bold text-xl">
+                      {selectedAsignacion.Usuario?.Usuario || "N/A"}
+                    </p>
                   </div>
 
                   <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">Nombre Completo</label>
-                    <p className="text-gray-900 font-bold text-xl">{selectedAsignacion.Nombre} {selectedAsignacion.Apellido}</p>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Nombre Completo
+                    </label>
+                    <p className="text-gray-900 font-bold text-xl">
+                      {selectedAsignacion.Nombre} {selectedAsignacion.Apellido}
+                    </p>
                   </div>
 
                   <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">Documento</label>
-                    <p className="text-gray-900 font-bold text-xl">{selectedAsignacion.Documento}</p>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Documento
+                    </label>
+                    <p className="text-gray-900 font-bold text-xl">
+                      {selectedAsignacion.Documento}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -660,26 +812,51 @@ const Asignaciones = () => {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">Fecha de Asignación</label>
-                    <p className="text-gray-900 font-bold text-lg">{formatDate(selectedAsignacion.FechaAsignacion)}</p>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">Hora de Asignación</label>
-                    <p className="text-gray-900 font-bold text-lg">{selectedAsignacion.HoraAsignacion || 'N/A'}</p>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">Fecha de Devolución</label>
-                    <p className={`font-bold text-lg ${selectedAsignacion.FechaDevolucion ? 'text-gray-900' : 'text-gray-400 italic'}`}>
-                      {formatDate(selectedAsignacion.FechaDevolucion) || 'No devuelto'}
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Fecha de Asignación
+                    </label>
+                    <p className="text-gray-900 font-bold text-lg">
+                      {formatDate(selectedAsignacion.FechaAsignacion)}
                     </p>
                   </div>
 
                   <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">Hora de Devolución</label>
-                    <p className={`font-bold text-lg ${selectedAsignacion.HoraDevolucion ? 'text-gray-900' : 'text-gray-400 italic'}`}>
-                      {selectedAsignacion.HoraDevolucion || 'N/A'}
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Hora de Asignación
+                    </label>
+                    <p className="text-gray-900 font-bold text-lg">
+                      {selectedAsignacion.HoraAsignacion || "N/A"}
+                    </p>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Fecha de Devolución
+                    </label>
+                    <p
+                      className={`font-bold text-lg ${
+                        selectedAsignacion.FechaDevolucion
+                          ? "text-gray-900"
+                          : "text-gray-400 italic"
+                      }`}
+                    >
+                      {formatDate(selectedAsignacion.FechaDevolucion) ||
+                        "No devuelto"}
+                    </p>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Hora de Devolución
+                    </label>
+                    <p
+                      className={`font-bold text-lg ${
+                        selectedAsignacion.HoraDevolucion
+                          ? "text-gray-900"
+                          : "text-gray-400 italic"
+                      }`}
+                    >
+                      {selectedAsignacion.HoraDevolucion || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -693,12 +870,18 @@ const Asignaciones = () => {
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">Item</label>
-                    <p className="text-gray-900 font-bold text-xl">{selectedAsignacion.Item}</p>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Item
+                    </label>
+                    <p className="text-gray-900 font-bold text-xl">
+                      {selectedAsignacion.Item}
+                    </p>
                   </div>
 
                   <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">Cantidad</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Cantidad
+                    </label>
                     <div className="flex items-center">
                       <div className="bg-green-100 text-green-800 px-4 py-3 rounded-full font-bold text-2xl shadow-md">
                         {selectedAsignacion.Cantidad}
@@ -707,7 +890,9 @@ const Asignaciones = () => {
                   </div>
 
                   <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">Estado</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Estado
+                    </label>
                     <span
                       className={
                         selectedAsignacion.Estado === "Activo"
@@ -715,7 +900,13 @@ const Asignaciones = () => {
                           : "bg-red-100 text-red-800 px-4 py-3 rounded-full font-bold text-sm inline-flex items-center shadow-md border border-red-200"
                       }
                     >
-                      <div className={`w-2 h-2 rounded-full mr-2 ${selectedAsignacion.Estado === "Activo" ? "bg-green-500" : "bg-red-500"}`}></div>
+                      <div
+                        className={`w-2 h-2 rounded-full mr-2 ${
+                          selectedAsignacion.Estado === "Activo"
+                            ? "bg-green-500"
+                            : "bg-red-500"
+                        }`}
+                      ></div>
                       {selectedAsignacion.Estado}
                     </span>
                   </div>

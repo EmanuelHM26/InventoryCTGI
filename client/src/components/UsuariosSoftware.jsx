@@ -113,155 +113,168 @@ const UsuariosSoftware = () => {
               }}
               className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
             >
-              <UserPlus size={18} className="mr-2" />
-              {formVisible ? "Cancelar" : "Nuevo Usuario"}
+              <Plus size={18} className="mr-2" />
+              {formVisible ? "Nuevo Usuario" : "Nuevo Usuario"}
             </button>
           </div>
         </div>
 
-        {/* Formulario de creación de usuarios */}
+        {/* Modal de creación de usuarios */}
         {formVisible && (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h2 className="text-lg font-semibold mb-4 text-gray-700">Crear Nuevo Usuario</h2>
-            <form onSubmit={handleSubmit(handleCreateUser)}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Usuario */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Usuario <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    {...register("Usuario", {
-                      required: "El usuario es obligatorio",
-                      minLength: { value: 3, message: "Mínimo 3 caracteres" },
-                      maxLength: { value: 20, message: "Máximo 20 caracteres" },
-                      pattern: {
-                        value: /^[A-Za-z0-9_]+$/,
-                        message: "Solo letras, números y guión bajo"
-                      },
-                      validate: {
-                        notOnlyNumbers: value => !/^\d+$/.test(value) || "No puede ser solo números",
-                        notOnlyUnderscores: value => !/^_+$/.test(value) || "No puede ser solo guiones bajos"
-                      }
-                    })}
-                    className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.Usuario || validationErrors.Usuario ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    placeholder="Nombre de usuario"
-                    maxLength={20}
-                  />
-                  {(errors.Usuario || validationErrors.Usuario) && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.Usuario?.message || validationErrors.Usuario}
-                    </p>
-                  )}
-                </div>
-
-                {/* Correo */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Correo <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    {...register("Correo", {
-                      required: "El correo es obligatorio",
-                      maxLength: { value: 100, message: "Máximo 100 caracteres" },
-                      pattern: {
-                        value: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/,
-                        message: "Correo no válido"
-                      }
-                    })}
-                    className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.Correo || validationErrors.Correo ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    placeholder="correo@ejemplo.com"
-                    maxLength={100}
-                  />
-                  {(errors.Correo || validationErrors.Correo) && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.Correo?.message || validationErrors.Correo}
-                    </p>
-                  )}
-                </div>
-
-                {/* Contraseña */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Contraseña <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-screen overflow-y-auto">
+              <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">
+                Crear Nuevo Usuario
+              </h2>
+              <form onSubmit={handleSubmit(handleCreateUser)}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Usuario */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Usuario <span className="text-red-500">*</span>
+                    </label>
                     <input
-                      type={showPassword ? "text" : "password"}
-                      {...register("PasswordTexto", {
-                        required: "La contraseña es obligatoria",
-                        minLength: { value: 6, message: "Mínimo 6 caracteres" },
-                        maxLength: { value: 50, message: "Máximo 50 caracteres" },
+                      type="text"
+                      {...register("Usuario", {
+                        required: "El usuario es obligatorio",
+                        minLength: { value: 3, message: "Mínimo 3 caracteres" },
+                        maxLength: { value: 20, message: "Máximo 20 caracteres" },
+                        pattern: {
+                          value: /^[A-Za-z0-9_]+$/,
+                          message: "Solo letras, números y guión bajo"
+                        },
                         validate: {
-                          hasLetter: value => /[A-Za-z]/.test(value) || "Debe contener al menos una letra",
-                          hasNumber: value => /\d/.test(value) || "Debe contener al menos un número",
-                          noSpaces: value => !/\s/.test(value) || "No puede contener espacios"
+                          notOnlyNumbers: value => !/^\d+$/.test(value) || "No puede ser solo números",
+                          notOnlyUnderscores: value => !/^_+$/.test(value) || "No puede ser solo guiones bajos"
                         }
                       })}
-                      className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${errors.PasswordTexto || validationErrors.PasswordTexto ? 'border-red-500' : 'border-gray-300'
+                      className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.Usuario || validationErrors.Usuario ? 'border-red-500' : 'border-gray-300'
                         }`}
-                      placeholder="Contraseña"
-                      maxLength={50}
+                      placeholder="Nombre de usuario"
+                      maxLength={20}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2 top-2.5 text-gray-500 hover:text-gray-700"
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+                    {(errors.Usuario || validationErrors.Usuario) && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.Usuario?.message || validationErrors.Usuario}
+                      </p>
+                    )}
                   </div>
-                  {(errors.PasswordTexto || validationErrors.PasswordTexto) && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.PasswordTexto?.message || validationErrors.PasswordTexto}
-                    </p>
-                  )}
-                </div>
 
-                {/* Rol */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Rol <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    {...register("IdRol", {
-                      required: "Debe seleccionar un rol"
-                    })}
-                    className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.IdRol || validationErrors.IdRol ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                  >
-                    <option value="">Seleccionar Rol</option>
-                    {roles.map((role) => (
-                      <option key={role.IdRol} value={role.IdRol}>
-                        {role.NombreRol}
-                      </option>
-                    ))}
-                  </select>
-                  {(errors.IdRol || validationErrors.IdRol) && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.IdRol?.message || validationErrors.IdRol}
-                    </p>
-                  )}
+                  {/* Correo */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Correo <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      {...register("Correo", {
+                        required: "El correo es obligatorio",
+                        maxLength: { value: 100, message: "Máximo 100 caracteres" },
+                        pattern: {
+                          value: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/,
+                          message: "Correo no válido"
+                        }
+                      })}
+                      className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.Correo || validationErrors.Correo ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                      placeholder="correo@ejemplo.com"
+                      maxLength={100}
+                    />
+                    {(errors.Correo || validationErrors.Correo) && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.Correo?.message || validationErrors.Correo}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Contraseña */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contraseña <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        {...register("PasswordTexto", {
+                          required: "La contraseña es obligatoria",
+                          minLength: { value: 6, message: "Mínimo 6 caracteres" },
+                          maxLength: { value: 50, message: "Máximo 50 caracteres" },
+                          validate: {
+                            hasLetter: value => /[A-Za-z]/.test(value) || "Debe contener al menos una letra",
+                            hasNumber: value => /\d/.test(value) || "Debe contener al menos un número",
+                            noSpaces: value => !/\s/.test(value) || "No puede contener espacios"
+                          }
+                        })}
+                        className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${errors.PasswordTexto || validationErrors.PasswordTexto ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                        placeholder="Contraseña"
+                        maxLength={50}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2 top-2.5 text-gray-500 hover:text-gray-700"
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {(errors.PasswordTexto || validationErrors.PasswordTexto) && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.PasswordTexto?.message || validationErrors.PasswordTexto}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Rol */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Rol <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      {...register("IdRol", {
+                        required: "Debe seleccionar un rol"
+                      })}
+                      className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.IdRol || validationErrors.IdRol ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                    >
+                      <option value="">Seleccionar Rol</option>
+                      {roles
+                        .filter(role => role.NombreRol !== 'Instructor' && role.NombreRol !== 'Administrativo')
+                        .map((role) => (
+                          <option key={role.IdRol} value={role.IdRol}>
+                            {role.NombreRol}
+                          </option>
+                        ))}
+                    </select>
+                    {(errors.IdRol || validationErrors.IdRol) && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.IdRol?.message || validationErrors.IdRol}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="mt-4 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className={`px-4 py-2 rounded-lg transition-colors duration-200 flex items-center ${isSubmitting
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-green-600 hover:bg-green-700'
-                    } text-white`}
-                >
-                  <Plus size={18} className="mr-2" />
-                  {isSubmitting ? "Creando..." : "Crear Usuario"}
-                </button>
-              </div>
-            </form>
+                <div className="mt-4 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormVisible(false)}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={`px-4 py-2 rounded-lg transition-colors duration-200 flex items-center ${isSubmitting
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-green-600 hover:bg-green-700'
+                      } text-white`}
+                  >
+                    
+                    {isSubmitting ? "Creando..." : "Crear"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 
