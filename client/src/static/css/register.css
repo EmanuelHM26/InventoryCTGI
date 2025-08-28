@@ -1,0 +1,12 @@
+.register-container {
+    background-image: url("/public/register.png"); /* Ruta de la imagen */
+    background-size: cover;
+    background-position: center;
+  }
+  
+  /* Tarjeta del formulario */
+  .register-card {
+    backdrop-filter: blur(10px); /* Efecto de desenfoque */
+    background-color: rgba(255, 255, 255, 0.8); /* Fondo semitransparente */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }

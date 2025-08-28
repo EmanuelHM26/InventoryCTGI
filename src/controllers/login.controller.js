@@ -1,106 +1,150 @@
-import RegistroLogin from "../models/LoginModel.js";
-import Password from "../models/PasswordModel.js";
-import bcrypt from "bcrypt";
+import {
+  createUserService,
+  loginUserService,
+  verifyEmailService,
+  requestPasswordResetService,
+  validateResetTokenService,
+  resetPasswordService,
+  verifyTokenService,
+  getAllUsersService,
+  getUserByIdService,
+  updateUserService,
+  deleteUserService,
+  getUserByEmailService
+} from "../services/login.service.js";
 
-// Crear usuario
+// ======================= REGISTRO =======================
 export const createUser = async (req, res) => {
   try {
-    const { Usuario, Correo, PasswordTexto } = req.body;
-
-    if (!Usuario || !Correo || !PasswordTexto) {
-      return res.status(400).json({ message: "Todos los campos son obligatorios" });
-    }
-
-    // Encriptar la contraseña antes de guardarla
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(PasswordTexto, salt);
-
-    // Guardar en la tabla Password
-    const nuevaPassword = await Password.create({
-      Password: hashedPassword, // Se guarda la contraseña encriptada
-      FechaCreacion: new Date(),
-      FechaActualizacion: new Date(),
-    });
-
-    // Guardar en la tabla RegistroLogin con la referencia a Password
-    const newUser = await RegistroLogin.create({
-      Usuario,
-      Correo,
-      IdPassword: nuevaPassword.IdPassword, // Relación con Password
-    });
-
-    res.status(201).json({ message: "Usuario registrado exitosamente" });
+    const result = await createUserService(req.body);
+    res.status(201).json(result);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al registrar usuario", error });
+    res.status(400).json({ message: "Error al crear usuario", error: error.message });
   }
 };
 
-// Obtener todos los usuarios
-export const getUsers = async (req, res) => {
-  try {
-    const users = await RegistroLogin.findAll();
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ message: "Error al obtener usuarios", error });
-  }
-};
-
-// Obtener un usuario por ID
-export const getUserById = async (req, res) => {
-  try {
-    const { id } = req.params; // id viene de la URL
-    const user = await RegistroLogin.findByPk(id, { 
-      attributes: [
-        "IdRegistroLogin", "Usuario", "Correo", "Password", "IdPassword",
-        "FechaInicioSesion", "FechaCerrarSesion", "HoraInicioSesion"
-      ]
-    });
-
-    if (!user) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
-    }
-
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Error al obtener usuario", error });
-  }
-};
-
-// Iniciar sesión
+// ======================= LOGIN =======================
 export const loginUser = async (req, res) => {
   try {
-    const { Usuario, PasswordTexto } = req.body;
-
-    if (!Usuario || !PasswordTexto) {
-      return res.status(400).json({ message: "Usuario y contraseña son obligatorios" });
-    }
-
-    // Buscar el usuario y hacer un INNER JOIN con la tabla Password
-    const user = await RegistroLogin.findOne({
-      where: { Usuario },
-      include: [
-        {
-          model: Password,
-          attributes: ["Password"], // Solo necesitamos la contraseña encriptada
-        },
-      ],
-    });
+    const { token, Correo } = await loginUserService(req.body);
+    
+    const user = await getUserByEmailService(Correo);
 
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    // Verificar la contraseña
-    const passwordMatch = await bcrypt.compare(PasswordTexto, user.Password.Password);
-    if (!passwordMatch) {
-      return res.status(401).json({ message: "Contraseña incorrecta" });
-    }
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
 
-    // Si las credenciales son correctas
-    res.status(200).json({ message: "Inicio de sesión exitoso", user: { Usuario: user.Usuario, Password: user.Password.Password } });
+    res.status(200).json({
+       message: "Inicio de sesión exitoso",
+       Usuario: user.Usuario,
+       Rol: user.Rol?.NombreRol || "Sin rol", 
+       Correo: user.Correo, 
+      });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al iniciar sesión", error });
+    res.status(401).json({ message: "Error al iniciar sesión", error: error.message });
+  }
+};
+
+// ======================= LOGOUT =======================
+export const logoutUser = (req, res) => {
+  res.cookie("token", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    expires: new Date(0),
+  });
+  res.status(200).json({ message: "Sesión cerrada exitosamente" });
+};
+
+// ======================= VERIFICAR CORREO =======================
+export const verifyEmail = async (req, res) => {
+  try {
+    const result = await verifyEmailService(req.query.token);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ message: "Error al verificar correo", error: error.message });
+  }
+};
+
+// ======================= SOLICITAR RESTABLECIMIENTO =======================
+export const requestPasswordReset = async (req, res) => {
+  try {
+    const result = await requestPasswordResetService(req.body.Correo);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ message: "Error al solicitar restablecimiento", error: error.message });
+  }
+};
+
+// ======================= VALIDAR TOKEN DE RESET =======================
+export const validateResetToken = async (req, res) => {
+  try {
+    const result = await validateResetTokenService(req.query.token);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ message: "Token inválido o expirado", error: error.message });
+  }
+};
+
+// ======================= RESTABLECER CONTRASEÑA =======================
+export const resetPassword = async (req, res) => {
+  try {
+    const result = await resetPasswordService(req.body);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ message: "Error al restablecer contraseña", error: error.message });
+  }
+};
+
+// ======================= VERIFICAR TOKEN JWT =======================
+export const verifyToken = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    const decoded = await verifyTokenService(token);
+    res.status(200).json(decoded);
+  } catch (error) {
+    res.status(401).json({ message: "Token inválido", error: error.message });
+  }
+};
+
+// ======================= USUARIOS - CRUD =======================
+export const getAllUsers = async (req, res) => {
+  try {
+    const users = await getAllUsersService();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener usuarios", error: error.message });
+  }
+};
+
+export const getUserById = async (req, res) => {
+  try {
+    const user = await getUserByIdService(req.params.id);
+    res.json(user);
+  } catch (error) {
+    res.status(404).json({ message: "Usuario no encontrado", error: error.message });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const updated = await updateUserService(req.params.id, req.body);
+    res.json(updated);
+  } catch (error) {
+    res.status(400).json({ message: "Error al actualizar usuario", error: error.message });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const result = await deleteUserService(req.params.id);
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: "Error al eliminar usuario", error: error.message });
   }
 };
