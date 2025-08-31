@@ -27,7 +27,7 @@ export const createUserService = async ({ Usuario, Correo, PasswordTexto }) => {
     FechaActualizacion: new Date(),
   });
 
-  // Usar el ID 3 para el rol "Almacenista" (según tu imagen)
+  // Usar el ID 3 para el rol "Almacenista"
   const rolAlmacenistaId = 3;
 
   const newUser = await RegistroLogin.create({
@@ -36,6 +36,7 @@ export const createUserService = async ({ Usuario, Correo, PasswordTexto }) => {
     IdPassword: nuevaPassword.IdPassword,
     IdRol: rolAlmacenistaId, // ID 3 para Almacenista
     isVerified: false, // Estado inactivo por defecto
+    emailVerified: false, // Correo no verificado por defecto
   });
 
   // Resto del código para el token de verificación...
@@ -73,7 +74,6 @@ export const createUserService = async ({ Usuario, Correo, PasswordTexto }) => {
   };
 };
 
-
 // ======================= AUTENTICACIÓN =======================
 export const loginUserService = async ({ Correo, PasswordTexto }) => {
   if (!Correo || !PasswordTexto) {
@@ -84,6 +84,12 @@ export const loginUserService = async ({ Correo, PasswordTexto }) => {
 
   if (!user) {
     throw new Error("Correo o contraseña incorrectos");
+  }
+
+  if (!user.emailVerified) {
+    throw new Error(
+      "Por favor, verifica tu correo electrónico antes de iniciar sesión."
+    );
   }
 
   // Verificar que la cuenta esté activa (verificada)
@@ -124,7 +130,7 @@ export const verifyEmailService = async (token) => {
   const user = await RegistroLogin.findByPk(verificationToken.UsuarioId);
   if (!user) throw new Error("Usuario no encontrado");
 
-  user.isVerified = true;
+  user.emailVerified = true;
   await user.save();
   await verificationToken.destroy();
 
@@ -276,11 +282,16 @@ export const getUserByEmailService = async (Correo) => {
   }
 };
 
-
 // ======================= GESTIÓN DE USUARIOS POR ADMIN =======================
+// En activateUserService - ahora activa administrativamente
 export const activateUserService = async (userId) => {
   const user = await RegistroLogin.findByPk(userId);
   if (!user) throw new Error("Usuario no encontrado");
+
+  // Verificar que el correo esté verificado primero
+  if (!user.emailVerified) {
+    throw new Error("El usuario debe verificar su correo primero");
+  }
 
   user.isVerified = true;
   await user.save();
@@ -303,12 +314,17 @@ export const changeUserRoleService = async (userId, newRoleId) => {
 
 export const getPendingUsersService = async () => {
   return await RegistroLogin.findAll({
-    where: { isVerified: false },
-    include: [{
-      model: Role,
-      attributes: ["NombreRol"],
-      as: "Rol"
-    }]
+    where: {
+      emailVerified: true, // Correo verificado
+      isVerified: false, // Pero pendiente de activación
+    },
+    include: [
+      {
+        model: Role,
+        attributes: ["NombreRol"],
+        as: "Rol",
+      },
+    ],
   });
 };
 
@@ -320,17 +336,21 @@ export const toggleUserActivationService = async (userId, activate) => {
   user.isVerified = activate;
   await user.save();
 
-  return { message: `Usuario ${activate ? 'activado' : 'desactivado'} exitosamente` };
+  return {
+    message: `Usuario ${activate ? "activado" : "desactivado"} exitosamente`,
+  };
 };
 
 // ======================= OBTENER USUARIOS POR ESTADO =======================
 export const getUsersByStatusService = async (isVerified) => {
   return await RegistroLogin.findAll({
     where: { isVerified },
-    include: [{
-      model: Role,
-      attributes: ["NombreRol"],
-      as: "Rol"
-    }]
+    include: [
+      {
+        model: Role,
+        attributes: ["NombreRol"],
+        as: "Rol",
+      },
+    ],
   });
 };

@@ -44,6 +44,11 @@ const RegistroLogin = sequelize.define("RegistroLogin", {
     defaultValue: false, // Por defecto, no verificado
     allowNull: false,
   },
+  emailVerified:{
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+  },
   IdRol: {
     type: DataTypes.INTEGER,
     allowNull: false,

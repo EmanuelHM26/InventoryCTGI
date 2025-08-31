@@ -12,9 +12,10 @@ import {
   Download,
   Eye,
   EyeOff,
-  Save,
+  Check,
 } from "lucide-react";
 import { useUsuariosSoftware } from "../hooks/useUsuariosSoftware";
+import GestionUsuariosPendientes from "./GestionUsuariosPendientes";
 
 const UsuariosSoftware = () => {
   const {
@@ -69,6 +70,8 @@ const UsuariosSoftware = () => {
     setShowInactive,
     activationStatusFilter,
     setActivationStatusFilter,
+    forceRefresh,
+    changeUserRole,
   } = useUsuariosSoftware();
 
   return (
@@ -155,6 +158,12 @@ const UsuariosSoftware = () => {
             </button>
           </div>
         </div>
+
+        {/* Sección de usuarios pendientes */}
+        <div className="mb-6">
+          <GestionUsuariosPendientes />
+        </div>
+
         {/* Modal de creación de usuarios */}
         {formVisible && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -415,6 +424,34 @@ const UsuariosSoftware = () => {
                     )}
                   </div>
                 </th>
+                {/* Nueva columna de Correo Verificado */}
+                <th
+                  onClick={() => requestSort("emailVerified")}
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                >
+                  <div className="flex items-center">
+                    Correo Verificado
+                    {sortConfig.key === "emailVerified" && (
+                      <span className="ml-1">
+                        {sortConfig.direction === "ascending" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                {/* Nueva columna de Estado */}
+                <th
+                  onClick={() => requestSort("Estado")}
+                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                >
+                  <div className="flex items-center">
+                    Estado
+                    {sortConfig.key === "Estado" && (
+                      <span className="ml-1">
+                        {sortConfig.direction === "ascending" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </div>
+                </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Acciones
                 </th>
@@ -491,6 +528,30 @@ const UsuariosSoftware = () => {
                         </span>
                       )}
                     </td>
+                    {/* Nueva celda de Correo Verificado */}
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          user.emailVerified
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {user.emailVerified ? "Sí" : "No"}
+                      </span>
+                    </td>
+                    {/* Nueva celda de Estado */}
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          user.Estado === "Activo"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {user.Estado || "Inactivo"}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
                         {editingUser?.IdRegistroLogin ===
@@ -534,7 +595,7 @@ const UsuariosSoftware = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan="7" // Aumentado a 6 columnas
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     No se encontraron usuarios

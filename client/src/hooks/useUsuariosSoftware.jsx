@@ -59,7 +59,6 @@ export const useUsuariosSoftware = () => {
   }, [searchTerm, usuarios]);
 
   // Filtrar usuarios por estado de activación
-  // En useUsuariosSoftware.jsx, modifica el useEffect de filtrado:
   useEffect(() => {
     let filtered = usuarios;
 
@@ -87,8 +86,17 @@ export const useUsuariosSoftware = () => {
   const fetchUsuarios = async () => {
     try {
       const response = await axios.get("http://localhost:3000/api/users");
-      setUsuarios(response.data);
-      setFilteredUsuarios(response.data);
+
+      // Mapear los campos correctamente
+      const usuariosConEstado = response.data.map((user) => ({
+        ...user,
+        emailVerified: user.emailVerified || false,
+        isVerified: user.isVerified || false,
+        Estado: user.isVerified ? "Activo" : "Inactivo",
+      }));
+
+      setUsuarios(usuariosConEstado);
+      setFilteredUsuarios(usuariosConEstado);
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
       await Swal.fire({
@@ -221,14 +229,31 @@ export const useUsuariosSoftware = () => {
     }
   };
 
-  const handleUpdateUser = async (data) => {
+  const handleUpdateUser = async () => {
+   
     setIsSubmitting(true);
-    if (!validateForm(data)) {
+
+    // Validación específica para edición
+    const editErrors = {};
+    if (!editingUser.Usuario?.trim())
+      editErrors.Usuario = "El usuario es obligatorio";
+    if (!editingUser.Correo?.trim())
+      editErrors.Correo = "El correo es obligatorio";
+    if (!editingUser.IdRol) editErrors.IdRol = "El rol es obligatorio";
+
+    setEditErrors(editErrors);
+
+    if (Object.keys(editErrors).length > 0) {
       setIsSubmitting(false);
       return;
     }
+
     if (
-      checkDuplicates(data.Usuario, data.Correo, editingUser.IdRegistroLogin)
+      checkDuplicates(
+        editingUser.Usuario,
+        editingUser.Correo,
+        editingUser.IdRegistroLogin
+      )
     ) {
       setEditErrors({
         Usuario: "Usuario o correo ya existe",
@@ -237,17 +262,40 @@ export const useUsuariosSoftware = () => {
       setIsSubmitting(false);
       return;
     }
+
     try {
       await axios.put(
         `http://localhost:3000/api/users/${editingUser.IdRegistroLogin}`,
-        data
+        {
+          Usuario: editingUser.Usuario,
+          Correo: editingUser.Correo,
+          IdRol: editingUser.IdRol,
+        }
       );
 
       // Actualizar el estado local inmediatamente
       setUsuarios((prevUsuarios) =>
         prevUsuarios.map((user) =>
           user.IdRegistroLogin === editingUser.IdRegistroLogin
-            ? { ...user, ...data }
+            ? {
+                ...user,
+                Usuario: editingUser.Usuario,
+                Correo: editingUser.Correo,
+                IdRol: editingUser.IdRol,
+              }
+            : user
+        )
+      );
+
+      setFilteredUsuarios((prev) =>
+        prev.map((user) =>
+          user.IdRegistroLogin === editingUser.IdRegistroLogin
+            ? {
+                ...user,
+                Usuario: editingUser.Usuario,
+                Correo: editingUser.Correo,
+                IdRol: editingUser.IdRol,
+              }
             : user
         )
       );
@@ -267,6 +315,7 @@ export const useUsuariosSoftware = () => {
       // También llamar a fetchUsuarios para asegurar consistencia
       fetchUsuarios();
     } catch (error) {
+      console.error("Error al actualizar usuario:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -323,8 +372,8 @@ export const useUsuariosSoftware = () => {
   // Función para activar/desactivar usuario
   const toggleUserActivation = async (userId, isCurrentlyActive) => {
     try {
-      await axios.put(
-        `http://localhost:3000/api/admin/users/${userId}/activate`,
+      const response = await axios.put(
+        `http://localhost:3000/api/admin/users/${userId}/toggle-activation`, // ← Ruta corregida
         {
           activate: !isCurrentlyActive,
         },
@@ -333,11 +382,28 @@ export const useUsuariosSoftware = () => {
         }
       );
 
-      // Actualizar el estado local inmediatamente
+      // Actualizar ambos estados
       setUsuarios((prevUsuarios) =>
         prevUsuarios.map((user) =>
           user.IdRegistroLogin === userId
-            ? { ...user, isVerified: !isCurrentlyActive }
+            ? {
+                ...user,
+                isVerified: !isCurrentlyActive,
+                Estado: !isCurrentlyActive ? "Activo" : "Inactivo", // ← Actualizar ambos
+              }
+            : user
+        )
+      );
+
+      // También actualizar filteredUsuarios - IMPORTANTE
+      setFilteredUsuarios((prev) =>
+        prev.map((user) =>
+          user.IdRegistroLogin === userId
+            ? {
+                ...user,
+                isVerified: !isCurrentlyActive,
+                Estado: !isCurrentlyActive ? "Activo" : "Inactivo", // ← Actualizar ambos
+              }
             : user
         )
       );
@@ -364,15 +430,13 @@ export const useUsuariosSoftware = () => {
     }
   };
 
-  
-
   // Función para cambiar rol de usuario
   const changeUserRole = async (userId, newRoleId) => {
     try {
       await axios.put(
         `http://localhost:3000/api/admin/users/${userId}/role`,
         {
-          newRoleId,
+          newRoleId: parseInt(newRoleId),
         },
         {
           withCredentials: true,
@@ -385,14 +449,13 @@ export const useUsuariosSoftware = () => {
           user.IdRegistroLogin === userId
             ? {
                 ...user,
-                IdRol: parseInt(newRoleId), // Asegurar que es número
-                // También actualizar filteredUsuarios
+                IdRol: parseInt(newRoleId),
               }
             : user
         )
       );
 
-      // También actualizar filteredUsuarios
+      // También actualizar filteredUsuarios - CRÍTICO
       setFilteredUsuarios((prev) =>
         prev.map((user) =>
           user.IdRegistroLogin === userId
@@ -419,6 +482,11 @@ export const useUsuariosSoftware = () => {
         text: "No se pudo cambiar el rol del usuario.",
       });
     }
+  };
+
+  const forceRefresh = () => {
+    fetchUsuarios();
+    fetchRoles();
   };
 
   const exportToPDF = async () => {
@@ -604,5 +672,7 @@ export const useUsuariosSoftware = () => {
     setShowInactive,
     activationStatusFilter,
     setActivationStatusFilter,
+    forceRefresh,
+    changeUserRole,
   };
 };
