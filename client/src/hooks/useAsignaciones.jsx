@@ -123,37 +123,33 @@ export const useAsignaciones = () => {
         );
 
         if (existingEquipment) {
-          // Incrementar cantidad si ya existe
-          setScannedEquipment((prev) =>
-            prev.map((eq) =>
-              eq.code === scannedCode
-                ? { ...eq, quantity: eq.quantity + 1 }
-                : eq
-            )
-          );
+          Swal.fire({
+            icon: "error",
+            title: "Equipo ya escaneado",
+            text: `El equipo con código ${scannedCode} ya fue escaneado.`,
+            timer: 1800,
+            showConfirmButton: false,
+          });
         } else {
           // Agregar nuevo equipo
           setScannedEquipment((prev) => [
             ...prev,
             { code: scannedCode, quantity: 1 },
           ]);
+          // Actualizar cantidad total
+          const totalQuantity = scannedEquipment.reduce((sum, eq) => sum + eq.quantity, 0) + 1;
+          setNewAsignacion({
+            ...newAsignacion,
+            Cantidad: totalQuantity.toString(),
+          });
+          Swal.fire({
+            icon: "success",
+            title: "Equipo escaneado",
+            text: `Código: ${scannedCode}`,
+            timer: 1000,
+            showConfirmButton: false,
+          });
         }
-
-        // Actualizar cantidad total
-        const totalQuantity =
-          scannedEquipment.reduce((sum, eq) => sum + eq.quantity, 0) + 1;
-        setNewAsignacion({
-          ...newAsignacion,
-          Cantidad: totalQuantity.toString(),
-        });
-
-        Swal.fire({
-          icon: "success",
-          title: "Equipo escaneado",
-          text: `Código: ${scannedCode}`,
-          timer: 1000,
-          showConfirmButton: false,
-        });
       }
     } catch (error) {
       console.error("Error al procesar código de barras:", error);
@@ -165,6 +161,28 @@ export const useAsignaciones = () => {
     }
   };
 
+// Función para eliminar un equipo escaneado
+const handleRemoveScannedEquipment = (codeToRemove) => {
+  const updatedEquipment = scannedEquipment.filter(eq => eq.code !== codeToRemove);
+  setScannedEquipment(updatedEquipment);
+  
+  // Actualizar cantidad total (número de equipos únicos)
+  const totalQuantity = updatedEquipment.length;
+  setNewAsignacion({
+    ...newAsignacion,
+    Cantidad: totalQuantity.toString(),
+  });
+
+  Swal.fire({
+    icon: "success",
+    title: "Equipo eliminado",
+    text: `Código ${codeToRemove} eliminado de la lista`,
+    timer: 1500,
+    showConfirmButton: false,
+  });
+};
+
+  
   // Llenar automáticamente Nombre, Apellido y Documento al seleccionar usuario
   const handleUsuarioChange = (e) => {
     const selectedId = e.target.value;
@@ -186,7 +204,7 @@ export const useAsignaciones = () => {
       Nombre: "Nombre",
       Apellido: "Apellido",
       Documento: "Documento",
-      Observacion: "Observación",
+      // Observacion ya no es obligatorio
       Cantidad: "Cantidad",
       Item: "Item",
       Estado: "Estado",
@@ -200,6 +218,11 @@ export const useAsignaciones = () => {
       ) {
         missingFields.push(label);
       }
+    }
+
+    // Si Observacion está vacío, ponerle automáticamente "ninguna observación"
+    if (!newAsignacion.Observacion || !newAsignacion.Observacion.trim()) {
+      newAsignacion.Observacion = "ninguna observación";
     }
 
     if (missingFields.length > 0) {
@@ -701,18 +724,52 @@ export const useAsignaciones = () => {
 
   return {
     // Estados
-    asignaciones, usuarios, showModal, showNovedadModal, selectedNovedad,
-    showDetailsModal, selectedAsignacion, formTouched, newAsignacion,
-    currentPage, searchTerm, sortConfig, barcodeMode, scannedEquipment,
-    showBarcodeInstructions, currentAsignaciones, sortedAsignaciones,
-    indexOfFirstItem, indexOfLastItem, totalPages,
+    asignaciones,
+    usuarios,
+    showModal,
+    showNovedadModal,
+    selectedNovedad,
+    showDetailsModal,
+    selectedAsignacion,
+    formTouched,
+    newAsignacion,
+    currentPage,
+    searchTerm,
+    sortConfig,
+    barcodeMode,
+    scannedEquipment,
+    showBarcodeInstructions,
+    currentAsignaciones,
+    sortedAsignaciones,
+    indexOfFirstItem,
+    indexOfLastItem,
+    totalPages,
     // Funciones
-    setSearchTerm, setShowModal, setShowNovedadModal, setSelectedNovedad,
-    setShowDetailsModal, setSelectedAsignacion, setFormTouched, setNewAsignacion,
-    setBarcodeMode, setScannedEquipment, setShowBarcodeInstructions,
-    handleBarcodeScan, handleUsuarioChange, handleCreateAsignacion,
-    handleEditAsignacion, handleDeleteAsignacion, handleConfirmarDevolucion,
-    handleShowNovedad, handleShowDetails, requestSort, paginate,
-    exportToPDF, exportToExcel, getTodayLocal, formatDate
+    setSearchTerm,
+    setShowModal,
+    setShowNovedadModal,
+    setSelectedNovedad,
+    setShowDetailsModal,
+    setSelectedAsignacion,
+    setFormTouched,
+    setNewAsignacion,
+    setBarcodeMode,
+    setScannedEquipment,
+    setShowBarcodeInstructions,
+    handleBarcodeScan,
+    handleUsuarioChange,
+    handleCreateAsignacion,
+    handleEditAsignacion,
+    handleDeleteAsignacion,
+    handleConfirmarDevolucion,
+    handleShowNovedad,
+    handleShowDetails,
+    requestSort,
+    paginate,
+    exportToPDF,
+    exportToExcel,
+    getTodayLocal,
+    formatDate,
+    handleRemoveScannedEquipment,
   };
 };
