@@ -12,10 +12,10 @@ import { verifyRole } from '../middlewares/rol.middleware.js';
 const router = express.Router();
 
 // Crear un nuevo producto consumible
-router.post('/productosconsumibles', verifyToken, verifyRole([1]), createProductoHandler);
+router.post('/productosconsumibles', verifyToken, verifyRole([1,2,3]), createProductoHandler);
 
 // Obtener todos los productos consumibles
-router.get('/productosconsumibles', verifyToken, verifyRole([1]), getProductos);
+router.get('/productosconsumibles', verifyToken, verifyRole([1,2,3]), getProductos);
 
 // Obtener un producto consumible por ID
 router.get('/productosconsumibles/:id', verifyToken, verifyRole([1]), getProducto);

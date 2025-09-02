@@ -12,18 +12,18 @@ import { verifyRole } from '../middlewares/rol.middleware.js';
 const router = express.Router();
 
 // Crear un nuevo equipo tecnológico
-router.post('/equipostecnologicos', verifyToken, verifyRole([1]), createEquipoHandler);
+router.post('/equipostecnologicos', verifyToken, verifyRole([1,2,3]), createEquipoHandler);
 
 // Obtener todos los equipos tecnológicos
-router.get('/equipostecnologicos', verifyToken, verifyRole([1]), getEquipos);
+router.get('/equipostecnologicos', verifyToken, verifyRole([1,2,3]), getEquipos);
 
 // Obtener un equipo tecnológico por ID
-router.get('/equipostecnologicos/:id', verifyToken, verifyRole([1]), getEquipo);
+router.get('/equipostecnologicos/:id', verifyToken, verifyRole([1,2,3]), getEquipo);
 
 // Actualizar un equipo tecnológico por ID
-router.put('/equipostecnologicos/:id', verifyToken, verifyRole([1]), updateEquipoHandler);
+router.put('/equipostecnologicos/:id', verifyToken, verifyRole([1,2,3]), updateEquipoHandler);
 
 // Eliminar un equipo tecnológico por ID
-router.delete('/equipostecnologicos/:id', verifyToken, verifyRole([1]), deleteEquipoHandler);
+router.delete('/equipostecnologicos/:id', verifyToken, verifyRole([1,2,3]), deleteEquipoHandler);
 
 export default router;

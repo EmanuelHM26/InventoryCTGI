@@ -12,18 +12,18 @@ import { verifyRole } from '../middlewares/rol.middleware.js';
 const router = express.Router();
 
 // Crear una nueva reserva fija
-router.post('/reservasfijas', verifyToken, verifyRole([1]), createReservaFija);
+router.post('/reservasfijas', verifyToken, verifyRole([1,2,3]), createReservaFija);
 
 // Obtener todas las reservas fijas
-router.get('/reservasfijas', verifyToken, verifyRole([1]), getAllReservasFijas);
+router.get('/reservasfijas', verifyToken, verifyRole([1,2,3]), getAllReservasFijas);
 
 // Obtener una reserva fija por ID
-router.get('/reservasfijas/:id', verifyToken, verifyRole([1]), getReservaFijaById);
+router.get('/reservasfijas/:id', verifyToken, verifyRole([1,2,3]), getReservaFijaById);
 
 // Actualizar una reserva fija por ID
-router.put('/reservasfijas/:id', verifyToken, verifyRole([1]), updateReservaFija);
+router.put('/reservasfijas/:id', verifyToken, verifyRole([1,2,3]), updateReservaFija);
 
 // Eliminar una reserva fija por ID
-router.delete('/reservasfijas/:id', verifyToken, verifyRole([1]), deleteReservaFija);
+router.delete('/reservasfijas/:id', verifyToken, verifyRole([1,2,3]), deleteReservaFija);
 
 export default router;
