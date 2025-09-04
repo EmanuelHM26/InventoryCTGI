@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 export const useProductosConsumibles = () => {
-     const [productos, setProductos] = useState([]);
+  const [productos, setProductos] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [newProducto, setNewProducto] = useState({
     Nombre: "",
     CantidadDisponible: "",
-    IdOriginal: "",
-    IdCodigoBarras: "",
   });
 
   // Estados para búsqueda, paginación y ordenación
@@ -42,41 +40,49 @@ export const useProductosConsumibles = () => {
 
   const handleCreateProducto = async () => {
     try {
+      let response;
       if (newProducto.IdProductosConsumibles) {
-        await axios.put(
+        response = await axios.put(
           `http://localhost:3000/api/productosconsumibles/${newProducto.IdProductosConsumibles}`,
           newProducto,
           { withCredentials: true }
         );
-        Swal.fire({
-          icon: "success",
-          title: "Producto actualizado",
-          text: "El producto se actualizó correctamente.",
-          showConfirmButton: true,
-        });
+        // Actualizar estado local inmediatamente
+        actualizarProductoLocal(
+          newProducto.IdProductosConsumibles,
+          newProducto
+        );
       } else {
-        await axios.post(
+        response = await axios.post(
           "http://localhost:3000/api/productosconsumibles",
           newProducto,
           { withCredentials: true }
         );
-        Swal.fire({
-          icon: "success",
-          title: "Producto creado",
-          text: "El producto se creó correctamente.",
-          showConfirmButton: true,
-        });
+        // Agregar nuevo producto al estado local
+        setProductos((prev) => [...prev, response.data]);
       }
+
+      Swal.fire({
+        icon: "success",
+        title: newProducto.IdProductosConsumibles
+          ? "Producto actualizado"
+          : "Producto creado",
+        text: `El producto se ${
+          newProducto.IdProductosConsumibles ? "actualizó" : "creó"
+        } correctamente.`,
+        showConfirmButton: true,
+      });
+
       setShowModal(false);
-      fetchProductos();
     } catch (error) {
+      // Si hay error, recargar desde servidor
+      fetchProductos();
       Swal.fire({
         icon: "error",
         title: "Error",
         text: "Ocurrió un error al guardar el producto.",
         showConfirmButton: true,
       });
-      console.error("Error al guardar producto:", error);
     }
   };
 
@@ -122,6 +128,16 @@ export const useProductosConsumibles = () => {
     }
   };
 
+  const actualizarProductoLocal = (id, nuevosDatos) => {
+    setProductos((prev) =>
+      prev.map((producto) =>
+        producto.IdProductosConsumibles === id
+          ? { ...producto, ...nuevosDatos }
+          : producto
+      )
+    );
+  };
+
   const requestSort = (key) => {
     let direction = "ascending";
     if (sortConfig.key === key && sortConfig.direction === "ascending") {
@@ -146,7 +162,10 @@ export const useProductosConsumibles = () => {
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentProductos = sortedProductos.slice(indexOfFirstItem, indexOfLastItem);
+  const currentProductos = sortedProductos.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
   const totalPages = Math.ceil(sortedProductos.length / itemsPerPage);
 
   const paginate = (pageNumber) => {
@@ -157,7 +176,6 @@ export const useProductosConsumibles = () => {
 
   const exportToPDF = async () => {
     try {
-      // Cargar el logo y convertirlo a base64
       const getBase64FromUrl = async (url) => {
         const response = await fetch(url);
         const blob = await response.blob();
@@ -169,84 +187,88 @@ export const useProductosConsumibles = () => {
         });
       };
 
-      const senaLogoBase64 = await getBase64FromUrl('/logosena.png');
+      const senaLogoBase64 = await getBase64FromUrl("/logosena.png");
       const doc = new jsPDF();
 
       // --- LOGO SENA ---
-      doc.addImage(senaLogoBase64, 'PNG', 15, 10, 30, 25);
+      doc.addImage(senaLogoBase64, "PNG", 15, 10, 30, 25);
 
       // --- TÍTULO EN VERDE CENTRADO ---
       doc.setFontSize(22);
-      doc.setTextColor(57, 181, 74); // Verde SENA
-      doc.setFont(undefined, 'bold');
-      doc.text('Inventario CTGI', 105, 25, { align: 'center' });
+      doc.setTextColor(57, 181, 74);
+      doc.setFont(undefined, "bold");
+      doc.text("Inventario CTGI", 105, 25, { align: "center" });
 
       // --- SUBTÍTULO EN NEGRO ---
       doc.setFontSize(18);
       doc.setTextColor(0, 0, 0);
-      doc.setFont(undefined, 'bold');
-      doc.text('Productos consumibles', 15, 45);
+      doc.setFont(undefined, "bold");
+      doc.text("Productos consumibles", 15, 45);
 
       // --- FECHA Y TOTAL ---
       doc.setFontSize(12);
-      doc.setFont(undefined, 'bold');
+      doc.setFont(undefined, "bold");
       doc.text(`Fecha:`, 15, 55);
       doc.text(`Total:`, 15, 63);
 
-      doc.setFont(undefined, 'normal');
-      doc.text(`${new Date().toLocaleDateString('es-ES')}`, 40, 55);
+      doc.setFont(undefined, "normal");
+      doc.text(`${new Date().toLocaleDateString("es-ES")}`, 40, 55);
       doc.text(`${sortedProductos.length}`, 40, 63);
 
       // --- DESCRIPCIÓN ---
       doc.setFontSize(13);
-      doc.setFont(undefined, 'bold');
-      doc.text('Descripción:', 15, 73);
+      doc.setFont(undefined, "bold");
+      doc.text("Descripción:", 15, 73);
       doc.setFontSize(11);
-      doc.setFont(undefined, 'normal');
-      doc.text('Este reporte contiene la lista de productos consumibles registrados en el sistema, mostrando su cantidad disponible y códigos asociados.', 15, 80, { maxWidth: 180 });
+      doc.setFont(undefined, "normal");
+      doc.text(
+        "Este reporte contiene la lista de productos consumibles registrados en el sistema, mostrando su cantidad disponible.",
+        15,
+        80,
+        { maxWidth: 180 }
+      );
 
       // --- TABLA ---
-      const tableData = sortedProductos.map(prod => [
-        String(prod.IdProductosConsumibles || ''),
-        prod.Nombre || '',
-        prod.CantidadDisponible || '',
-        prod.IdOriginal || '',
-        prod.IdCodigoBarras || ''
+      const tableData = sortedProductos.map((prod) => [
+        String(prod.IdProductosConsumibles || ""),
+        prod.Nombre || "",
+        prod.CantidadDisponible || "",
       ]);
 
       autoTable(doc, {
-        head: [['ID', 'Nombre', 'Cantidad', 'ID Original', 'ID Código Barras']],
+        head: [["ID", "Nombre", "Cantidad"]],
         body: tableData,
         startY: 90,
         styles: {
           fontSize: 9,
-          cellPadding: 2
+          cellPadding: 2,
         },
         headStyles: {
-          fillColor: [57, 181, 74], // Verde SENA
+          fillColor: [57, 181, 74],
           textColor: 255,
-          fontStyle: 'bold'
-        }
+          fontStyle: "bold",
+        },
       });
 
-      const fileName = `productos_consumibles_${new Date().toISOString().split('T')[0]}.pdf`;
+      const fileName = `productos_consumibles_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
       doc.save(fileName);
 
       Swal.fire({
-        icon: 'success',
-        title: 'PDF generado',
-        text: 'El archivo PDF se ha descargado correctamente.',
+        icon: "success",
+        title: "PDF generado",
+        text: "El archivo PDF se ha descargado correctamente.",
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
       });
-
     } catch (error) {
-      console.error('Error detallado al generar PDF:', error);
+      console.error("Error detallado al generar PDF:", error);
       Swal.fire({
-        icon: 'error',
-        title: 'Error al generar PDF',
+        icon: "error",
+        title: "Error al generar PDF",
         text: `Error: ${error.message}`,
-        showConfirmButton: true
+        showConfirmButton: true,
       });
     }
   };
@@ -254,42 +276,42 @@ export const useProductosConsumibles = () => {
   const exportToExcel = () => {
     try {
       const wsData = [
-        ['ID', 'Nombre', 'Cantidad', 'ID Original', 'ID Código Barras'],
-        ...sortedProductos.map(prod => [
-          prod.IdProductosConsumibles || '',
-          prod.Nombre || '',
-          prod.CantidadDisponible || '',
-          prod.IdOriginal || '',
-          prod.IdCodigoBarras || ''
-        ])
+        ["ID", "Nombre", "Cantidad"],
+        ...sortedProductos.map((prod) => [
+          prod.IdProductosConsumibles || "",
+          prod.Nombre || "",
+          prod.CantidadDisponible || "",
+        ]),
       ];
 
       const worksheet = XLSX.utils.aoa_to_sheet(wsData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "ProductosConsumibles");
 
-      const fileName = `productos_consumibles_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `productos_consumibles_${
+        new Date().toISOString().split("T")[0]
+      }.xlsx`;
       XLSX.writeFile(workbook, fileName);
 
       Swal.fire({
-        icon: 'success',
-        title: 'Excel generado',
-        text: 'El archivo Excel se ha descargado correctamente.',
+        icon: "success",
+        title: "Excel generado",
+        text: "El archivo Excel se ha descargado correctamente.",
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
       });
     } catch (error) {
-      console.error('Error al generar Excel:', error);
+      console.error("Error al generar Excel:", error);
       Swal.fire({
-        icon: 'error',
-        title: 'Error al generar Excel',
+        icon: "error",
+        title: "Error al generar Excel",
         text: `Error: ${error.message}`,
-        showConfirmButton: true
+        showConfirmButton: true,
       });
     }
   };
 
-   return {
+  return {
     productos,
     showModal,
     setShowModal,
@@ -305,11 +327,12 @@ export const useProductosConsumibles = () => {
     itemsPerPage,
     requestSort,
     sortConfig,
-    sortedProductos, // <-- CAMBIA ESTO
+    sortedProductos,
     currentProductos,
     totalPages,
     paginate,
     exportToPDF,
-    exportToExcel
+    exportToExcel,
+    actualizarProductoLocal,
   };
-}
+};

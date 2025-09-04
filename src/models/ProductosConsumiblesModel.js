@@ -13,16 +13,9 @@ const ProductosConsumibles = sequelize.define('ProductosConsumibles', {
     allowNull: false,
   },
   CantidadDisponible: {
-    type: DataTypes.STRING(100),
-    allowNull: false,
-  },
-  IdOriginal: {
-    type: DataTypes.STRING(45),
-    allowNull: false,
-  },
-  IdCodigoBarras: {
     type: DataTypes.INTEGER(11),
     allowNull: false,
+    defaultValue: 0,
   },
 }, {
   tableName: 'productosconsumibles',
@@ -30,5 +23,13 @@ const ProductosConsumibles = sequelize.define('ProductosConsumibles', {
   charset: 'utf8',
   collate: 'utf8_general_ci',
 });
+
+// Función para configurar las asociaciones de ProductosConsumibles
+export const setupProductosConsumiblesAssociations = (models) => {
+  ProductosConsumibles.hasMany(models.MovimientosConsumibles, {
+    foreignKey: 'IdProductoConsumible',
+    as: 'Movimientos'
+  });
+};
 
 export default ProductosConsumibles;

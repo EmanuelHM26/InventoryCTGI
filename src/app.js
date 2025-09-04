@@ -14,6 +14,7 @@ import grupoRoutes from "./routes/grupo.routes.js";
 import reservasFijasRoutes from "./routes/reservasFijas.routes.js";
 import reservasDiariasRoutes from "./routes/reservasDiarias.routes.js";
 import contarEstadisticasInicioRoutes from "./routes/estadisticasInicio.routes.js";
+import movimientosConsumiblesRoutes from "./routes/movimientosConsumibles.routes.js"
 
 import cookieParser from "cookie-parser";
 
@@ -74,6 +75,10 @@ app.use('/api', reservasDiariasRoutes);
 
 // Registrar las rutas de estadísticas de inicio
 app.use('/api', contarEstadisticasInicioRoutes);
+
+// Registrar las rutas de movimientos consumibles
+
+app.use('/api', movimientosConsumiblesRoutes);
 
 export default app;
 
