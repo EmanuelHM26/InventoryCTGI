@@ -8,7 +8,8 @@
     "test": "cross-env NODE_ENV=test mocha \"src/test/**/*.test.js\" --config mocha.config.js",
     "test:integration": "cross-env NODE_ENV=test mocha --config mocha.config.js test/integration/",
     "test:unit": "cross-env NODE_ENV=test mocha --config mocha.config.js test/unit/services/",
-    "test:watch": "cross-env NODE_ENV=test mocha --config mocha.config.js --watch"
+    "test:watch": "cross-env NODE_ENV=test mocha --config mocha.config.js --watch",
+    "test:security": "cross-env NODE_ENV=test mocha src/test/integration/login.security.test.js --timeout 10000 --config mocha.config.js"
   },
   "keywords": [],
   "author": "",
