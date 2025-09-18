@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  UserPlus, Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, X, FileText, Download, Eye, EyeOff, Save
+ Check, UserPlus, Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, X, FileText, Download, Eye, EyeOff, Save
 } from "lucide-react";
 import { useUsuariosSoftware } from "../hooks/useUsuariosSoftware";
 

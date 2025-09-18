@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import Usuario from "../models/UsuariosModel.js";
+import EquiposTecnologicos from "../models/EquiposTecnologicosModel.js";
 
 const ReservasDiarias = sequelize.define("ReservasDiarias", {
   idReservaDiaria: {
@@ -40,5 +41,14 @@ ReservasDiarias.belongsTo(Usuario, {
   targetKey: 'IdUsuario',
   as: 'Usuario'
 });
+
+
+
+ReservasDiarias.hasMany(EquiposTecnologicos, {
+  foreignKey: 'IdReservaDiaria',
+  as: 'Equipos'
+});
+
+
 
 export default ReservasDiarias;

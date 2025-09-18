@@ -9,6 +9,11 @@ export const useReservas = () => {
   const [reservasFijas, setReservasFijas] = useState([]);
   const [reservasDiarias, setReservasDiarias] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
+  // Nuevos estados agregados:
+  const [equiposTecnologicos, setEquiposTecnologicos] = useState([]);
+  const [showEquiposModal, setShowEquiposModal] = useState(false);
+  const [selectedReservaEquipos, setSelectedReservaEquipos] = useState(null);
+
   const [activeTab, setActiveTab] = useState("fijas");
   const [showModal, setShowModal] = useState(false);
   const [newReserva, setNewReserva] = useState({});
@@ -24,11 +29,13 @@ export const useReservas = () => {
   const [showBarcodeInstructions, setShowBarcodeInstructions] = useState(false);
   const [scanBuffer, setScanBuffer] = useState("");
   const scanTimeout = useRef(null);
+  const [inputErrors, setInputErrors] = useState({});
 
   useEffect(() => {
     fetchReservasFijas();
     fetchReservasDiarias();
     fetchUsuarios();
+    fetchEquiposTecnologicos();
   }, []);
 
   const fetchReservasFijas = async () => {
@@ -66,22 +73,69 @@ export const useReservas = () => {
     }
   };
 
+  const fetchEquiposTecnologicos = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:3000/api/equipostecnologicos",
+        { withCredentials: true }
+      );
+      setEquiposTecnologicos(response.data);
+    } catch (error) {
+      console.error("Error al obtener equipos tecnológicos:", error);
+    }
+  };
+
   const handleCreateReserva = async () => {
     try {
+      // Limpiar errores previos
+      setInputErrors({});
+      let errors = {};
+
       if (activeTab === "fijas") {
-        if (
-          !newReserva.nombrePrograma ||
-          !newReserva.ficha ||
-          !newReserva.materialReservado
+        // VALIDACIONES PARA RESERVAS FIJAS
+        const nombreRegex = /^[A-Za-z]+$/;
+        const fichaRegex = /^[0-9]+$/;
+
+        // Validar nombre programa
+        if (!newReserva.nombrePrograma?.trim()) {
+          errors.nombrePrograma = "El nombre del programa es requerido";
+        } else if (!nombreRegex.test(newReserva.nombrePrograma.trim())) {
+          errors.nombrePrograma =
+            "Solo se permiten letras (A-Z, a-z) sin espacios ni caracteres especiales";
+        }
+
+        // Validar ficha
+        if (!newReserva.ficha?.trim()) {
+          errors.ficha = "La ficha es requerida";
+        } else if (!fichaRegex.test(newReserva.ficha.trim())) {
+          errors.ficha = "Solo se permiten números";
+        }
+
+        // Validar material reservado
+        if (!newReserva.materialReservado?.trim()) {
+          errors.materialReservado = "El material reservado es requerido";
+        } else if (
+          /\s|[^A-Za-z0-9]/.test(newReserva.materialReservado.trim())
         ) {
-          alert("Por favor, completa todos los campos de la reserva fija.");
+          errors.materialReservado =
+            "No se permiten espacios ni caracteres especiales";
+        }
+
+        // Si hay errores, mostrarlos y no continuar
+        if (Object.keys(errors).length > 0) {
+          setInputErrors(errors);
           return;
         }
+
         const endpoint = "http://localhost:3000/api/reservasfijas";
         const reservaFija = {
           ...newReserva,
+          nombrePrograma: newReserva.nombrePrograma.trim(),
+          ficha: newReserva.ficha.trim(),
+          materialReservado: newReserva.materialReservado.trim(),
           Estado: "Disponible",
         };
+
         if (newReserva.idReservaFija) {
           await axios.put(
             `${endpoint}/${newReserva.idReservaFija}`,
@@ -93,33 +147,73 @@ export const useReservas = () => {
         }
         fetchReservasFijas();
       } else {
-        const { IdUsuario, ficha, materialReservado, fecha } = newReserva;
-        if (!IdUsuario || !ficha || !materialReservado || !fecha) {
-          alert("Por favor, completa todos los campos de la reserva diaria.");
-          return;
+        // VALIDACIONES PARA RESERVAS DIARIAS
+        const fichaRegex = /^[0-9]+$/;
+
+        // Validar usuario
+        if (!newReserva.IdUsuario) {
+          errors.IdUsuario = "Debe seleccionar un usuario";
         }
-        const endpoint = "http://localhost:3000/api/reservas-diarias";
-        let fechaFormateada = fecha;
-        if (fecha && fecha.includes("/")) {
-          const [dia, mes, anio] = fecha.split("/");
-          if (dia && mes && anio) {
-            fechaFormateada = `${anio}-${mes.padStart(2, "0")}-${dia.padStart(
-              2,
-              "0"
-            )}`;
-          } else {
-            fechaFormateada = "";
+
+        // Validar ficha
+        if (!newReserva.ficha?.trim()) {
+          errors.ficha = "La ficha es requerida";
+        } else if (!fichaRegex.test(newReserva.ficha.trim())) {
+          errors.ficha = "Solo se permiten números";
+        }
+
+        // Validar material reservado (debe haber al menos un equipo escaneado)
+        if (scannedEquipment.length === 0) {
+          errors.materialReservado = "Debe escanear al menos un equipo";
+        }
+
+        // Validar fecha
+        if (!newReserva.fecha) {
+          errors.fecha = "La fecha es requerida";
+        } else {
+          const fechaSeleccionada = new Date(newReserva.fecha);
+          const fechaHoy = new Date();
+          fechaHoy.setHours(0, 0, 0, 0);
+
+          if (fechaSeleccionada < fechaHoy) {
+            errors.fecha = "No se pueden seleccionar fechas pasadas";
           }
         }
+
+        // Si hay errores, mostrarlos y no continuar
+        if (Object.keys(errors).length > 0) {
+          setInputErrors(errors);
+          return;
+        }
+
+        const endpoint = "http://localhost:3000/api/reservas-diarias";
+        let fechaFormateada = newReserva.fecha;
+        if (newReserva.fecha && newReserva.fecha.includes("/")) {
+          const [dia, mes, anio] = newReserva.fecha.split("/");
+          if (dia && mes && anio) {
+            fechaFormateada = `${anio}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
+          }
+        }
+
+        // CAMBIO PRINCIPAL: Preparar datos con los equipos escaneados
+        const equiposParaEnviar = scannedEquipment.map(eq => ({
+          codigo: eq.code,
+          idequipostecnologicos: eq.equipo.idequipostecnologicos,
+          quantity: eq.quantity
+        }));
+
         const reservaData = {
-          ...newReserva,
+          IdUsuario: newReserva.IdUsuario,
+          ficha: newReserva.ficha.trim(),
+          materialReservado: newReserva.materialReservado || scannedEquipment.map(eq => eq.code).join(', '),
           fecha: fechaFormateada,
-          materialesEscaneados: scannedEquipment,
+          equiposEscaneados: equiposParaEnviar, // Enviar los equipos con sus IDs
         };
+
         if (newReserva.idReservaDiaria) {
           await axios.put(
             `${endpoint}/${newReserva.idReservaDiaria}`,
-            newReserva,
+            reservaData,
             { withCredentials: true }
           );
         } else {
@@ -127,12 +221,15 @@ export const useReservas = () => {
         }
         fetchReservasDiarias();
       }
+
+      // Si llegamos aquí, todo salió bien
       setShowModal(false);
       setNewReserva({});
       setScannedEquipment([]);
       setScanBuffer("");
       setBarcodeMode("user");
       setShowBarcodeInstructions(false);
+      setInputErrors({});
     } catch (error) {
       console.error("Error al procesar reserva:", error);
       alert(
@@ -336,7 +433,6 @@ export const useReservas = () => {
   // Escucha global de teclado SOLO cuando el modal está abierto y hay modo de escaneo
   useEffect(() => {
     if (!showModal) return;
-    if (barcodeMode !== "user") return;
 
     const handleKeyDown = (e) => {
       if (e.key === "Enter") {
@@ -358,65 +454,91 @@ export const useReservas = () => {
     };
   }, [showModal, barcodeMode, scanBuffer]);
 
-  // Procesar código escaneado
-  const handleScan = (codigo) => {
-    if (barcodeMode === "user") {
-      const usuarioEncontrado = usuarios.find(
-        (u) => String(u.NumeroDocumento) === codigo
-      );
-      if (usuarioEncontrado) {
-        setNewReserva({
-          ...newReserva,
-          IdUsuario: usuarioEncontrado.IdUsuario,
-        });
-        setBarcodeMode("equipment");
-        setShowBarcodeInstructions(true);
-        setTimeout(() => setShowBarcodeInstructions(false), 2000);
-      } else {
-        alert("Usuario no encontrado");
-      }
-    } else if (barcodeMode === "equipment") {
+const handleScan = (codigo) => {
+  if (barcodeMode === "user") {
+    const usuarioEncontrado = usuarios.find(
+      (u) => String(u.NumeroDocumento) === codigo
+    );
+    if (usuarioEncontrado) {
+      setNewReserva({
+        ...newReserva,
+        IdUsuario: usuarioEncontrado.IdUsuario,
+      });
+      setBarcodeMode("equipment");
+      setShowBarcodeInstructions(true);
+      setTimeout(() => setShowBarcodeInstructions(false), 2000);
+    } else {
+      alert("Usuario no encontrado");
+    }
+  } else if (barcodeMode === "equipment") {
+    // Buscar el equipo en la base de datos
+    const equipoEncontrado = equiposTecnologicos.find(
+      (equipo) => equipo.Codigo === codigo
+    );
+
+    if (equipoEncontrado) {
       const existingEquipment = scannedEquipment.find(
         (eq) => eq.code === codigo
       );
       let nuevosEquipos;
       if (existingEquipment) {
         nuevosEquipos = scannedEquipment.map((eq) =>
-          eq.code === codigo ? { ...eq, quantity: eq.quantity + 1 } : eq
+          eq.code === codigo
+            ? { ...eq, quantity: eq.quantity + 1 }
+            : eq
         );
       } else {
-        nuevosEquipos = [...scannedEquipment, { code: codigo, quantity: 1 }];
+        nuevosEquipos = [
+          ...scannedEquipment,
+          {
+            code: codigo,
+            quantity: 1,
+            equipo: equipoEncontrado,
+          },
+        ];
       }
       setScannedEquipment(nuevosEquipos);
+      
+      // CAMBIO PRINCIPAL: Actualizar materialReservado con los códigos separados por comas
+      const codigosEscaneados = nuevosEquipos.map(eq => eq.code).join(', ');
       setNewReserva((prev) => ({
         ...prev,
-        materialReservado: nuevosEquipos
-          .map((eq) => `${eq.code} (x${eq.quantity})`)
-          .join(", "),
+        materialReservado: codigosEscaneados,
       }));
+    } else {
+      // Mostrar alerta más informativa si el equipo no existe
+      alert(`Equipo con código "${codigo}" no encontrado en el inventario`);
     }
-  };
+  }
+};
+      
+      
 
-  // Para el BarcodeReader (por compatibilidad)
   const handleBarcodeScan = (scannedCode) => {
-    if (!showModal) return;
-    if (barcodeMode === "user") {
-      const usuario = usuarios.find(
-        (u) => String(u.NumeroDocumento).trim() === String(scannedCode).trim()
-      );
-      if (usuario) {
-        setNewReserva({
-          ...newReserva,
-          IdUsuario: usuario.IdUsuario,
-        });
-        setBarcodeMode("equipment");
-        setShowBarcodeInstructions(true);
-        setTimeout(() => setShowBarcodeInstructions(false), 2000);
-      } else {
-        setShowBarcodeInstructions(true);
-        setTimeout(() => setShowBarcodeInstructions(false), 2000);
-      }
-    } else if (barcodeMode === "equipment") {
+  if (!showModal) return;
+  if (barcodeMode === "user") {
+    const usuario = usuarios.find(
+      (u) => String(u.NumeroDocumento).trim() === String(scannedCode).trim()
+    );
+    if (usuario) {
+      setNewReserva({
+        ...newReserva,
+        IdUsuario: usuario.IdUsuario,
+      });
+      setBarcodeMode("equipment");
+      setShowBarcodeInstructions(true);
+      setTimeout(() => setShowBarcodeInstructions(false), 2000);
+    } else {
+      setShowBarcodeInstructions(true);
+      setTimeout(() => setShowBarcodeInstructions(false), 2000);
+    }
+  } else if (barcodeMode === "equipment") {
+    // Buscar el equipo en la base de datos
+    const equipoEncontrado = equiposTecnologicos.find(
+      (equipo) => equipo.Codigo === scannedCode
+    );
+
+    if (equipoEncontrado) {
       const existingEquipment = scannedEquipment.find(
         (eq) => eq.code === scannedCode
       );
@@ -428,20 +550,26 @@ export const useReservas = () => {
       } else {
         nuevosEquipos = [
           ...scannedEquipment,
-          { code: scannedCode, quantity: 1 },
+          { 
+            code: scannedCode, 
+            quantity: 1,
+            equipo: equipoEncontrado
+          },
         ];
       }
       setScannedEquipment(nuevosEquipos);
-      const totalQuantity = nuevosEquipos.reduce(
-        (sum, eq) => sum + eq.quantity,
-        0
-      );
+      
+      // CAMBIO PRINCIPAL: Actualizar materialReservado con los códigos
+      const codigosEscaneados = nuevosEquipos.map(eq => eq.code).join(', ');
       setNewReserva({
         ...newReserva,
-        Cantidad: totalQuantity.toString(),
+        materialReservado: codigosEscaneados,
       });
+    } else {
+      alert(`Equipo con código "${scannedCode}" no encontrado en el inventario`);
     }
-  };
+  }
+};
 
   const getTableHeaders = () => {
     if (activeTab === "fijas") {
@@ -643,6 +771,11 @@ export const useReservas = () => {
     }
   };
 
+  const handleShowEquipos = (reserva) => {
+    setSelectedReservaEquipos(reserva);
+    setShowEquiposModal(true);
+  };
+
   return {
     reservasFijas,
     reservasDiarias,
@@ -690,5 +823,13 @@ export const useReservas = () => {
     getTableHeaders,
     exportToPDF,
     exportToExcel,
+    inputErrors,
+    setInputErrors,
+    equiposTecnologicos,
+    showEquiposModal,
+    setShowEquiposModal,
+    selectedReservaEquipos,
+    handleShowEquipos,
+    fetchEquiposTecnologicos,
   };
 };
