@@ -26,7 +26,7 @@ const EquiposTecnologicos = () => {
     searchTerm,
     setSearchTerm,
     requestSort,
-    sortConfig,
+    //sortConfig,
     currentPage,
     totalPages,
     paginate,
@@ -97,7 +97,7 @@ const EquiposTecnologicos = () => {
                     onClick={() => {
                       if (index < 5) {
                         const keys = [
-                          "IdEquiposTecnologicos",
+                          "idequipostecnologicos",
                           "Codigo",
                           "Nombre",
                           "Marca",
@@ -118,10 +118,10 @@ const EquiposTecnologicos = () => {
               {equipos.length > 0 ? (
                 equipos.map((equipo) => (
                   <tr
-                    key={equipo.IdEquiposTecnologicos}
+                    key={equipo.idequipostecnologicos}
                     className="hover:bg-blue-50 transition-colors duration-150"
                   >
-                    <td className="px-4 py-3">{equipo.IdEquiposTecnologicos}</td>
+                    <td className="px-4 py-3">{equipo.idequipostecnologicos}</td>
                     <td className="px-4 py-3">{equipo.Codigo}</td>
                     <td className="px-4 py-3">{equipo.Nombre}</td>
                     <td className="px-4 py-3">{equipo.Marca}</td>
@@ -137,7 +137,7 @@ const EquiposTecnologicos = () => {
                         </button>
                         <button
                           onClick={() =>
-                            handleDeleteEquipo(equipo.IdEquiposTecnologicos)
+                            handleDeleteEquipo(equipo.idequipostecnologicos)
                           }
                           className="p-1 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition-colors duration-200"
                           title="Eliminar equipo"
@@ -213,7 +213,7 @@ const EquiposTecnologicos = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-screen overflow-y-auto">
             <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">
-              {watch('IdEquiposTecnologicos') ? "Editar Equipo" : "Crear Nuevo Equipo"}
+              {watch('idequipostecnologicos') ? "Editar Equipo" : "Crear Nuevo Equipo"}
             </h2>
 
             {/* Modo de Escaner */}
@@ -352,7 +352,7 @@ const EquiposTecnologicos = () => {
                   type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
                 >
-                  {watch('IdEquiposTecnologicos') ? "Actualizar" : "Crear"}
+                  {watch('idequipostecnologicos') ? "Actualizar" : "Crear"}
                 </button>
               </div>
             </form>

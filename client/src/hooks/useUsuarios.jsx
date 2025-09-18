@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -63,6 +63,14 @@ export const useUsuarios = () => {
       setUsuarios(response.data);
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
+      toast.error("Error al cargar la lista de usuarios", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   };
 
@@ -79,6 +87,10 @@ export const useUsuarios = () => {
         { IdRol: 3, NombreRol: "Aprendiz" },
         { IdRol: 4, NombreRol: "Invitado" },
       ]);
+      toast.warning("Se cargaron los roles por defecto", {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
 
@@ -110,21 +122,25 @@ export const useUsuarios = () => {
           userData,
           { withCredentials: true }
         );
-        Swal.fire({
-          icon: "success",
-          title: "Usuario actualizado",
-          text: "El usuario se actualizó correctamente.",
-          showConfirmButton: true,
+        toast.success("Usuario actualizado correctamente", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
         });
       } else {
         await axios.post("http://localhost:3000/api/usuarios", userData, {
           withCredentials: true,
         });
-        Swal.fire({
-          icon: "success",
-          title: "Usuario creado",
-          text: "El usuario se creó correctamente.",
-          showConfirmButton: true,
+        toast.success("Usuario creado correctamente", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
         });
       }
       setShowModal(false);
@@ -141,11 +157,13 @@ export const useUsuarios = () => {
       });
       fetchUsuarios();
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "Ocurrió un error al guardar el usuario.",
-        showConfirmButton: true,
+      toast.error("Ocurrió un error al guardar el usuario", {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
       });
       console.error(
         newUser.IdUsuario
@@ -166,11 +184,13 @@ export const useUsuarios = () => {
     setValue("Correo", user.Correo);
     setValue("IdRol", user.IdRol);
     setShowModal(true);
-    Swal.fire({
-      icon: "info",
-      title: "Modo edición",
-      text: "Ahora puedes editar el usuario.",
-      showConfirmButton: true,
+    toast.info("Modo edición activado", {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
     });
   };
 
@@ -190,34 +210,78 @@ export const useUsuarios = () => {
   };
 
   const handleDeleteUser = async (id) => {
-    const result = await Swal.fire({
-      title: "¿Estás seguro?",
-      text: "Esta acción eliminará el usuario. ¿Deseas continuar?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
+    const confirmDelete = await new Promise((resolve) => {
+      toast.warning(
+        ({ closeToast }) => (
+          <div>
+            <p>¿Estás seguro de eliminar este usuario?</p>
+            <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => {
+                  resolve(true);
+                  closeToast();
+                }}
+                style={{
+                  backgroundColor: '#dc3545',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Eliminar
+              </button>
+              <button
+                onClick={() => {
+                  resolve(false);
+                  closeToast();
+                }}
+                style={{
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        ),
+        {
+          position: "top-right",
+          autoClose: false,
+          closeOnClick: false,
+          draggable: false,
+        }
+      );
     });
 
-    if (result.isConfirmed) {
+    if (confirmDelete) {
       try {
         await axios.delete(`http://localhost:3000/api/usuarios/${id}`, {
           withCredentials: true,
         });
         fetchUsuarios();
-        Swal.fire({
-          icon: "success",
-          title: "Eliminado",
-          text: "El usuario fue eliminado correctamente.",
-          showConfirmButton: true,
+        toast.success("Usuario eliminado correctamente", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
         });
       } catch (error) {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Ocurrió un error al eliminar el usuario.",
+        toast.error("Error al eliminar el usuario", {
+          position: "top-right",
+          autoClose: 4000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
         });
         console.error("Error al eliminar usuario:", error);
       }
@@ -362,19 +426,22 @@ export const useUsuarios = () => {
       const fileName = `usuarios_${new Date().toISOString().split("T")[0]}.pdf`;
       doc.save(fileName);
 
-      Swal.fire({
-        icon: "success",
-        title: "PDF generado",
-        text: "El archivo PDF se ha descargado correctamente.",
-        timer: 2000,
-        showConfirmButton: false,
+      toast.success("PDF generado y descargado correctamente", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
       });
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error al generar PDF",
-        text: `Error: ${error.message}`,
-        showConfirmButton: true,
+      toast.error(`Error al generar PDF: ${error.message}`, {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
       });
     }
   };
@@ -411,19 +478,22 @@ export const useUsuarios = () => {
       const fileName = `usuarios_${new Date().toISOString().split("T")[0]}.xlsx`;
       XLSX.writeFile(workbook, fileName);
 
-      Swal.fire({
-        icon: "success",
-        title: "Excel generado",
-        text: "El archivo Excel se ha descargado correctamente.",
-        timer: 2000,
-        showConfirmButton: false,
+      toast.success("Excel generado y descargado correctamente", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
       });
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error al generar Excel",
-        text: `Error: ${error.message}`,
-        showConfirmButton: true,
+      toast.error(`Error al generar Excel: ${error.message}`, {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
       });
     }
   };

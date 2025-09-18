@@ -7,7 +7,7 @@ export const useEquiposTecnologicos = () => {
   const [equipos, setEquipos] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [sortConfig, setSortConfig] = useState({
-    key: "IdEquiposTecnologicos",
+    key: "idequipostecnologicos",
     direction: "ascending",
   });
   const [currentPage, setCurrentPage] = useState(1);
@@ -51,12 +51,12 @@ export const useEquiposTecnologicos = () => {
     try {
       const equipoData = {
         ...data,
-        IdEquiposTecnologicos: watch('IdEquiposTecnologicos')
+        idequipostecnologicos: watch('idequipostecnologicos')
       };
 
-      if (equipoData.IdEquiposTecnologicos) {
+      if (equipoData.idequipostecnologicos) {
         await axios.put(
-          `http://localhost:3000/api/equipostecnologicos/${equipoData.IdEquiposTecnologicos}`,
+          `http://localhost:3000/api/equipostecnologicos/${equipoData.idequipostecnologicos}`,
           equipoData,
           { withCredentials: true }
         );
@@ -93,7 +93,7 @@ export const useEquiposTecnologicos = () => {
   };
 
   const handleEditEquipo = (equipo) => {
-    setValue('IdEquiposTecnologicos', equipo.IdEquiposTecnologicos);
+    setValue('idequipostecnologicos', equipo.idequipostecnologicos);
     setValue('Codigo', equipo.Codigo);
     setValue('Nombre', equipo.Nombre);
     setValue('Marca', equipo.Marca);
