@@ -1,3 +1,7 @@
+// Importa las funciones (servicios) desde el archivo reservasDiarias.service.js
+// Estos servicios son los que realmente hacen la lógica o las consultas a la base 
+// de datos.
+
 import {
   createReservaDiariaService,
   getAllReservasDiariasService,
@@ -6,6 +10,8 @@ import {
   deleteReservaDiariaService,
   getReservasByFechaService,
 } from '../services/reservasDiarias.service.js';
+
+//______________________________________________________________________________
 
 // Crear una nueva reserva diaria
 export const createReservaDiaria = async (req, res) => {
