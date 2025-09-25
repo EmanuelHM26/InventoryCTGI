@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -23,8 +23,8 @@ export const useAsignaciones = () => {
     FechaAsignacion: "",
     HoraAsignacion: "",
     Observacion: "",
-    FechaDevolucion: "",
-    HoraDevolucion: "",
+    FechaDevolucion: null,
+    HoraDevolucion: null,
     Novedad: "",
     Cantidad: "",
     Item: "",
@@ -58,9 +58,11 @@ export const useAsignaciones = () => {
       setAsignaciones(response.data);
     } catch (error) {
       console.error("Error al obtener asignaciones:", error);
-      toast.error("Error al cargar las asignaciones", {
-        position: "top-right",
-        autoClose: 3000,
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudieron cargar las asignaciones",
+        showConfirmButton: true,
       });
     }
   };
@@ -74,9 +76,11 @@ export const useAsignaciones = () => {
       setUsuarios(response.data);
     } catch (error) {
       console.error("Error al obtener usuarios:", error);
-      toast.error("Error al cargar los usuarios", {
-        position: "top-right",
-        autoClose: 3000,
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudieron cargar los usuarios",
+        showConfirmButton: true,
       });
     }
   };
@@ -102,9 +106,12 @@ export const useAsignaciones = () => {
             Usuario: usuario.Usuario || "",
           });
 
-          toast.success(`Usuario encontrado: ${usuario.Nombre} ${usuario.Apellido}`, {
-            position: "top-right",
-            autoClose: 2000,
+          Swal.fire({
+            icon: "success",
+            title: "Usuario encontrado",
+            text: `${usuario.Nombre} ${usuario.Apellido}`,
+            timer: 2000,
+            showConfirmButton: false,
           });
 
           // Cambiar automáticamente a modo equipo después de escanear usuario
@@ -112,9 +119,12 @@ export const useAsignaciones = () => {
           setShowBarcodeInstructions(true);
           setTimeout(() => setShowBarcodeInstructions(false), 3000);
         } else {
-          toast.warning("No se encontró un usuario con ese documento", {
-            position: "top-right",
-            autoClose: 2500,
+          Swal.fire({
+            icon: "warning",
+            title: "Usuario no encontrado",
+            text: "No se encontró un usuario con ese documento",
+            showConfirmButton: true,
+            confirmButtonText: "Cerrar",
           });
         }
       } else if (barcodeMode === "equipment") {
@@ -125,11 +135,11 @@ export const useAsignaciones = () => {
 
         if (existingEquipment) {
           Swal.fire({
-            icon: "error",
-            title: "Equipo ya escaneado",
+            icon: "warning",
+            title: "Equipo duplicado",
             text: `El equipo con código ${scannedCode} ya fue escaneado.`,
-            timer: 1800,
-            showConfirmButton: false,
+            showConfirmButton: true,
+            confirmButtonText: "Cerrar",
           });
         } else {
           // Agregar nuevo equipo
@@ -140,8 +150,7 @@ export const useAsignaciones = () => {
         }
 
         // Actualizar cantidad total
-        const totalQuantity =
-          scannedEquipment.reduce((sum, eq) => sum + eq.quantity, 0) + 1;
+        const totalQuantity = scannedEquipment.reduce((sum, eq) => sum + eq.quantity, 0) + 1;
         setNewAsignacion({
           ...newAsignacion,
           Cantidad: totalQuantity.toString(),
@@ -151,41 +160,43 @@ export const useAsignaciones = () => {
           icon: "success",
           title: "Equipo escaneado",
           text: `Código: ${scannedCode}`,
-          timer: 1000,
-          showConfirmButton: false,
+          showConfirmButton: true,
+          confirmButtonText: "Ok",
         });
       }
     } catch (error) {
       console.error("Error al procesar código de barras:", error);
-      toast.error("Error al procesar el código escaneado", {
-        position: "top-right",
-        autoClose: 3000,
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Ocurrió un error al procesar el código escaneado",
+        showConfirmButton: true,
+        confirmButtonText: "Cerrar",
       });
     }
   };
 
-// Función para eliminar un equipo escaneado
-const handleRemoveScannedEquipment = (codeToRemove) => {
-  const updatedEquipment = scannedEquipment.filter(eq => eq.code !== codeToRemove);
-  setScannedEquipment(updatedEquipment);
-  
-  // Actualizar cantidad total (número de equipos únicos)
-  const totalQuantity = updatedEquipment.length;
-  setNewAsignacion({
-    ...newAsignacion,
-    Cantidad: totalQuantity.toString(),
-  });
+  // Función para eliminar un equipo escaneado
+  const handleRemoveScannedEquipment = (codeToRemove) => {
+    const updatedEquipment = scannedEquipment.filter(eq => eq.code !== codeToRemove);
+    setScannedEquipment(updatedEquipment);
 
-  Swal.fire({
-    icon: "success",
-    title: "Equipo eliminado",
-    text: `Código ${codeToRemove} eliminado de la lista`,
-    timer: 1500,
-    showConfirmButton: false,
-  });
-};
+    // Actualizar cantidad total (número de equipos únicos)
+    const totalQuantity = updatedEquipment.length;
+    setNewAsignacion({
+      ...newAsignacion,
+      Cantidad: totalQuantity.toString(),
+    });
 
-  
+    Swal.fire({
+      icon: "success",
+      title: "Equipo eliminado",
+      text: `Código ${codeToRemove} eliminado de la lista`,
+      showConfirmButton: true,
+      confirmButtonText: "Ok",
+    });
+  };
+
   // Llenar automáticamente Nombre, Apellido y Documento al seleccionar usuario
   const handleUsuarioChange = (e) => {
     const selectedId = e.target.value;
@@ -207,7 +218,6 @@ const handleRemoveScannedEquipment = (codeToRemove) => {
       Nombre: "Nombre",
       Apellido: "Apellido",
       Documento: "Documento",
-      // Observacion ya no es obligatorio
       Cantidad: "Cantidad",
       Item: "Item",
       Estado: "Estado",
@@ -229,9 +239,12 @@ const handleRemoveScannedEquipment = (codeToRemove) => {
     }
 
     if (missingFields.length > 0) {
-      toast.warning(`Por favor complete los siguientes campos: ${missingFields.join(", ")}`, {
-        position: "top-right",
-        autoClose: 4000,
+      Swal.fire({
+        icon: "warning",
+        title: "Campos requeridos",
+        text: `Por favor complete los siguientes campos: ${missingFields.join(", ")}`,
+        showConfirmButton: true,
+        confirmButtonText: "Cerrar",
       });
       return;
     }
@@ -242,9 +255,11 @@ const handleRemoveScannedEquipment = (codeToRemove) => {
         new Date(newAsignacion.FechaDevolucion) <
         new Date(newAsignacion.FechaAsignacion)
       ) {
-        toast.warning("La fecha de devolución no puede ser anterior a la fecha de asignación", {
-          position: "top-right",
-          autoClose: 4000,
+        Swal.fire({
+          icon: "warning",
+          title: "Fecha inválida",
+          text: "La fecha de devolución no puede ser anterior a la fecha de asignación",
+          showConfirmButton: true,
         });
         return;
       }
@@ -252,32 +267,50 @@ const handleRemoveScannedEquipment = (codeToRemove) => {
 
     try {
       if (newAsignacion.IdAsignaciones) {
+        // Modo edición - mantener las fechas/horas existentes
         await axios.put(
           `http://localhost:3000/api/asignaciones/${newAsignacion.IdAsignaciones}`,
           newAsignacion,
           { withCredentials: true }
         );
-        toast.success("Asignación actualizada correctamente", {
-          position: "top-right",
-          autoClose: 2500,
+        Swal.fire({
+          icon: "success",
+          title: "¡Éxito!",
+          text: "Asignación actualizada correctamente",
+          showConfirmButton: true,
+          confirmButtonText: "Ok",
         });
       } else {
+        // Modo creación - establecer fecha/hora actual automáticamente
         const now = new Date();
-        newAsignacion.FechaAsignacion =
-          newAsignacion.FechaAsignacion || now.toISOString().split("T")[0];
-        newAsignacion.HoraAsignacion =
-          newAsignacion.HoraAsignacion || now.toTimeString().split(" ")[0];
+
+        // Formatear fecha como YYYY-MM-DD
+        const today = now.toISOString().split('T')[0];
+        // Formatear hora como HH:MM:SS
+        const currentTime = now.toTimeString().split(' ')[0];
+
+        const asignacionData = {
+          ...newAsignacion,
+          FechaAsignacion: today, // Se establece automáticamente
+          HoraAsignacion: currentTime, // Se establece automáticamente
+          FechaDevolucion: null, // Debe ser null al crear
+          HoraDevolucion: null // Debe ser null al crear
+        };
 
         await axios.post(
           "http://localhost:3000/api/asignaciones",
-          newAsignacion,
+          asignacionData,
           { withCredentials: true }
         );
-        toast.success("Asignación creada correctamente", {
-          position: "top-right",
-          autoClose: 2500,
+        Swal.fire({
+          icon: "success",
+          title: "¡Éxito!",
+          text: "Asignación creada correctamente",
+          showConfirmButton: true,
+          confirmButtonText: "Ok",
         });
       }
+
       setScannedEquipment([]); // Limpiar equipos escaneados
       setBarcodeMode("user"); // Resetear modo
       setShowModal(false);
@@ -290,17 +323,20 @@ const handleRemoveScannedEquipment = (codeToRemove) => {
         FechaAsignacion: "",
         HoraAsignacion: "",
         Observacion: "",
-        FechaDevolucion: "",
-        HoraDevolucion: "",
+        FechaDevolucion: null,
+        HoraDevolucion: null,
         Novedad: "",
         Cantidad: "",
         Item: "",
         Estado: "Activo",
       });
     } catch (error) {
-      toast.error(error.response?.data?.message || "Ocurrió un error al guardar la asignación", {
-        position: "top-right",
-        autoClose: 4000,
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.response?.data?.message || "Ocurrió un error al guardar la asignación",
+        showConfirmButton: true,
+        confirmButtonText: "Cerrar",
       });
       console.error(error);
     }
@@ -322,77 +358,52 @@ const handleRemoveScannedEquipment = (codeToRemove) => {
 
     setShowModal(true);
 
-    toast.info("Modo edición activado", {
-      position: "top-right",
-      autoClose: 2000,
-    });
-  };
-  
-  const handleDeleteAsignacion = async (id) => {
-    const confirmDelete = await new Promise((resolve) => {
-      toast.warning(
-        ({ closeToast }) => (
-          <div>
-            <p>¿Estás seguro de eliminar esta asignación?</p>
-            <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
-              <button
-                onClick={() => {
-                  resolve(true);
-                  closeToast();
-                }}
-                style={{
-                  backgroundColor: '#dc3545',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Sí, eliminar
-              </button>
-              <button
-                onClick={() => {
-                  resolve(false);
-                  closeToast();
-                }}
-                style={{
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        ),
-        {
-          position: "top-right",
-          autoClose: false,
-          closeOnClick: false,
-          draggable: false,
-        }
-      );
+    Swal.fire({
+      title: "Deseas editar esta asignación?",
+      text: "Modo edición activado",
+      icon: "info",
+      showCancelButton: true,
+      confirmButtonText: "#d33",
+      cancelButtonText: "#3085d6",
+      confirmButtonText: "Sí, editar",
+      cancelButtonText: "Cancelar",
     });
 
-    if (confirmDelete) {
+  };
+
+  const handleDeleteAsignacion = async (id) => {
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Esta acción eliminará la asignación permanentemente",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true
+    });
+
+    if (result.isConfirmed) {
       try {
         await axios.delete(`http://localhost:3000/api/asignaciones/${id}`, {
           withCredentials: true,
         });
         fetchAsignaciones();
-        toast.success("Asignación eliminada correctamente", {
-          position: "top-right",
-          autoClose: 2500,
+        Swal.fire({
+          icon: "success",
+          title: "¡Eliminado!",
+          text: "Asignación eliminada correctamente",
+          showConfirmButton: true,
+          confirmButtonText: "Ok",
         });
       } catch (error) {
-        toast.error("Ocurrió un error al eliminar la asignación", {
-          position: "top-right",
-          autoClose: 3000,
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Ocurrió un error al eliminar la asignación",
+          showConfirmButton: true,
+          confirmButtonText: "Cerrar",
         });
         console.error("Error al eliminar asignación:", error);
       }
@@ -401,122 +412,40 @@ const handleRemoveScannedEquipment = (codeToRemove) => {
 
   // Función para confirmar devolución de una asignación
   const handleConfirmarDevolucion = async (id) => {
-    const hasNovedad = await new Promise((resolve) => {
-      toast.info(
-        ({ closeToast }) => (
-          <div>
-            <p>¿Hay alguna novedad que reportar?</p>
-            <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
-              <button
-                onClick={() => {
-                  resolve(true);
-                  closeToast();
-                }}
-                style={{
-                  backgroundColor: '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Sí
-              </button>
-              <button
-                onClick={() => {
-                  resolve(false);
-                  closeToast();
-                }}
-                style={{
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                No
-              </button>
-            </div>
-          </div>
-        ),
-        {
-          position: "top-right",
-          autoClose: false,
-          closeOnClick: false,
-          draggable: false,
-        }
-      );
+    const { value: hasNovedad } = await Swal.fire({
+      title: "¿Hay alguna novedad que reportar?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí",
+      cancelButtonText: "No",
+      reverseButtons: true
     });
 
     let novedad = "";
     if (hasNovedad) {
-      novedad = await new Promise((resolve) => {
-        let inputValue = "";
-        toast.info(
-          ({ closeToast }) => (
-            <div>
-              <p>Describe la novedad:</p>
-              <textarea
-                placeholder="Escribe aquí la novedad..."
-                style={{
-                  width: '100%',
-                  minHeight: '60px',
-                  margin: '10px 0',
-                  padding: '8px',
-                  borderRadius: '4px',
-                  border: '1px solid #ccc'
-                }}
-                onChange={(e) => { inputValue = e.target.value; }}
-              />
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button
-                  onClick={() => {
-                    resolve(inputValue);
-                    closeToast();
-                  }}
-                  style={{
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Guardar
-                </button>
-                <button
-                  onClick={() => {
-                    resolve(null);
-                    closeToast();
-                  }}
-                  style={{
-                    backgroundColor: '#6c757d',
-                    color: 'white',
-                    border: 'none',
-                    padding: '8px 16px',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          ),
-          {
-            position: "top-right",
-            autoClose: false,
-            closeOnClick: false,
-            draggable: false,
+      const { value: novedadInput } = await Swal.fire({
+        title: "Describe la novedad",
+        input: "textarea",
+        inputLabel: "Novedad",
+        inputPlaceholder: "Escribe aquí la novedad...",
+        inputAttributes: {
+          'aria-label': 'Escribe aquí la novedad'
+        },
+        showCancelButton: true,
+        confirmButtonText: "Guardar",
+        cancelButtonText: "Cancelar",
+        inputValidator: (value) => {
+          if (!value) {
+            return "Debes escribir una novedad";
           }
-        );
+        }
       });
 
-      if (novedad === null) return; // Usuario canceló
+      if (novedadInput) {
+        novedad = novedadInput;
+      } else {
+        return; // Usuario canceló
+      }
     }
 
     try {
@@ -537,15 +466,20 @@ const handleRemoveScannedEquipment = (codeToRemove) => {
 
       await fetchAsignaciones();
 
-      toast.success("Devolución registrada exitosamente", {
-        position: "top-right",
-        autoClose: 2500,
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: "Devolución registrada exitosamente",
+        showConfirmButton: true,
+        confirmButtonText: "Ok",
       });
     } catch (error) {
       console.error("Error completo:", error.response?.data);
-      toast.error(error.response?.data?.message || "Error al confirmar devolución", {
-        position: "top-right",
-        autoClose: 3000,
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.response?.data?.message || "Error al confirmar devolución",
+        showConfirmButton: true,
       });
     }
   };
@@ -742,15 +676,20 @@ const handleRemoveScannedEquipment = (codeToRemove) => {
         }.pdf`;
       doc.save(fileName);
 
-      toast.success("PDF generado y descargado correctamente", {
-        position: "top-right",
-        autoClose: 2500,
+      Swal.fire({
+        icon: "success",
+        title: "PDF generado",
+        text: "El archivo PDF se ha descargado correctamente",
+        showConfirmButton: true,
+        confirmButtonText: "Ok",
       });
     } catch (error) {
       console.error("Error detallado al generar PDF:", error);
-      toast.error(`Error al generar PDF: ${error.message}`, {
-        position: "top-right",
-        autoClose: 4000,
+      Swal.fire({
+        icon: "error",
+        title: "Error al generar PDF",
+        text: `Error: ${error.message}`,
+        showConfirmButton: true,
       });
     }
   };
@@ -794,15 +733,19 @@ const handleRemoveScannedEquipment = (codeToRemove) => {
         }.xlsx`;
       XLSX.writeFile(workbook, fileName);
 
-      toast.success("Excel generado y descargado correctamente", {
-        position: "top-right",
-        autoClose: 2500,
+      Swal.fire({
+        icon: "success",
+        title: "Excel generado",
+        text: "El archivo Excel se ha descargado correctamente",
+        showConfirmButton: true,
       });
     } catch (error) {
       console.error("Error al generar Excel:", error);
-      toast.error(`Error al generar Excel: ${error.message}`, {
-        position: "top-right",
-        autoClose: 4000,
+      Swal.fire({
+        icon: "error",
+        title: "Error al generar Excel",
+        text: `Error: ${error.message}`,
+        showConfirmButton: true,
       });
     }
   };
