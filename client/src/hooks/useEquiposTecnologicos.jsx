@@ -33,10 +33,6 @@ export const useEquiposTecnologicos = () => {
 
   useEffect(() => {
     fetchEquipos();
-<<<<<<< HEAD
-=======
-   
->>>>>>> 2593c2d1af20fda65b69a3845132f34675bf47e7
   }, []);
 
   const fetchEquipos = async () => {
