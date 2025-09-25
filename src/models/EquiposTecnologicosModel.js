@@ -4,19 +4,19 @@ import sequelize from "../config/database.js";
 const EquiposTecnologicos = sequelize.define(
   "EquiposTecnologicos",
   {
-    idequipostecnologicos: {   // usa el mismo nombre que en la BD
+    idequipostecnologicos: {
       type: DataTypes.BIGINT,
       primaryKey: true,
       autoIncrement: true,
       allowNull: false,
     },
- Codigo: {
-  type: DataTypes.STRING(50),
-  allowNull: false,
-  unique: true
-},
+    Codigo: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      unique: true
+    },
     Nombre: {
-      type: DataTypes.STRING(100), // igual que en MySQL
+      type: DataTypes.STRING(100),
       allowNull: false,
     },
     Marca: {
@@ -24,21 +24,17 @@ const EquiposTecnologicos = sequelize.define(
       allowNull: false,
     },
     Modelo: {
-      type: DataTypes.STRING(40), // igual que en MySQL
+      type: DataTypes.STRING(40),
       allowNull: false,
     },
     Estado: {
-      type: DataTypes.STRING(45), // este faltaba en tu modelo
+      type: DataTypes.STRING(45),
       allowNull: true,
       defaultValue: null,
     },
-    IdCodigoBarras: {
+    // Se eliminaron IdCodigoBarras e IdEstado
+    IdReservaDiaria: {
       type: DataTypes.INTEGER,
-      allowNull: true,
-      defaultValue: null,
-    },
-    IdEstado: {
-      type: DataTypes.BIGINT,
       allowNull: true,
       defaultValue: null,
     },

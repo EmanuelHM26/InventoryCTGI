@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
 
-const Header = () => {
+const Header = ({ isSidebarCollapsed }) => {
   const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -40,16 +40,26 @@ const Header = () => {
     navigate('/dashboard/ayuda');
   };
 
+  // Calcular el ancho dinámico del header
+  const headerWidth = `calc(100% - ${isSidebarCollapsed ? '4rem' : '16rem'})`;
+  const headerLeft = isSidebarCollapsed ? '4rem' : '16rem';
+
   if (loading) {
     return (
-      <header className="absolute top-0 left-0 w-[calc(100%-16rem)] ml-64 bg-white shadow p-4 flex justify-between items-center z-50">
+      <header 
+        className="fixed top-0 bg-white shadow p-4 flex justify-between items-center z-40 transition-all duration-300"
+        style={{ width: headerWidth, left: headerLeft }}
+      >
         <h2 className="text-xl font-semibold text-gray-700">Cargando...</h2>
       </header>
     );
   }
 
   return (
-    <header className="absolute top-0 left-0 w-[calc(100%-16rem)] ml-64 bg-white shadow p-4 flex justify-between items-center z-50">
+    <header 
+      className="fixed top-0 bg-white shadow p-4 flex justify-between items-center z-40 transition-all duration-300"
+      style={{ width: headerWidth, left: headerLeft }}
+    >
       <h2 className="text-xl font-semibold text-gray-700">
         Bienvenido, {user?.nombre || "Usuario"}
       </h2>

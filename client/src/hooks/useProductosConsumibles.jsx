@@ -67,9 +67,8 @@ export const useProductosConsumibles = () => {
         title: newProducto.IdProductosConsumibles
           ? "Producto actualizado"
           : "Producto creado",
-        text: `El producto se ${
-          newProducto.IdProductosConsumibles ? "actualizó" : "creó"
-        } correctamente.`,
+        text: `El producto se ${newProducto.IdProductosConsumibles ? "actualizó" : "creó"
+          } correctamente.`,
         showConfirmButton: true,
       });
 
@@ -162,14 +161,13 @@ export const useProductosConsumibles = () => {
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentProductos = sortedProductos.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
+  const currentProductos = sortedProductos.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(sortedProductos.length / itemsPerPage);
 
+
+
   const paginate = (pageNumber) => {
-    if (pageNumber > 0 && pageNumber <= totalPages) {
+    if (pageNumber > 0 && pageNumber <= Math.max(1, totalPages)) {
       setCurrentPage(pageNumber);
     }
   };
@@ -250,9 +248,8 @@ export const useProductosConsumibles = () => {
         },
       });
 
-      const fileName = `productos_consumibles_${
-        new Date().toISOString().split("T")[0]
-      }.pdf`;
+      const fileName = `productos_consumibles_${new Date().toISOString().split("T")[0]
+        }.pdf`;
       doc.save(fileName);
 
       Swal.fire({
@@ -288,9 +285,8 @@ export const useProductosConsumibles = () => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "ProductosConsumibles");
 
-      const fileName = `productos_consumibles_${
-        new Date().toISOString().split("T")[0]
-      }.xlsx`;
+      const fileName = `productos_consumibles_${new Date().toISOString().split("T")[0]
+        }.xlsx`;
       XLSX.writeFile(workbook, fileName);
 
       Swal.fire({
@@ -310,6 +306,7 @@ export const useProductosConsumibles = () => {
       });
     }
   };
+
 
   return {
     productos,
@@ -334,5 +331,8 @@ export const useProductosConsumibles = () => {
     exportToPDF,
     exportToExcel,
     actualizarProductoLocal,
+    // AGREGAR ESTAS DOS VARIABLES:
+    indexOfFirstItem,
+    indexOfLastItem
   };
 };

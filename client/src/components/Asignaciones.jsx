@@ -2,15 +2,13 @@ import React from "react";
 import { useAsignaciones } from "../hooks/useAsignaciones";
 import BarcodeReader from './BarcodeReader';
 import { Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, X, Check, Eye } from "lucide-react";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+
 
 
 
 const Asignaciones = () => {
  const {
-  
-   usuarios, showModal, showNovedadModal, selectedNovedad,
+    usuarios, showModal, showNovedadModal, selectedNovedad,
     showDetailsModal, selectedAsignacion, formTouched, newAsignacion,
     currentPage, searchTerm, barcodeMode, scannedEquipment,
     showBarcodeInstructions, currentAsignaciones, sortedAsignaciones,
@@ -26,29 +24,6 @@ const Asignaciones = () => {
 
   return (
     <div className="px-4 py-20 md:px-8 lg:px-2 max-w-full bg-gray-50 min-h-screen">
-
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-        style={{
-          top: '80px',
-          right: '20px',
-          zIndex: 9999
-        }}
-        toastStyle={{
-          fontSize: '14px',
-          borderRadius: '8px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-        }}
-      />
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
@@ -106,8 +81,8 @@ const Asignaciones = () => {
                   FechaAsignacion: getTodayLocal(),
                   HoraAsignacion: "",
                   Observacion: "",
-                  FechaDevolucion: "",
-                  HoraDevolucion: "",
+                  FechaDevolucion: null,
+                  HoraDevolucion: null,
                   Novedad: "",
                   Cantidad: "",
                   Item: "",
@@ -177,7 +152,7 @@ const Asignaciones = () => {
                       {formatDate(asignacion.FechaAsignacion)}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(asignacion.FechaDevolucion)}
+                      {formatDate(asignacion.HoraAsignacion)}
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.Observacion}
