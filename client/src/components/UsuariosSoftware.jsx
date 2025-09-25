@@ -1,6 +1,6 @@
 import React from "react";
 import {
-<<<<<<<<< Temporary merge branch 1
+
   UserPlus,
   Search,
   Edit,
@@ -14,9 +14,8 @@ import {
   Eye,
   EyeOff,
   Check,
-=========
- Check, UserPlus, Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, X, FileText, Download, Eye, EyeOff, Save
->>>>>>>>> Temporary merge branch 2
+
+
 } from "lucide-react";
 import { useUsuariosSoftware } from "../hooks/useUsuariosSoftware";
 import GestionUsuariosPendientes from "./GestionUsuariosPendientes";
