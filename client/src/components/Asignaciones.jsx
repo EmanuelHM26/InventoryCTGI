@@ -1,67 +1,54 @@
 import React from "react";
 import { useAsignaciones } from "../hooks/useAsignaciones";
-import BarcodeReader from "./BarcodeReader";
-import {
-  Search,
-  Edit,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  X,
-  Check,
-  Eye,
-} from "lucide-react";
+import BarcodeReader from './BarcodeReader';
+import { Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, X, Check, Eye } from "lucide-react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+
 
 const Asignaciones = () => {
-  const {
-    asignaciones,
-    usuarios,
-    showModal,
-    showNovedadModal,
-    selectedNovedad,
-    showDetailsModal,
-    selectedAsignacion,
-    formTouched,
-    newAsignacion,
-    currentPage,
-    searchTerm,
-    barcodeMode,
-    scannedEquipment,
-    showBarcodeInstructions,
-    currentAsignaciones,
-    sortedAsignaciones,
-    indexOfFirstItem,
-    indexOfLastItem,
-    totalPages,
-    setSearchTerm,
-    setShowModal,
-    setShowNovedadModal,
-    setSelectedNovedad,
-    setShowDetailsModal,
-    setFormTouched,
-    setNewAsignacion,
-    setBarcodeMode,
-    setScannedEquipment,
-    setShowBarcodeInstructions,
-    handleBarcodeScan,
-    handleUsuarioChange,
-    handleCreateAsignacion,
-    handleEditAsignacion,
-    handleDeleteAsignacion,
-    handleConfirmarDevolucion,
-    handleShowNovedad,
-    handleShowDetails,
-    paginate,
-    exportToPDF,
-    exportToExcel,
-    getTodayLocal,
-    formatDate,
-    handleRemoveScannedEquipment,
-  } = useAsignaciones();
+ const {
+  
+   usuarios, showModal, showNovedadModal, selectedNovedad,
+    showDetailsModal, selectedAsignacion, formTouched, newAsignacion,
+    currentPage, searchTerm, barcodeMode, scannedEquipment,
+    showBarcodeInstructions, currentAsignaciones, sortedAsignaciones,
+    indexOfFirstItem, indexOfLastItem, totalPages,
+    setSearchTerm, setShowModal, setShowNovedadModal,
+    setShowDetailsModal, setFormTouched, setNewAsignacion,
+    setBarcodeMode, setScannedEquipment, setShowBarcodeInstructions,
+    handleBarcodeScan, handleUsuarioChange, handleCreateAsignacion,
+    handleEditAsignacion, handleDeleteAsignacion, handleConfirmarDevolucion,
+    handleShowDetails, paginate, handleRemoveScannedEquipment,
+    exportToPDF, exportToExcel, getTodayLocal, formatDate
+  } = useAsignaciones()
 
   return (
     <div className="px-4 py-20 md:px-8 lg:px-2 max-w-full bg-gray-50 min-h-screen">
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        style={{
+          top: '80px',
+          right: '20px',
+          zIndex: 9999
+        }}
+        toastStyle={{
+          fontSize: '14px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        }}
+      />
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">
@@ -96,22 +83,7 @@ const Asignaciones = () => {
                 className="flex items-center justify-center bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-sm"
                 title="Exportar a PDF"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="mr-2"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    d="M12 16v-8m0 8l-3-3m3 3l3-3M4 4h16v16H4V4z"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 16v-8m0 8l-3-3m3 3l3-3M4 4h16v16H4V4z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 PDF
               </button>
               <button
@@ -119,22 +91,7 @@ const Asignaciones = () => {
                 className="flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm"
                 title="Exportar a Excel"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="mr-2"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    d="M4 4h16v16H4V4zm8 4v8m0 0l-3-3m3 3l3-3"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 4h16v16H4V4zm8 4v8m0 0l-3-3m3 3l3-3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 Excel
               </button>
             </div>

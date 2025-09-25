@@ -15,37 +15,27 @@ import { useReservas } from "../hooks/useReservas";
 
 const Reservas = () => {
   const {
-    reservasFijas,
-    reservasDiarias,
     usuarios,
     activeTab,
-    setActiveTab,
     showModal,
     setShowModal,
     newReserva,
     setNewReserva,
     currentPage,
-    setCurrentPage,
     searchTerm,
     setSearchTerm,
-    sortConfig,
-    setSortConfig,
     barcodeMode,
     setBarcodeMode,
     scannedEquipment,
     setScannedEquipment,
     showBarcodeInstructions,
     setShowBarcodeInstructions,
-    scanBuffer,
-    setScanBuffer,
     handleCreateReserva,
     handleEditReserva,
     handleDeleteReserva,
     handleCheckReservaFija,
     formatDate,
     requestSort,
-    getCurrentData,
-    filteredReservas,
     sortedReservas,
     indexOfFirstItem,
     indexOfLastItem,
@@ -53,17 +43,79 @@ const Reservas = () => {
     totalPages,
     paginate,
     handleTabChange,
-    handleScan,
     handleBarcodeScan,
     getTableHeaders,
     exportToPDF,
     exportToExcel,
+    inputErrors,
+    setInputErrors,
+    //equiposTecnologicos,
+    showEquiposModal,
+    setShowEquiposModal,
+    selectedReservaEquipos,
+    handleShowEquipos,
   } = useReservas();
+
+  // Función para obtener la fecha mínima (hoy)
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  };
+
+  const validateField = (field, value) => {
+  const trimmed = value.trimStart();
+  switch (field) {
+    case "nombrePrograma":
+      if (!trimmed) return "El nombre del programa es requerido";
+      if (/^\s/.test(value)) return "No puede comenzar con espacio";
+      if (!/^[A-Za-z ]+$/.test(value)) return "Solo letras y espacios";
+      break;
+    case "ficha":
+      if (!value) return "La ficha es requerida";
+      if (!/^[0-9]+$/.test(value)) return "Solo se permiten números";
+      break;
+    case "materialReservado":
+      if (!trimmed) return "El material es requerido";
+      if (/^\s/.test(value)) return "No puede comenzar con espacio";
+      if (!/^[A-Za-z0-9, ]+$/.test(value)) return "Solo letras, números y comas";
+      break;
+    case "IdUsuario":
+      if (!value) return "Debe seleccionar un usuario";
+      break;
+    case "fecha":{
+      if (!value) return "La fecha es requerida";
+      const fechaSeleccionada = new Date(value);
+      const fechaHoy = new Date();
+      fechaHoy.setHours(0, 0, 0, 0);
+      if (fechaSeleccionada < fechaHoy) return "No se pueden seleccionar fechas pasadas";
+      break;}
+    default:
+      return "";
+  }
+  return "";
+};
+  
+//También puedes agregar una función para limpiar equipos escaneados:
+const removeScannedEquipment = (codeToRemove) => {
+  const nuevosEquipos = scannedEquipment.filter(eq => eq.code !== codeToRemove);
+  setScannedEquipment(nuevosEquipos);
+  
+  // Actualizar el campo materialReservado
+  const codigosEscaneados = nuevosEquipos.map(eq => eq.code).join(', ');
+  setNewReserva(prev => ({
+    ...prev,
+    materialReservado: codigosEscaneados
+  }));
+};
+
+
+   
 
   const getFormFields = () => {
     if (activeTab === "fijas") {
       return (
         <>
+          {/* Nombre del Programa */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Nombre del Programa
@@ -71,16 +123,27 @@ const Reservas = () => {
             <input
               type="text"
               value={newReserva.nombrePrograma || ""}
-              onChange={(e) =>
-                setNewReserva({
-                  ...newReserva,
-                  nombrePrograma: e.target.value,
-                })
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                setNewReserva(prev => ({ ...prev, nombrePrograma: value }));
+                setInputErrors(prev => ({
+                  ...prev,
+                  nombrePrograma: validateField("nombrePrograma", value)
+                }));
+              }}
               placeholder="Ingrese el nombre del programa"
-              className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`border p-2 rounded-lg w-full ${
+                inputErrors.nombrePrograma ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {inputErrors.nombrePrograma && (
+              <span className="text-red-500 text-xs">
+                {inputErrors.nombrePrograma}
+              </span>
+            )}
           </div>
+
+          {/* Ficha */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Ficha
@@ -88,16 +151,25 @@ const Reservas = () => {
             <input
               type="text"
               value={newReserva.ficha || ""}
-              onChange={(e) =>
-                setNewReserva({
-                  ...newReserva,
-                  ficha: e.target.value,
-                })
-              }
-              placeholder="ingrese el número de ficha"
-              className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(e) => {
+                const value = e.target.value;
+                setNewReserva({ ...newReserva, ficha: value });
+                setInputErrors((prev) => ({
+                  ...prev,
+                  ficha: validateField("ficha", value),
+                }));
+              }}
+              placeholder="Ingrese el número de ficha"
+              className={`border p-2 rounded-lg w-full ${
+                inputErrors.ficha ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {inputErrors.ficha && (
+              <span className="text-red-500 text-xs">{inputErrors.ficha}</span>
+            )}
           </div>
+
+          {/* Material Reservado */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Material Reservado
@@ -105,21 +177,31 @@ const Reservas = () => {
             <input
               type="text"
               value={newReserva.materialReservado || ""}
-              onChange={(e) =>
-                setNewReserva({
-                  ...newReserva,
-                  materialReservado: e.target.value,
-                })
-              }
+              onChange={(e) => {
+                const value = e.target.value.replace(/^\s+/, "");
+                setNewReserva({ ...newReserva, materialReservado: value });
+                setInputErrors((prev) => ({
+                  ...prev,
+                  materialReservado: validateField("materialReservado", value),
+                }));
+              }}
               placeholder="Escriba manualmente o use el escáner"
-              className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`border p-2 rounded-lg w-full ${
+                inputErrors.materialReservado ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {inputErrors.materialReservado && (
+              <span className="text-red-500 text-xs">
+                {inputErrors.materialReservado}
+              </span>
+            )}
           </div>
         </>
       );
     } else {
       return (
         <>
+          {/* Escaneo y materiales escaneados */}
           <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex gap-2 mb-2">
               <button
@@ -166,38 +248,24 @@ const Reservas = () => {
             )}
           </div>
 
-          {scannedEquipment.length > 0 && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <h4 className="font-semibold text-green-900 mb-2">
-                Materiales Escaneados
-              </h4>
-              <div className="space-y-2">
-                {scannedEquipment.map((equipment, index) => (
-                  <div
-                    key={index}
-                    className="flex justify-between items-center bg-white p-2 rounded border"
-                  >
-                    <span className="text-sm font-mono">{equipment.code}</span>
-                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">
-                      x{equipment.quantity}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Resto de campos */}
+          {/* Usuario */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Usuario
             </label>
             <select
               value={newReserva.IdUsuario || ""}
-              onChange={(e) =>
-                setNewReserva({ ...newReserva, IdUsuario: e.target.value })
-              }
-              className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(e) => {
+                const value = e.target.value;
+                setNewReserva({ ...newReserva, IdUsuario: value });
+                setInputErrors((prev) => ({
+                  ...prev,
+                  IdUsuario: validateField("IdUsuario", value),
+                }));
+              }}
+              className={`border p-2 rounded-lg w-full ${
+                inputErrors.IdUsuario ? "border-red-500" : "border-gray-300"
+              }`}
             >
               <option value="">Seleccione un usuario</option>
               {usuarios.map((u) => (
@@ -206,7 +274,12 @@ const Reservas = () => {
                 </option>
               ))}
             </select>
+            {inputErrors.IdUsuario && (
+              <span className="text-red-500 text-xs">{inputErrors.IdUsuario}</span>
+            )}
           </div>
+
+          {/* Ficha */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Ficha
@@ -214,16 +287,25 @@ const Reservas = () => {
             <input
               type="text"
               value={newReserva.ficha || ""}
-              onChange={(e) =>
-                setNewReserva({
-                  ...newReserva,
-                  ficha: e.target.value,
-                })
-              }
-              placeholder="Ingresa el numero de la ficha"
-              className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(e) => {
+                const value = e.target.value;
+                setNewReserva({ ...newReserva, ficha: value });
+                setInputErrors((prev) => ({
+                  ...prev,
+                  ficha: validateField("ficha", value),
+                }));
+              }}
+              placeholder="Ingresa el número de la ficha"
+              className={`border p-2 rounded-lg w-full ${
+                inputErrors.ficha ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {inputErrors.ficha && (
+              <span className="text-red-500 text-xs">{inputErrors.ficha}</span>
+            )}
           </div>
+
+          {/* Material Reservado */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Material Reservado
@@ -231,16 +313,27 @@ const Reservas = () => {
             <input
               type="text"
               value={newReserva.materialReservado || ""}
-              onChange={(e) =>
-                setNewReserva({
-                  ...newReserva,
-                  materialReservado: e.target.value,
-                })
-              }
+              onChange={(e) => {
+                const value = e.target.value.replace(/^\s+/, "");
+                setNewReserva({ ...newReserva, materialReservado: value });
+                setInputErrors((prev) => ({
+                  ...prev,
+                  materialReservado: validateField("materialReservado", value),
+                }));
+              }}
               placeholder="Escriba manualmente o use el escáner"
-              className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`border p-2 rounded-lg w-full ${
+                inputErrors.materialReservado ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {inputErrors.materialReservado && (
+              <span className="text-red-500 text-xs">
+                {inputErrors.materialReservado}
+              </span>
+            )}
           </div>
+
+          {/* Fecha */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Fecha
@@ -248,15 +341,61 @@ const Reservas = () => {
             <input
               type="date"
               value={newReserva.fecha || ""}
-              onChange={(e) =>
-                setNewReserva({
-                  ...newReserva,
-                  fecha: e.target.value,
-                })
-              }
-              className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              min={getTodayDate()}
+              onChange={(e) => {
+                const value = e.target.value;
+                setNewReserva({ ...newReserva, fecha: value });
+                setInputErrors((prev) => ({
+                  ...prev,
+                  fecha: validateField("fecha", value),
+                }));
+              }}
+              className={`border p-2 rounded-lg w-full ${
+                inputErrors.fecha ? "border-red-500" : "border-gray-300"
+              }`}
             />
+            {inputErrors.fecha && (
+              <span className="text-red-500 text-xs">{inputErrors.fecha}</span>
+            )}
           </div>
+
+          {/* Materiales Escaneados */}
+       {scannedEquipment.length > 0 && (
+  <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+    <h4 className="font-semibold text-green-900 mb-2">
+      Materiales Escaneados
+    </h4>
+    <div className="space-y-2">
+      {scannedEquipment.map((equipment, index) => (
+        <div
+          key={index}
+          className="flex justify-between items-center bg-white p-2 rounded border"
+        >
+          <div className="flex flex-col">
+            <span className="text-sm font-mono font-semibold">{equipment.code}</span>
+            <span className="text-xs text-gray-500">
+              {equipment.equipo?.Nombre || 'Sin nombre'} - {equipment.equipo?.Marca || 'Sin marca'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">
+              x{equipment.quantity}
+            </span>
+            <button
+              type="button"
+              onClick={() => removeScannedEquipment(equipment.code)}
+              className="text-red-500 hover:text-red-700 transition-colors"
+              title="Eliminar equipo"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+         
         </>
       );
     }
@@ -268,9 +407,6 @@ const Reservas = () => {
         {/* Header */}
         <div className="flex items-center mb-6">
           <div className="flex items-center mr-8">
-            <div className="bg-green-500 text-white px-2 py-1 rounded text-sm font-bold mr-2">
-              SENA
-            </div>
             <h1 className="text-2xl font-bold text-gray-800">
               Reservas de Material
             </h1>
@@ -395,23 +531,7 @@ const Reservas = () => {
                     key={index}
                     onClick={() => {
                       if (index < getTableHeaders().length - 1) {
-                        const keys =
-                          activeTab === "fijas"
-                            ? [
-                                "idReservaFija",
-                                "nombrePrograma",
-                                "ficha",
-                                "materialReservado",
-                                "Estado",
-                              ]
-                            : [
-                                "idReservaDiaria",
-                                "IdUsuario",
-                                "ficha",
-                                "materialReservado",
-                                "fecha",
-                              ];
-                        requestSort(keys[index]);
+                        requestSort(header);
                       }
                     }}
                     className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
@@ -535,6 +655,14 @@ const Reservas = () => {
                             >
                               <Trash2 size={16} />
                             </button>
+                            {/* Botón Ver Equipos */}
+                            <button
+                              onClick={() => handleShowEquipos(reserva)}
+                              className="p-1 rounded-full bg-green-100 hover:bg-green-200 text-green-600 transition-colors duration-200"
+                              title="Ver equipos tecnológicos"
+                            >
+                              <Eye size={16} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -597,7 +725,7 @@ const Reservas = () => {
                 className={`p-2 rounded-md ${
                   currentPage === totalPages
                     ? "text-gray-300 cursor-not-allowed"
-                    : "text-gray-600 hover:bg-gray-100"
+                    : "text-gray-600 hover"
                 }`}
               >
                 <ChevronRight size={18} />
@@ -653,13 +781,7 @@ const Reservas = () => {
                 onClick={handleCreateReserva}
                 className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold shadow"
               >
-                {activeTab === "fijas"
-                  ? newReserva.idReservaFija
-                    ? "Actualizar"
-                    : "Crear"
-                  : newReserva.idReservaDiaria
-                  ? "Actualizar"
-                  : "Crear"}
+                Crear
               </button>
             </div>
           </div>
@@ -667,6 +789,47 @@ const Reservas = () => {
       )}
 
       <BarcodeReader onScan={handleBarcodeScan} isActive={showModal} />
+
+      {/* Modal de Equipos Tecnológicos */}
+      {showEquiposModal && selectedReservaEquipos && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-blue-700">
+                Equipos Tecnológicos - Reserva #{selectedReservaEquipos.idReservaDiaria}
+              </h2>
+              <button
+                onClick={() => setShowEquiposModal(false)}
+                className="text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              {selectedReservaEquipos.materialesEscaneados && selectedReservaEquipos.materialesEscaneados.length > 0 ? (
+                selectedReservaEquipos.materialesEscaneados.map((eq, idx) => (
+                  <div key={idx} className="bg-gray-50 rounded-lg p-4 shadow flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <div className="font-semibold text-gray-700">Nombre: <span className="font-normal">{eq.equipo?.Nombre || "Sin nombre"}</span></div>
+                      <div className="text-gray-600 text-sm">Código: <span className="font-mono">{eq.code}</span></div>
+                      <div className="text-gray-600 text-sm">Marca: {eq.equipo?.Marca || "Sin marca"}</div>
+                      <div className="text-gray-600 text-sm">Modelo: {eq.equipo?.Modelo || "Sin modelo"}</div>
+                    </div>
+                    <div className="mt-2 md:mt-0">
+                      <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 font-bold text-lg">
+                        x{eq.quantity}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-gray-500 text-center">No hay equipos asignados a esta reserva.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
