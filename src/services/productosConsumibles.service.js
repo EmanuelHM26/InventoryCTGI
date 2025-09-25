@@ -1,4 +1,4 @@
-import ProductosConsumibles from '../models/ProductosConsumiblesModel.js';
+import { ProductosConsumibles } from '../models/index.js';
 
 export const getAllProductosService = async () => {
   return await ProductosConsumibles.findAll();

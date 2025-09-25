@@ -14,10 +14,37 @@ import { IoIosArrowDown } from "react-icons/io";
 const Navbar = () => {
   const [isAsignacionesOpen, setIsAsignacionesOpen] = useState(false);
   const [isInventarioOpen, setIsInventarioOpen] = useState(false);
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const linkClasses =
     "flex items-center w-full py-1 px-4 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200";
+
+  // VERIFICACIÓN SEGURA DE ROLES (múltiples criterios)
+  const isAdmin = user && (
+    user.rolId === 1 || 
+    user.id === 1 || 
+    user.rol === "Administrador" ||
+    user.Rol === "Administrador"
+  );
+
+  const isSubdirector = user && (
+    user.rolId === 2 || 
+    user.rol === "Subdirector" ||
+    user.Rol === "Subdirector"
+  );
+
+  const isAlmacenista = user && (
+    user.rolId === 3 || 
+    user.rol === "Almacenista" ||
+    user.Rol === "Almacenista"
+  );
+
+  // Usuarios Software visible para Admin y Subdirector
+  const canSeeUsuariosSoftware = isAdmin || isSubdirector;
+  // Roles visible solo para Admin
+  const canSeeRoles = isAdmin;
+  // Gestión de Usuarios visible solo para Admin
+  const canSeeGestionUsuarios = isAdmin;
 
   return (
     <aside className="w-64 bg-green-800 text-white flex flex-col min-h-screen">
@@ -26,17 +53,20 @@ const Navbar = () => {
       </div>
 
       <nav className="flex-1 p-2 space-y-2">
-        {/* Inicio */}
+        {/* Inicio - Visible para todos */}
         <Link to="/dashboard/inicio" className={linkClasses}>
           <FaHome className="mr-1" /> Inicio
         </Link>
 
-        {/* Usuarios */}
-        <Link to="/dashboard/usuarios" className={linkClasses}>
-          <FaUsers className="mr-1" /> Usuarios
-        </Link>
 
-        {/* Asignaciones */}
+        {/* Usuarios - Visible para todos los roles autenticados */}
+        {user && (
+          <Link to="/dashboard/usuarios" className={linkClasses}>
+            <FaUsers className="mr-1" /> Usuarios
+          </Link>
+        )}
+
+        {/* Asignaciones - Visible para todos */}
         <div>
           <button
             onClick={() => setIsAsignacionesOpen(!isAsignacionesOpen)}
@@ -46,27 +76,20 @@ const Navbar = () => {
               <FaEdit className="mr-1" /> Asignaciones
             </div>
             <IoIosArrowDown
-              className={`transition-transform ${isAsignacionesOpen ? "rotate-180" : ""
-                }`}
+              className={`transition-transform ${
+                isAsignacionesOpen ? "rotate-180" : ""
+              }`}
             />
           </button>
           {isAsignacionesOpen && (
             <div className="ml-6 mt-1 space-y-1">
-
               <Link
                 to="/dashboard/asignaciones"
                 className="flex items-center py-1 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
               >
                 Asignaciones
               </Link>
-              {/* <Link
-                to="/dashboard/grupo"
-                className="flex items-center py-1 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
-              >
-                Grupo
-              </Link> */}
-
-                   <Link
+              <Link
                 to="/dashboard/reservas"
                 className="flex items-center py-1 px-2 rounded-l hover:bg-white/10 hover:border-l-4 hover:border-white/90 transition-colors duration-200"
               >
@@ -76,7 +99,7 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Inventario */}
+        {/* Inventario - Visible para todos */}
         <div>
           <button
             onClick={() => setIsInventarioOpen(!isInventarioOpen)}
@@ -86,8 +109,9 @@ const Navbar = () => {
               <FaBoxes className="mr-2" /> Inventario
             </div>
             <IoIosArrowDown
-              className={`transition-transform ${isInventarioOpen ? "rotate-180" : ""
-                }`}
+              className={`transition-transform ${
+                isInventarioOpen ? "rotate-180" : ""
+              }`}
             />
           </button>
           {isInventarioOpen && (
@@ -108,22 +132,21 @@ const Navbar = () => {
           )}
         </div>
 
+        {/* Roles - Solo para administradores */}
+        {canSeeRoles && (
+          <Link to="/dashboard/roles" className={linkClasses}>
+            <FaChartLine className="mr-2" /> Roles
+          </Link>
+        )}
 
-        <Link to="/dashboard/roles" className={linkClasses}>
-          <FaChartLine className="mr-2" /> Roles
-        </Link>
-
-        <Link to="/dashboard/usuarios-software" className={linkClasses}>
-          <FaUsers className="mr-2" /> Usuarios Software
-        </Link>
+        {/* Usuarios Software - Solo para administradores y subdirectores */}
+        {canSeeUsuariosSoftware && (
+          <Link to="/dashboard/usuarios-software" className={linkClasses}>
+            <FaUsers className="mr-2" /> Usuarios Software
+          </Link>
+        )}
       </nav>
 
-      {/* Cerrar sesión */}
-      <div className="p-4 border-t border-white mt-auto">
-        <button onClick={logout} className={linkClasses}>
-          <FaSignOutAlt className="mr-2" /> Cerrar sesión
-        </button>
-      </div>
     </aside>
   );
 };

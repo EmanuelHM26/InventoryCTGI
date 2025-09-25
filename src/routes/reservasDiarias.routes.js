@@ -13,21 +13,21 @@ import { verifyRole } from '../middlewares/rol.middleware.js';
 const router = express.Router();
 
 // Crear una nueva reserva diaria
-router.post('/reservas-diarias', verifyToken, verifyRole([1]), createReservaDiaria);
+router.post('/reservas-diarias', verifyToken, verifyRole([1,2,3]), createReservaDiaria);
 
 // Obtener todas las reservas diarias
-router.get('/reservas-diarias', verifyToken, verifyRole([1]), getAllReservasDiarias);
+router.get('/reservas-diarias', verifyToken, verifyRole([1,2,3]), getAllReservasDiarias);
 
 // Obtener una reserva diaria por ID
-router.get('/reservas-diarias/:idReservaDiaria', verifyToken, verifyRole([1]), getReservaDiariaById);
+router.get('/reservas-diarias/:idReservaDiaria', verifyToken, verifyRole([1,2,3]), getReservaDiariaById);
 
 // Actualizar una reserva diaria
-router.put('/reservas-diarias/:idReservaDiaria', verifyToken, verifyRole([1]), updateReservaDiaria);
+router.put('/reservas-diarias/:idReservaDiaria', verifyToken, verifyRole([1,2,3]), updateReservaDiaria);
 
 // Eliminar una reserva diaria
-router.delete('/reservas-diarias/:idReservaDiaria', verifyToken, verifyRole([1]), deleteReservaDiaria);
+router.delete('/reservas-diarias/:idReservaDiaria', verifyToken, verifyRole([1,2,3]), deleteReservaDiaria);
 
 // Obtener reservas por fecha
-router.get('/reservas-diarias/fecha/:fecha', verifyToken, verifyRole([1]), getReservasByFecha);
+router.get('/reservas-diarias/fecha/:fecha', verifyToken, verifyRole([1,2,3]), getReservasByFecha);
 
 export default router;

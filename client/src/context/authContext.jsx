@@ -1,6 +1,11 @@
 import { createContext, useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { registerUser, loginUser, logoutUser, getAuthenticatedUser } from "../api/authenticatedLogin";
+import {
+  registerUser,
+  loginUser,
+  logoutUser,
+  getAuthenticatedUser,
+} from "../api/authenticatedLogin";
 import Swal from "sweetalert2";
 import axios from "axios";
 
@@ -16,14 +21,15 @@ export const AuthProvider = ({ children }) => {
     try {
       const userData = await getAuthenticatedUser();
       console.log("Datos del usuario obtenidos:", userData);
-      
-      // Importante: Asegurarse de que los datos tienen la estructura correcta
+
+      // Asegurar compatibilidad con diferentes estructuras de respuesta
       setUser({
-        id: userData.id,
-        nombre: userData.nombre,
-        rol: userData.rol
+        id: userData.id || userData.IdRegistroLogin,
+        nombre: userData.nombre || userData.Usuario,
+        rol: userData.rol || userData.Rol,
+        email: userData.email || userData.Correo,
       });
-      
+
       return true;
     } catch (error) {
       console.error("Error al cargar datos del usuario:", error);
@@ -51,19 +57,6 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-
-  const getAuthenticatedUser = async () => {
-    try {
-      const response = await axios.get("http://localhost:3000/api/auth/me", {
-        withCredentials: true, // Asegúrate de incluir las cookies
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error al obtener datos del usuario:", error);
-      throw error;
-    }
-  };
-  
   // Registro de usuario
   const signup = async (userData) => {
     try {
@@ -76,22 +69,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Inicio de sesión
+  // Inicio de sesión - CORREGIDA
   const signin = async (credentials) => {
     try {
       const response = await loginUser(credentials);
       console.log("Respuesta de inicio de sesión:", response);
-      
-      // Después de iniciar sesión, obtener los datos del usuario
-      const success = await loadUserData();
-      
-      if (success) {
-        navigate("/dashboard");
-      }
-      
+
+      // Guardar el usuario en el estado directamente desde la respuesta
+      setUser({
+        id: response.id || response.IdRegistroLogin,
+        nombre: response.Usuario || response.nombre,
+        rol: response.Rol || response.rol,
+        email: response.Correo || response.email,
+      });
+
+      // Navegar al dashboard
+      navigate("/dashboard");
+
       return response;
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
+
+      // Propagar el error con el mensaje original para que LoginPage lo maneje
       throw error;
     }
   };
@@ -115,7 +114,11 @@ export const AuthProvider = ({ children }) => {
       await logoutUser();
       setUser(null);
       navigate("/login");
-      Swal.fire("Sesión cerrada", "Has cerrado sesión exitosamente.", "success");
+      Swal.fire(
+        "Sesión cerrada",
+        "Has cerrado sesión exitosamente.",
+        "success"
+      );
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
       Swal.fire("Error", "Hubo un problema al cerrar sesión.", "error");

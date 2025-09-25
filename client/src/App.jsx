@@ -23,6 +23,9 @@ import ProductosConsumibles from "./components/ProductosConsumibles";
 import Grupos from "./components/Grupos";
 import Reservas from "./components/Reservas";
 import Reportes from "./components/Reportes";
+import Profile from "./components/Profile";
+import Settings from "./components/Settings";
+import Help from "./components/Help";
 
 
 const App = () => {
@@ -61,6 +64,9 @@ const App = () => {
             <Route path="reportes" element={<Reportes />} />
             
 
+            <Route path="perfil" element={<Profile />} />
+            <Route path="ajustes" element={<Settings />} />
+            <Route path="ayuda" element={<Help />} />
           </Route>
         </Routes>
       </AuthProvider>

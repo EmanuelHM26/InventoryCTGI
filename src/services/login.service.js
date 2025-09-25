@@ -12,6 +12,7 @@ import Role from "../models/RolModel.js";
 dotenv.config();
 
 // ======================= CREAR USUARIO =======================
+// ======================= CREAR USUARIO =======================
 export const createUserService = async ({ Usuario, Correo, PasswordTexto }) => {
   if (!Usuario || !Correo || !PasswordTexto) {
     throw new Error("Todos los campos son obligatorios");
@@ -26,15 +27,19 @@ export const createUserService = async ({ Usuario, Correo, PasswordTexto }) => {
     FechaActualizacion: new Date(),
   });
 
-  const rolPorDefecto = 1;
+  // Usar el ID 3 para el rol "Almacenista"
+  const rolAlmacenistaId = 3;
 
   const newUser = await RegistroLogin.create({
     Usuario,
     Correo,
     IdPassword: nuevaPassword.IdPassword,
-    IdRol: rolPorDefecto,
+    IdRol: rolAlmacenistaId, // ID 3 para Almacenista
+    isVerified: false, // Estado inactivo por defecto
+    emailVerified: false, // Correo no verificado por defecto
   });
 
+  // Resto del código para el token de verificación...
   const token = crypto.randomBytes(32).toString("hex");
   const expiration = new Date(Date.now() + 3600000);
 
@@ -57,11 +62,16 @@ export const createUserService = async ({ Usuario, Correo, PasswordTexto }) => {
     from: process.env.EMAIL_USER,
     to: Correo,
     subject: "Verificación de correo electrónico",
-    html: `<p>Gracias por registrarte. Haz clic en el siguiente enlace para verificar tu correo:</p>
+    html: `<p>Gracias por registrarte. Tu cuenta ha sido creada con rol Almacenista y está pendiente de activación.</p>
+           <p>Un administrador deberá activar tu cuenta antes de que puedas iniciar sesión.</p>
+           <p>Haz clic en el siguiente enlace para verificar tu correo:</p>
            <a href="${verificationLink}">${verificationLink}</a>`,
   });
 
-  return { message: "Usuario registrado exitosamente" };
+  return {
+    message:
+      "Usuario registrado exitosamente. Pendiente de activación por administrador.",
+  };
 };
 
 // ======================= AUTENTICACIÓN =======================
@@ -72,8 +82,21 @@ export const loginUserService = async ({ Correo, PasswordTexto }) => {
 
   const user = await RegistroLogin.findOne({ where: { Correo } });
 
-  if (!user || !user.isVerified) {
-    throw new Error("Debes verificar tu correo antes de iniciar sesión");
+  if (!user) {
+    throw new Error("Correo o contraseña incorrectos");
+  }
+
+  if (!user.emailVerified) {
+    throw new Error(
+      "Por favor, verifica tu correo electrónico antes de iniciar sesión."
+    );
+  }
+
+  // Verificar que la cuenta esté activa (verificada)
+  if (!user.isVerified) {
+    throw new Error(
+      "Tu cuenta está pendiente de activación. Contacta al administrador."
+    );
   }
 
   const password = await Password.findByPk(user.IdPassword);
@@ -97,7 +120,9 @@ export const loginUserService = async ({ Correo, PasswordTexto }) => {
 
 // ======================= VERIFICAR CORREO =======================
 export const verifyEmailService = async (token) => {
-  const verificationToken = await VerificationToken.findOne({ where: { Token: token } });
+  const verificationToken = await VerificationToken.findOne({
+    where: { Token: token },
+  });
   if (!verificationToken || verificationToken.Expiration < new Date()) {
     throw new Error("Token inválido o expirado");
   }
@@ -105,7 +130,7 @@ export const verifyEmailService = async (token) => {
   const user = await RegistroLogin.findByPk(verificationToken.UsuarioId);
   if (!user) throw new Error("Usuario no encontrado");
 
-  user.isVerified = true;
+  user.emailVerified = true;
   await user.save();
   await verificationToken.destroy();
 
@@ -113,7 +138,7 @@ export const verifyEmailService = async (token) => {
 };
 
 // ======================= SOLICITAR RESTABLECIMIENTO =======================
-export const requestPasswordResetService= async (Correo) => {
+export const requestPasswordResetService = async (Correo) => {
   const user = await RegistroLogin.findOne({ where: { Correo } });
   if (!user) throw new Error("Usuario no encontrado");
 
@@ -183,18 +208,17 @@ export const resetPasswordService = async ({ token, nuevaPassword }) => {
 
 // ======================= VERIFICAR TOKEN =======================
 export const verifyTokenService = async (token) => {
-    if (!token) {
-      throw new Error("Token no proporcionado");
-    }
-  
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      return decoded; // contiene el payload (id, correo, rol, etc.)
-    } catch (error) {
-      throw new Error("Token inválido o expirado");
-    }
-  };
-  
+  if (!token) {
+    throw new Error("Token no proporcionado");
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded; // contiene el payload (id, correo, rol, etc.)
+  } catch (error) {
+    throw new Error("Token inválido o expirado");
+  }
+};
 
 // ======================= LISTADO / CRUD =======================
 export const getAllUsersService = async () => {
@@ -249,11 +273,84 @@ export const getUserByEmailService = async (Correo) => {
           model: Role,
           attributes: ["NombreRol"], // Asegúrate de que este campo exista en tu modelo de Roles
           as: "Rol", // Asegúrate de que este alias coincida con tu asociación
-        }
-      ]
+        },
+      ],
     });
     return user;
   } catch (error) {
     throw new Error("Error al obtener el usuario por correo");
   }
+};
+
+// ======================= GESTIÓN DE USUARIOS POR ADMIN =======================
+// En activateUserService - ahora activa administrativamente
+export const activateUserService = async (userId) => {
+  const user = await RegistroLogin.findByPk(userId);
+  if (!user) throw new Error("Usuario no encontrado");
+
+  // Verificar que el correo esté verificado primero
+  if (!user.emailVerified) {
+    throw new Error("El usuario debe verificar su correo primero");
+  }
+
+  user.isVerified = true;
+  await user.save();
+
+  return { message: "Usuario activado exitosamente" };
+};
+
+export const changeUserRoleService = async (userId, newRoleId) => {
+  const user = await RegistroLogin.findByPk(userId);
+  if (!user) throw new Error("Usuario no encontrado");
+
+  const roleExists = await Role.findByPk(newRoleId);
+  if (!roleExists) throw new Error("Rol no encontrado");
+
+  user.IdRol = newRoleId;
+  await user.save();
+
+  return { message: "Rol de usuario actualizado exitosamente" };
+};
+
+export const getPendingUsersService = async () => {
+  return await RegistroLogin.findAll({
+    where: {
+      emailVerified: true, // Correo verificado
+      isVerified: false, // Pero pendiente de activación
+    },
+    include: [
+      {
+        model: Role,
+        attributes: ["NombreRol"],
+        as: "Rol",
+      },
+    ],
+  });
+};
+
+// ======================= ACTIVAR/DESACTIVAR USUARIO =======================
+export const toggleUserActivationService = async (userId, activate) => {
+  const user = await RegistroLogin.findByPk(userId);
+  if (!user) throw new Error("Usuario no encontrado");
+
+  user.isVerified = activate;
+  await user.save();
+
+  return {
+    message: `Usuario ${activate ? "activado" : "desactivado"} exitosamente`,
+  };
+};
+
+// ======================= OBTENER USUARIOS POR ESTADO =======================
+export const getUsersByStatusService = async (isVerified) => {
+  return await RegistroLogin.findAll({
+    where: { isVerified },
+    include: [
+      {
+        model: Role,
+        attributes: ["NombreRol"],
+        as: "Rol",
+      },
+    ],
+  });
 };

@@ -11,10 +11,10 @@ import { verifyRole } from "../middlewares/rol.middleware.js";
 
 const router = express.Router();
 
-router.get("/usuarios", verifyToken, verifyRole([1]), getUsuarios);
-router.get("/usuarios/:id", verifyToken, verifyRole([1]), getUsuarioById);
-router.post("/usuarios", verifyToken, verifyRole([1]), createUsuario);
-router.put("/usuarios/:id", verifyToken, verifyRole([1]), updateUsuario);
-router.delete("/usuarios/:id", verifyToken, verifyRole([1]), deleteUsuario);
+router.get("/usuarios", verifyToken, verifyRole([1,2,3]), getUsuarios);
+router.get("/usuarios/:id", verifyToken, verifyRole([1,2,3]), getUsuarioById);
+router.post("/usuarios", verifyToken, verifyRole([1,2,3]), createUsuario);
+router.put("/usuarios/:id", verifyToken, verifyRole([1,2,3]), updateUsuario);
+router.delete("/usuarios/:id", verifyToken, verifyRole([1,2,3]), deleteUsuario);
 
 export default router;

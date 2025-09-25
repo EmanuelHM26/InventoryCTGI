@@ -10,7 +10,12 @@ import {
   getUserByIdService,
   updateUserService,
   deleteUserService,
-  getUserByEmailService
+  getUserByEmailService,
+  activateUserService,
+  changeUserRoleService,
+  getPendingUsersService,
+  toggleUserActivationService,
+  getUsersByStatusService,
 } from "../services/login.service.js";
 
 // ======================= REGISTRO =======================
@@ -146,5 +151,59 @@ export const deleteUser = async (req, res) => {
     res.json(result);
   } catch (error) {
     res.status(400).json({ message: "Error al eliminar usuario", error: error.message });
+  }
+};
+
+export const activateUser = async (req, res) => {
+  try {
+    const result = await activateUserService(req.params.id);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ message: "Error al activar usuario", error: error.message });
+  }
+};
+
+// ======================= CAMBIAR ROL DE USUARIO =======================
+export const changeUserRole = async (req, res) => {
+  try {
+    const { newRoleId } = req.body;
+    const result = await changeUserRoleService(req.params.id, newRoleId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ message: "Error al cambiar el rol del usuario", error: error.message });
+  }
+};
+
+// ======================= OBTENER USUARIOS PENDIENTES =======================
+export const getPendingUsers = async (req, res) => {
+  try {
+    const users = await getPendingUsersService();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(400).json({ message: "Error al obtener usuarios pendientes", error: error.message });
+  }
+};
+
+// ======================= ACTIVAR/DESACTIVAR USUARIO =======================
+export const toggleUserActivation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { activate } = req.body;
+    const result = await toggleUserActivationService(id, activate);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ message: "Error al cambiar estado del usuario", error: error.message });
+  }
+};
+
+// ======================= OBTENER USUARIOS POR ESTADO =======================
+export const getUsersByStatus = async (req, res) => {
+  try {
+    const { status } = req.query;
+    const isVerified = status === 'active';
+    const users = await getUsersByStatusService(isVerified);
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(400).json({ message: "Error al obtener usuarios por estado", error: error.message });
   }
 };

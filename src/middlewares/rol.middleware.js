@@ -1,9 +1,21 @@
 export const verifyRole = (rolesPermitidos) => {
   return (req, res, next) => {
-    const { rolId } = req.user;
+    if (!req.user) {
+      return res.status(403).json({ message: "Acceso denegado: usuario no autenticado" });
+    }
 
-    if (!rolesPermitidos.includes(rolId)) {
-      return res.status(403).json({ message: "Acceso denegado" });
+    const userRoleId = req.user.rolId;
+    const userRoleName = req.user.rol; // o req.user.Rol si usas mayúscula
+
+    // Verificar por ID o por nombre
+    const hasAccess = rolesPermitidos.some(role => 
+      role === userRoleId || 
+      role === userRoleName ||
+      (typeof role === 'string' && role.toLowerCase() === userRoleName?.toLowerCase())
+    );
+
+    if (!hasAccess) {
+      return res.status(403).json({ message: "Acceso denegado: permisos insuficientes" });
     }
 
     next();

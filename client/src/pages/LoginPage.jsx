@@ -30,27 +30,45 @@ const Login = () => {
         PasswordTexto: data.password,
       });
 
-      // Alerta de éxito
       Swal.fire({
         icon: "success",
         title: "Inicio de sesión exitoso",
         text: "Has iniciado sesión correctamente",
-        confirmButtonColor: "#22c55e", // Color verde
+        confirmButtonColor: "#22c55e",
       }).then(() => {
-         navigate("/dashboard");
+        navigate("/dashboard");
       });
     } catch (error) {
       console.error("Error al iniciar sesión:", error.message);
 
-      // Alerta de error
+      // Manejo de errores específicos con mensajes más descriptivos
+      let errorMsg =
+        error.message || "La contraseña o el usuario son incorrectos";
+      let errorTitle = "Error al iniciar sesión";
+      let errorIcon = "error";
+
+      if (error.message.includes("verificar tu correo")) {
+        errorMsg =
+          "Debes verificar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.";
+        errorTitle = "Verificación requerida";
+        errorIcon = "warning";
+      } else if (error.message.includes("pendiente de activación")) {
+        errorMsg =
+          "Tu cuenta está pendiente de activación por un administrador. Contacta con el administrador del sistema.";
+        errorTitle = "Activación pendiente";
+        errorIcon = "info";
+      } else if (error.message.includes("Correo o contraseña incorrectos")) {
+        errorMsg =
+          "Las credenciales ingresadas son incorrectas. Por favor, verifica tu correo y contraseña.";
+        errorTitle = "Credenciales incorrectas";
+        errorIcon = "error";
+      }
+
       Swal.fire({
-        icon: "error",
-        title: "Error al iniciar sesión",
-        text: "La contraseña o el usuario son incorrectos",
-        // text: `Error: ${error.message}`,
-        confirmButtonColor: "#ef4444", // Color rojo
-      }).then(() => {
-        navigate("/login");   
+        icon: errorIcon,
+        title: errorTitle,
+        text: errorMsg,
+        confirmButtonColor: "#ef4444",
       });
     }
   };
@@ -96,7 +114,7 @@ const Login = () => {
                 </p>
               )}
             </div>
-            
+
             {/* Campo Contraseña con icono de visualización */}
             <div>
               <label
@@ -126,14 +144,39 @@ const Login = () => {
                 >
                   {showPassword ? (
                     // Icono de ojo tachado (ocultar)
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.878 6.878M14.12 14.12l3 3m-6.364-6.364L12 12m-3.536-3.536l3.536 3.536M9.878 9.878l3.122 3.122m0 0L9.878 9.878" />
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.878 6.878M14.12 14.12l3 3m-6.364-6.364L12 12m-3.536-3.536l3.536 3.536M9.878 9.878l3.122 3.122m0 0L9.878 9.878"
+                      />
                     </svg>
                   ) : (
                     // Icono de ojo normal (mostrar)
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
                     </svg>
                   )}
                 </button>
@@ -144,7 +187,7 @@ const Login = () => {
                 </p>
               )}
             </div>
-            
+
             <button
               type="submit"
               className="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 transition duration-300"
@@ -152,7 +195,7 @@ const Login = () => {
               Iniciar Sesión
             </button>
             <p className="text-sm text-center text-green-600 mt-4 cursor-pointer hover:underline">
-              <Link to="/forgot-password"> ¿Olvidaste tu contraseña?</Link>  
+              <Link to="/forgot-password"> ¿Olvidaste tu contraseña?</Link>
             </p>
 
             <p className="text-xs text-gray-500 mt-4 text-center hover:underline">

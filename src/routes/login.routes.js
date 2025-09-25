@@ -12,9 +12,15 @@ import {
   deleteUser,
   updateUser,
   verifyEmail,
+  activateUser,
+  changeUserRole,
+  getPendingUsers,
+  toggleUserActivation,
+  getUsersByStatus
 } from "../controllers/login.controller.js";
 
 import { verifyToken as authMiddleware } from "../middlewares/auth.middleware.js";
+import { verifyRole } from "../middlewares/rol.middleware.js";
 
 const router = express.Router();
 
@@ -39,5 +45,14 @@ router.post("/reset-password", resetPassword);
 
 // Verificación de JWT
 router.get("/verify-token", authMiddleware, verifyToken);
+
+// Rutas para gestión de usuarios por administradores
+router.get("/admin/users/pending", authMiddleware, verifyRole([1]), getPendingUsers);
+router.put("/admin/users/:id/activate", authMiddleware, verifyRole([1]), activateUser);
+router.put("/admin/users/:id/role", authMiddleware, verifyRole([1]), changeUserRole);
+
+// Nuevas rutas para activación/desactivación y filtrado por estado
+router.put("/admin/users/:id/toggle-activation", authMiddleware, verifyRole([1]), toggleUserActivation);
+router.get("/admin/users/by-status", authMiddleware, verifyRole([1]), getUsersByStatus);
 
 export default router;
