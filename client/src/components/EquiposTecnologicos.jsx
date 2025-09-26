@@ -38,7 +38,9 @@ const EquiposTecnologicos = () => {
     indexOfLastItem,
     sortedEquipos,
     watch,
-    loading
+    loading,
+    exportToPDF,
+    exportToExcel
   } = useEquiposTecnologicos();
 
   return (
@@ -70,6 +72,26 @@ const EquiposTecnologicos = () => {
                   <X size={18} />
                 </button>
               )}
+            </div>
+
+            {/* Botones de exportar */}
+            <div className="flex gap-2">
+              <button
+                onClick={exportToPDF}
+                className="flex items-center justify-center bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-sm"
+                title="Exportar a PDF"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 16v-8m0 8l-3-3m3 3l3-3M4 4h16v16H4V4z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                PDF
+              </button>
+              <button
+                onClick={exportToExcel}
+                className="flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm"
+                title="Exportar a Excel"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 4h16v16H4V4zm8 4v8m-3-3l3 3 3-3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Excel
+              </button>
             </div>
 
             <button
