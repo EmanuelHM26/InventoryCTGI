@@ -1,5 +1,11 @@
+// Op: es el objeto de operadores de Sequelize (p. ej. Op.or, Op.like, Op.in). Se usa para construir condiciones en where.
+
 import { Usuario, Asignaciones } from '../models/index.js';
 import { Op } from 'sequelize';
+
+// searchTerm: texto de búsqueda que el usuario envía (por ejemplo "nicolle").
+//Devuelve un objeto { usuarios: [...], asignaciones: [...] }.
+// !searcTerm = si no hay termino en la busqueda, es vacio 
 
 export const searchGlobalService = async (searchTerm) => {
   try {
@@ -61,3 +67,10 @@ export const searchGlobalService = async (searchTerm) => {
     throw new Error(`Error en la búsqueda global: ${error.message}`);
   }
 };
+
+
+// findAll: consulta a la tabla usuarios.
+// where con [Op.or]: busca coincidencias en cualquiera de las columnas listadas.
+// { [Op.like]: %${searchTerm}% }: busca coincidencias parciales (antes y después) — p. ej. "nic" encuentra "Nicolle".
+// attributes: selecciona solo las columnas que quieres devolver (reduce datos transferidos).
+// limit: 10: devuelve hasta 10 resultados (evita traer demasiados registros).
