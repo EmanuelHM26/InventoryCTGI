@@ -44,6 +44,14 @@ ReservasDiarias.belongsTo(Usuario, {
 
 
 
+// Una reserva tiene muchos equipos.
+// Ejemplo: "La reserva #1 tiene muchos equipos: laptop, proyector, tablet".
+
+// hasOne → tiene uno
+// belongsTo → pertenece a uno
+// hasMany → tiene muchos
+// belongsToMany → pertenece a muchos (muchos a muchos con tabla intermedia)
+
 ReservasDiarias.hasMany(EquiposTecnologicos, {
   foreignKey: 'IdReservaDiaria',
   as: 'Equipos'

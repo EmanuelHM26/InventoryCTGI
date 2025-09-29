@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { useEquiposTecnologicos } from "../hooks/useEquiposTecnologicos";
 
+
+// Todas etsas son la funciones que estoy trayendo del hook useEquiposTecnologicos
 const EquiposTecnologicos = () => {
   const {
     equipos,
@@ -41,6 +43,10 @@ const EquiposTecnologicos = () => {
     loading
   } = useEquiposTecnologicos();
 
+
+
+  // sirve para construir una barra de búsqueda con un campo de texto y un botón para crear un nuevo equipo.
+//________________________________________________________________________________
   return (
     <div className="px-4 py-20 md:px-8 lg:px-10 max-w-full bg-gray-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -54,8 +60,8 @@ const EquiposTecnologicos = () => {
               <input
                 type="text"
                 placeholder="Buscar por código, nombre, marca, estado..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTerm} // Es lo que el usuario escribe
+                onChange={(e) => setSearchTerm(e.target.value)} // Actualiza el estado searchTerm
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-64"
               />
               <Search
@@ -64,7 +70,7 @@ const EquiposTecnologicos = () => {
               />
               {searchTerm && (
                 <button
-                  onClick={() => setSearchTerm("")}
+                  onClick={() => setSearchTerm("")} // Limpia el campo de búsqueda
                   className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
                 >
                   <X size={18} />
@@ -73,19 +79,34 @@ const EquiposTecnologicos = () => {
             </div>
 
             <button
-              onClick={handleNewEquipo}
+              onClick={handleNewEquipo} // Abre el modal para crear un nuevo equipo
               disabled={loading}
               className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm disabled:bg-blue-300 disabled:cursor-not-allowed"
             >
+
+              // Si la app está cargando algo (loading = true) → se muestra un iconito que gira (como un relojito).      
               {loading ? (
                 <Loader size={18} className="mr-2 animate-spin" />
               ) : (
+
+                // Si la app no está cargando (loading = false) → se muestra un iconito de “+” (para agregar un nuevo equipo).   
                 <Plus size={18} className="mr-2" />
               )}
-              {loading ? "Cargando..." : "Nuevo Equipo"}
+              {loading ? "Cargando..." : "Nuevo Equipo"} // Texto del botón
             </button>
           </div>
         </div>
+
+//_____________________________________________________________________________
+
+
+
+
+
+
+
+
+
 
         {loading && (
           <div className="flex justify-center items-center py-8">
@@ -146,6 +167,8 @@ const EquiposTecnologicos = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {equipos.length > 0 ? (
+
+                // Ese código sirve para llenar la tabla con los equipos que tienes en la lista.
                 equipos.map((equipo) => (
                   <tr
                     key={equipo.idequipostecnologicos}
@@ -166,6 +189,11 @@ const EquiposTecnologicos = () => {
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {equipo.Modelo}
                     </td>
+                    
+       //_________________________________________________________________________________
+
+
+
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${equipo.Estado === "Activo"
                           ? "bg-green-100 text-green-800"
@@ -176,6 +204,8 @@ const EquiposTecnologicos = () => {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex space-x-2">
+
+                        // Estos botones sirven para editar o eliminar un equipo.
                         <button
                           onClick={() => handleEditEquipo(equipo)}
                           disabled={loading}
@@ -210,27 +240,48 @@ const EquiposTecnologicos = () => {
           </table>
         </div>
 
+
+
+
+//___________________________________________________________________________________________________
+
         {/* Paginación */}
-        {/* Paginación */}
+
+
+        // Este código sirve para mostrar la paginación debajo de la tabla.
         {sortedEquipos.length > 0 && (
           <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
             <div>
+              
               Mostrando {indexOfFirstItem + 1} a{" "}
+              // Aquí se asegura de no mostrar un número mayor al total de equipos.
+
+              // sortedEquipos es la lista de equipos ya filtrada y ordenada.
+              // indexOfFirstItem y indexOfLastItem son los índices que indican qué parte de la lista se está mostrando en la página actual.
               {Math.min(indexOfLastItem, sortedEquipos.length)} de{" "}
               {sortedEquipos.length} equipos
-              {/* ✅ CORREGIDO: filteredEquipos.length muestra el total filtrado */}
+             
             </div>
             <div className="flex space-x-1">
               <button
+
+               // Botón para ir a la página anterior
                 onClick={() => paginate(currentPage - 1)}
+
+                // Deshabilita el botón si ya estás en la primera página o si está cargando
                 disabled={currentPage === 1 || loading}
+
+                // Cambia el estilo del botón según si está deshabilitado o no
                 className={`p-2 rounded-md ${currentPage === 1 || loading
                     ? "text-gray-300 cursor-not-allowed"
                     : "text-gray-600 hover:bg-gray-100"
                   }`}
               >
+                // Icono de flecha izquierda
                 <ChevronLeft size={18} />
               </button>
+
+              // Botones para cada número de página
               {Array.from({ length: totalPages }).map((_, idx) => (
                 <button
                   key={idx}
@@ -244,14 +295,22 @@ const EquiposTecnologicos = () => {
                   {idx + 1}
                 </button>
               ))}
+
+              // Botón para ir a la página siguiente
               <button
                 onClick={() => paginate(currentPage + 1)}
+
+                // Deshabilita el botón si ya estás en la última página o si está cargando
                 disabled={currentPage === totalPages || loading}
+
+                // Cambia el estilo del botón según si está deshabilitado o no
                 className={`p-2 rounded-md ${currentPage === totalPages || loading
                     ? "text-gray-300 cursor-not-allowed"
                     : "text-gray-600 hover:bg-gray-100"
                   }`}
               >
+
+                // Icono de flecha derecha
                 <ChevronRight size={18} />
               </button>
             </div>
@@ -259,11 +318,24 @@ const EquiposTecnologicos = () => {
         )}
       </div>
 
+  //___________________________________________________________________________________________________
+
+
+
+
+
+
       {/* Modal para crear o editar un equipo */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-screen overflow-y-auto">
             <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">
+
+              {/* 
+              Si watch('idequipostecnologicos') tiene un valor (es decir, estás editando un equipo),
+               muestra "Editar Equipo". Si no tiene valor (estás creando uno nuevo), muestra "Crear Nuevo Equipo".
+               */}
+
               {watch('idequipostecnologicos') ? "Editar Equipo" : "Crear Nuevo Equipo"}
             </h2>
 
@@ -275,6 +347,8 @@ const EquiposTecnologicos = () => {
               <div className="flex gap-2 items-center">
                 <button
                   type="button"
+
+                  // Botón para iniciar o detener el escáner
                   onClick={() => setIsScanning(!isScanning)}
                   disabled={loading}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isScanning
@@ -298,12 +372,14 @@ const EquiposTecnologicos = () => {
                   <p className="text-xs text-blue-600">Apunte la cámara hacia el código de barras</p>
                 </div>
                 <BarcodeReader
+                // Componente que maneja la lectura del código de barras
                   onScan={handleBarcodeScanned}
                   isActive={isScanning}
                 />
               </div>
             )}
 
+            
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
@@ -312,6 +388,8 @@ const EquiposTecnologicos = () => {
                   </label>
                   <input
                     type="text"
+                    // Aquí se registran las reglas de validación para el campo "Código"
+                    //  el ... register Sirve para “desarmar” el objeto que devuelve register y poner sus propiedades dentro del input
                     {...register("Codigo", {
                       required: "El código es obligatorio",
                       minLength: {
@@ -338,6 +416,9 @@ const EquiposTecnologicos = () => {
                   </label>
                   <input
                     type="text"
+
+                    // Aquí se registran las reglas de validación para el campo "nombre"
+                    //  el ... register Sirve para “desarmar” el objeto que devuelve register y poner sus propiedades dentro del input
                     {...register("Nombre", {
                       required: "El nombre es obligatorio",
                       minLength: {

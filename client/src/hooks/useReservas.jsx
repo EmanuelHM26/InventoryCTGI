@@ -6,8 +6,14 @@ import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
 
 export const useReservas = () => {
+
+  // Aquí se guardan las reservas fijas.
   const [reservasFijas, setReservasFijas] = useState([]);
+
+  // Aquí se guardan las reservas diarias.
   const [reservasDiarias, setReservasDiarias] = useState([]);
+
+  // Aquí se guardan los usuarios que hacen reservas.
   const [usuarios, setUsuarios] = useState([]);
   // Nuevos estados agregados:
   const [equiposTecnologicos, setEquiposTecnologicos] = useState([]);
@@ -24,7 +30,11 @@ export const useReservas = () => {
     direction: "ascending",
   });
   const itemsPerPage = 8;
+
+  // Estados para el escaneo de códigos de barras
   const [barcodeMode, setBarcodeMode] = useState("user");
+
+  // "user" para escanear usuario, "equipment" para escanear equipos
   const [scannedEquipment, setScannedEquipment] = useState([]);
   const [showBarcodeInstructions, setShowBarcodeInstructions] = useState(false);
   const [scanBuffer, setScanBuffer] = useState("");
@@ -50,6 +60,10 @@ export const useReservas = () => {
     }
   };
 
+
+  // fetchReservasDiarias sirve para obtener las reservas diarias desde el backend.
+  // Hace una petición GET a la API y actualiza el estado reservasDiarias con los datos recibidos.
+  // Si hay un error, lo registra en la consola.
   const fetchReservasDiarias = async () => {
     try {
       const response = await axios.get(
@@ -62,6 +76,10 @@ export const useReservas = () => {
     }
   };
 
+
+// fetchUsuarios sirve para obtener los usuarios desde el backend.
+// Hace una petición GET a la API y actualiza el estado usuarios con los datos recibidos.
+// Si hay un error, lo registra en la consola.
   const fetchUsuarios = async () => {
     try {
       const response = await axios.get("http://localhost:3000/api/usuarios", {
@@ -73,6 +91,10 @@ export const useReservas = () => {
     }
   };
 
+
+// fetchEquiposTecnologicos sirve para obtener los equipos tecnológicos desde el backend.
+// Hace una petición GET a la API y actualiza el estado equiposTecnologicos con los datos recibidos.
+// Si hay un error, lo registra en la consola.
   const fetchEquiposTecnologicos = async () => {
     try {
       const response = await axios.get(
@@ -84,6 +106,10 @@ export const useReservas = () => {
       console.error("Error al obtener equipos tecnológicos:", error);
     }
   };
+  
+
+  
+// handleCreateReserva maneja la creación o edición de una reserva.
 
   const handleCreateReserva = async () => {
     try {
@@ -93,6 +119,8 @@ export const useReservas = () => {
 
       if (activeTab === "fijas") {
         // VALIDACIONES PARA RESERVAS FIJAS
+        //nombreRegex permite solo letras sin espacios ni caracteres especiales
+        //fichaRegex permite solo números
         const nombreRegex = /^[A-Za-z]+$/;
         const fichaRegex = /^[0-9]+$/;
 
@@ -115,6 +143,7 @@ export const useReservas = () => {
         if (!newReserva.materialReservado?.trim()) {
           errors.materialReservado = "El material reservado es requerido";
         } else if (
+          //.test verifica si hay espacios o caracteres especiales
           /\s|[^A-Za-z0-9]/.test(newReserva.materialReservado.trim())
         ) {
           errors.materialReservado =

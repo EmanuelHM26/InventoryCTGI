@@ -20,6 +20,13 @@ export const createReservaDiariaService = async (data) => {
   }
 };
 
+
+
+// include le dice a Sequelize que además de traer las reservas, también traiga los datos del usuario que hizo cada reserva.
+// model: Usuario → le dice de qué tabla o modelo traer la información.
+// as: "Usuario" → es el alias de la relación.
+// attributes: ["IdUsuario", "Usuario"] → indica qué columnas del usuario quieres mostrar (solo el id y el nombre, en este caso).
+
 // Obtener todas las reservas diarias
 export const getAllReservasDiariasService = async () => {
   try {

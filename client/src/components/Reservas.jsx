@@ -59,10 +59,12 @@ const Reservas = () => {
   // Función para obtener la fecha mínima (hoy)
   const getTodayDate = () => {
     const today = new Date();
+    // Ajustar la hora para evitar problemas de zona horaria
     return today.toISOString().split("T")[0];
   };
 
   const validateField = (field, value) => {
+    // Eliminar espacios al inicio para validaciones que lo requieran
   const trimmed = value.trimStart();
   switch (field) {
     case "nombrePrograma":
@@ -95,12 +97,15 @@ const Reservas = () => {
   return "";
 };
   
-//También puedes agregar una función para limpiar equipos escaneados:
+//función para limpiar equipos escaneados:
 const removeScannedEquipment = (codeToRemove) => {
+  // Filtrar el equipo que se va a eliminar
+  //filter(eq => eq.code !== codeToRemove) para mantener todos los equipos excepto el que se va a eliminar
   const nuevosEquipos = scannedEquipment.filter(eq => eq.code !== codeToRemove);
   setScannedEquipment(nuevosEquipos);
   
   // Actualizar el campo materialReservado
+  // map(eq => eq.code) para obtener solo los códigos
   const codigosEscaneados = nuevosEquipos.map(eq => eq.code).join(', ');
   setNewReserva(prev => ({
     ...prev,

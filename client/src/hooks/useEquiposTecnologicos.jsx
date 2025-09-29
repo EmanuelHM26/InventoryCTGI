@@ -3,13 +3,19 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { useForm } from "react-hook-form";
 
+
+// Hook personalizado para gestionar equipos tecnológicos
 export const useEquiposTecnologicos = () => {
+
+  // Estados del hook 
   const [equipos, setEquipos] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [sortConfig, setSortConfig] = useState({
     key: "idequipostecnologicos",
     direction: "ascending",
   });
+
+  // Estados para paginación y búsqueda
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -85,6 +91,7 @@ export const useEquiposTecnologicos = () => {
       setLoading(true);
       
       const equipoId = watch('idequipostecnologicos');
+      // Eliminar espacios al inicio y final del código
       const codigo = data.Codigo.trim();
 
       // Verificar si el código ya existe (excepto para el equipo actual en edición)
@@ -155,19 +162,24 @@ export const useEquiposTecnologicos = () => {
       } else if (error.response?.status === 500) {
         errorMessage = "Error del servidor. Intente nuevamente.";
       }
-
+      
+      // Mostrar mensaje de error específico
       Swal.fire({
         icon: "error",
         title: "Error",
         text: errorMessage,
         showConfirmButton: true,
       });
+
+      // Si el error es por código duplicado, establecer error en el campo
     } finally {
       setLoading(false);
     }
   };
 
   const handleEditEquipo = (equipo) => {
+
+    // Rellenar el formulario con los datos del equipo a editar
     reset({
       idequipostecnologicos: equipo.idequipostecnologicos,
       Codigo: equipo.Codigo || "",
@@ -177,9 +189,13 @@ export const useEquiposTecnologicos = () => {
       Estado: equipo.Estado || "Activo"
     });
     setShowModal(true);
+
   };
 
+
+// Función para eliminar un equipo con confirmación
   const handleDeleteEquipo = async (id) => {
+    // Mostrar alerta de confirmación
     const result = await Swal.fire({
       title: "¿Estás seguro?",
       text: "Esta acción no se puede deshacer. El equipo será eliminado permanentemente.",
@@ -231,6 +247,7 @@ export const useEquiposTecnologicos = () => {
   };
 
   const handleBarcodeScanned = (barcode) => {
+    // Eliminar espacios en blanco y validar
     if (barcode && barcode.trim() !== '') {
       const codigoLimpio = barcode.trim();
       setValue('Codigo', codigoLimpio);
@@ -286,18 +303,29 @@ export const useEquiposTecnologicos = () => {
 
   // Tabla y paginación
   const requestSort = (key) => {
+    // Determinar la dirección de ordenamiento
     let direction = "ascending";
+
+    // Si ya está ordenado por esta clave, invertir la dirección
     if (sortConfig.key === key && sortConfig.direction === "ascending") {
       direction = "descending";
     }
+
+    // Actualizar el estado de ordenamiento
     setSortConfig({ key, direction });
   };
 
+
+  // Filtrar equipos según el término de búsqueda
   const filteredEquipos = equipos.filter((equipo) => {
     if (!searchTerm) return true;
     
+
+    // Convertir el término de búsqueda a minúsculas para comparación insensible a mayúsculas
     const searchTermLower = searchTerm.toLowerCase();
     return (
+
+      // Verificar si el término de búsqueda está en alguno de los campos relevantes
       (equipo.Nombre?.toLowerCase().includes(searchTermLower)) ||
       (equipo.Marca?.toLowerCase().includes(searchTermLower)) ||
       (equipo.Modelo?.toLowerCase().includes(searchTermLower)) ||
@@ -306,11 +334,15 @@ export const useEquiposTecnologicos = () => {
     );
   });
 
+
+  // Ordenar los equipos filtrados según la configuración de ordenamiento
   const sortedEquipos = [...filteredEquipos].sort((a, b) => {
     if (!a[sortConfig.key] && !b[sortConfig.key]) return 0;
     if (!a[sortConfig.key]) return 1;
     if (!b[sortConfig.key]) return -1;
     
+
+    // Comparar los valores para determinar el orden
     if (a[sortConfig.key] < b[sortConfig.key]) {
       return sortConfig.direction === "ascending" ? -1 : 1;
     }
@@ -320,6 +352,8 @@ export const useEquiposTecnologicos = () => {
     return 0;
   });
 
+
+  // Calcular los índices para la paginación
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentEquipos = sortedEquipos.slice(indexOfFirstItem, indexOfLastItem);

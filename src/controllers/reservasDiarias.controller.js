@@ -16,7 +16,7 @@ import {
 // Crear una nueva reserva diaria
 export const createReservaDiaria = async (req, res) => {
   try {
-    const data = req.body;
+    const data = req.body; // lo que manda el cliente en el body
     const nuevaReserva = await createReservaDiariaService(data);
     res.status(201).json(nuevaReserva);
   } catch (error) {
@@ -48,7 +48,10 @@ export const getReservaDiariaById = async (req, res) => {
 // Actualizar una reserva diaria
 export const updateReservaDiaria = async (req, res) => {
   try {
+    // 1. Saca el id de la reserva desde los parámetros de la URL
     const { idReservaDiaria } = req.params;
+
+    // 2. Saca los nuevos datos enviados en el body de la petición
     const data = req.body;
     const reservaActualizada = await updateReservaDiariaService(idReservaDiaria, data);
     res.status(200).json(reservaActualizada);

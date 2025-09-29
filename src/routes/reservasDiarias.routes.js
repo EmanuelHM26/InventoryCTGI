@@ -12,6 +12,11 @@ import { verifyRole } from '../middlewares/rol.middleware.js';
 
 const router = express.Router();
 
+
+// Primero pasa por verifyToken (¿está autenticado?).
+// Luego pasa por verifyRole([1,2,3]) (¿su rol está en la lista [1,2,3]?).
+// Si todo ok → ejecuta la funcion (lógica del controlador). Y ASI HACE CON TODOS 
+
 // Crear una nueva reserva diaria
 router.post('/reservas-diarias', verifyToken, verifyRole([1,2,3]), createReservaDiaria);
 
