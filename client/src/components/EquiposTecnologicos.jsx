@@ -92,7 +92,8 @@ const EquiposTecnologicos = () => {
                 // Si la app no está cargando (loading = false) → se muestra un iconito de “+” (para agregar un nuevo equipo).   
                 <Plus size={18} className="mr-2" />
               )}
-              {loading ? "Cargando..." : "Nuevo Equipo"} // Texto del botón
+              {loading ? "Cargando..." : "Nuevo Equipo"} 
+              
             </button>
           </div>
         </div>
