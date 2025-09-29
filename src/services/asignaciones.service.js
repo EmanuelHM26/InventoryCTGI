@@ -159,9 +159,7 @@ export const getAsignacionesByDaysService = async (days = 7) => {
   }
 };
 
-//Confirmar una asignación
 
-//Confirmar una asignación - VERSIÓN CORREGIDA
 //Confirmar una asignación - VERSIÓN CORREGIDA
 export const confirmarDevolucionService = async (idAsignaciones, { FechaDevolucion, HoraDevolucion, Novedad }) => {
   try {
