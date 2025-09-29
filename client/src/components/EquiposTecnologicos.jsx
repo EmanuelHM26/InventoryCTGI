@@ -84,7 +84,7 @@ const EquiposTecnologicos = () => {
               className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm disabled:bg-blue-300 disabled:cursor-not-allowed"
             >
 
-              // Si la app está cargando algo (loading = true) → se muestra un iconito que gira (como un relojito).      
+              {/* Si la app está cargando algo (loading = true) → se muestra un iconito que gira (como un relojito).  */}    
               {loading ? (
                 <Loader size={18} className="mr-2 animate-spin" />
               ) : (
@@ -97,7 +97,7 @@ const EquiposTecnologicos = () => {
           </div>
         </div>
 
-//_____________________________________________________________________________
+
 
 
 
@@ -190,7 +190,7 @@ const EquiposTecnologicos = () => {
                       {equipo.Modelo}
                     </td>
                     
-       //_________________________________________________________________________________
+     
 
 
 
@@ -205,7 +205,7 @@ const EquiposTecnologicos = () => {
                     <td className="px-4 py-3">
                       <div className="flex space-x-2">
 
-                        // Estos botones sirven para editar o eliminar un equipo.
+                        {/* Etos botones sirven para editar o eliminar un equipo. */}
                         <button
                           onClick={() => handleEditEquipo(equipo)}
                           disabled={loading}
@@ -243,21 +243,20 @@ const EquiposTecnologicos = () => {
 
 
 
-//___________________________________________________________________________________________________
 
         {/* Paginación */}
 
 
-        // Este código sirve para mostrar la paginación debajo de la tabla.
+        {/* Este código sirve para mostrar la paginación debajo de la tabla.*/}
         {sortedEquipos.length > 0 && (
           <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
             <div>
               
               Mostrando {indexOfFirstItem + 1} a{" "}
-              // Aquí se asegura de no mostrar un número mayor al total de equipos.
+              {/* // Aquí se asegura de no mostrar un número mayor al total de equipos.*/}
 
-              // sortedEquipos es la lista de equipos ya filtrada y ordenada.
-              // indexOfFirstItem y indexOfLastItem son los índices que indican qué parte de la lista se está mostrando en la página actual.
+               {/*  sortedEquipos es la lista de equipos ya filtrada y ordenada.
+              // indexOfFirstItem y indexOfLastItem son los índices que indican qué parte de la lista se está mostrando en la página actual.*/}
               {Math.min(indexOfLastItem, sortedEquipos.length)} de{" "}
               {sortedEquipos.length} equipos
              
@@ -277,11 +276,11 @@ const EquiposTecnologicos = () => {
                     : "text-gray-600 hover:bg-gray-100"
                   }`}
               >
-                // Icono de flecha izquierda
+               {/* Icono de flecha izquierda*/}
                 <ChevronLeft size={18} />
               </button>
 
-              // Botones para cada número de página
+              {/* Botones para cada número de página */}
               {Array.from({ length: totalPages }).map((_, idx) => (
                 <button
                   key={idx}
@@ -296,7 +295,7 @@ const EquiposTecnologicos = () => {
                 </button>
               ))}
 
-              // Botón para ir a la página siguiente
+              {/* Botón para ir a la página siguiente*/}
               <button
                 onClick={() => paginate(currentPage + 1)}
 
@@ -310,7 +309,7 @@ const EquiposTecnologicos = () => {
                   }`}
               >
 
-                // Icono de flecha derecha
+                {/* Icono de flecha derecha */}
                 <ChevronRight size={18} />
               </button>
             </div>
@@ -318,7 +317,7 @@ const EquiposTecnologicos = () => {
         )}
       </div>
 
-  //___________________________________________________________________________________________________
+ 
 
 
 
