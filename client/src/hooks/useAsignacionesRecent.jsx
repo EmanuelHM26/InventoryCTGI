@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+// axios: para hacer la petición HTTP a tu backend.
 
 export const useAsignacionesRecent = () => {
   const [asignaciones, setAsignaciones] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [diasFiltro, setDiasFiltro] = useState(7); // Por defecto últimos 7 días
   const itemsPerPage = 6;
+//asignaciones → array con todas las asignaciones recientes que vienen del backend.
+//currentPage → número de página actual en la paginación.
+//diasFiltro → cuántos días hacia atrás se buscan asignaciones (ejemplo: 7 días por defecto).
+//itemsPerPage → cantidad fija de asignaciones que se muestran por página (6).
+
 
   useEffect(() => {
     fetchRecentAsignaciones();
   }, [diasFiltro]);
+  // Cada vez que diasFiltro cambie, se llama a fetchRecentAsignaciones para actualizar la lista.
 
+  // Función para obtener asignaciones recientes desde el backend
   const fetchRecentAsignaciones = async () => {
     try {
       const response = await axios.get(
@@ -33,11 +41,18 @@ export const useAsignacionesRecent = () => {
   );
   const totalPages = Math.ceil(asignaciones.length / itemsPerPage);
 
+//Calcula qué asignaciones mostrar en la página actual:
+//indexOfLastItem: índice del último elemento de la página.
+//indexOfFirstItem: índice del primer elemento de la página.
+//currentAsignaciones: el "slice" (corte) de asignaciones a mostrar.
+//totalPages: número total de páginas según cuántas asignaciones hay.
+
   const paginate = (pageNumber) => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
     }
   };
+  //Cambia la página actual, pero solo si está dentro del rango válido.
 
   // Formatear fecha para mostrar en formato legible
   const formatDate = (dateString) => {

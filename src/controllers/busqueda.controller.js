@@ -1,5 +1,9 @@
 import { searchGlobalService } from '../services/busqueda.service.js';
 
+// term: término de búsqueda proporcionado por el usuario
+// query: consulta 
+// req: peticion, res: respuesta
+
 export const searchGlobal = async (req, res) => {
   try {
     const { term } = req.query;
