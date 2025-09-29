@@ -7,6 +7,9 @@ import {
 } from "../services/usuarios.service.js";
 
 // Obtener todos los usuarios
+// async, await = para manejar codigo asincrono 
+// res.status = se usa para definir el codigo de estado HTTP en la respuesta 
+
 export const getUsuarios = async (req, res) => {
   try {
     const usuarios = await getUsuariosService();
@@ -17,6 +20,8 @@ export const getUsuarios = async (req, res) => {
 };
 
 // Obtener un usuario por ID
+//req.params= contiene los parametros de una ruta que se envia de la URL
+
 export const getUsuarioById = async (req, res) => {
   try {
     const usuario = await getUsuarioByIdService(req.params.id);
@@ -37,6 +42,7 @@ export const createUsuario = async (req, res) => {
 };
 
 // Actualizar un usuario
+//req.body = por aca viajan las peticiones; valores en el cuerpo de la peticion(eje: formulario o JSON enviado con POST)
 export const updateUsuario = async (req, res) => {
   try {
     const usuario = await updateUsuarioService(req.params.id, req.body);
@@ -55,3 +61,10 @@ export const deleteUsuario = async (req, res) => {
     res.status(500).json({ message: "Error al eliminar usuario", error: error.message });
   }
 };
+
+
+// controladores: controlador hace la peticion y la resive 
+// servicios: es el que tiene toda la logica, y en los 
+// controladores se importan los servivios 
+
+// JSON= es un formato de datos 
