@@ -11,7 +11,7 @@ import Role from "../models/RolModel.js";
 
 dotenv.config();
 
-// ======================= CREAR USUARIO =======================
+
 // ======================= CREAR USUARIO =======================
 export const createUserService = async ({ Usuario, Correo, PasswordTexto }) => {
   if (!Usuario || !Correo || !PasswordTexto) {
@@ -40,8 +40,8 @@ export const createUserService = async ({ Usuario, Correo, PasswordTexto }) => {
   });
 
   // Resto del código para el token de verificación...
-  const token = crypto.randomBytes(32).toString("hex");
-  const expiration = new Date(Date.now() + 3600000);
+  const token = crypto.randomBytes(32).toString("hex"); // generar 32 bytes en hexadecimal
+  const expiration = new Date(Date.now() + 3600000); // Date.now() devuelve la hora actual en milisegundos y 3600000 = 1 hora en milisegundos (1000 ms * 60 seg * 60 min).
 
   await VerificationToken.create({
     Token: token,
@@ -312,6 +312,7 @@ export const changeUserRoleService = async (userId, newRoleId) => {
   return { message: "Rol de usuario actualizado exitosamente" };
 };
 
+// Obtener usuarios pendientes de activación (correo verificado pero no activo)
 export const getPendingUsersService = async () => {
   return await RegistroLogin.findAll({
     where: {

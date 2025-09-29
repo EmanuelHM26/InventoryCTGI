@@ -125,6 +125,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Proveer el contexto de autenticación a los componentes hijos
   return (
     <AuthContext.Provider value={{ user, loading, signup, signin, logout }}>
       {children}

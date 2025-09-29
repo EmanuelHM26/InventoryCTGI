@@ -18,3 +18,8 @@ router.put("/usuarios/:id", verifyToken, verifyRole([1,2,3]), updateUsuario);
 router.delete("/usuarios/:id", verifyToken, verifyRole([1,2,3]), deleteUsuario);
 
 export default router;
+
+// get = obtener 
+// post = enviar 
+// put = actualizar 
+// delete = eliminar 

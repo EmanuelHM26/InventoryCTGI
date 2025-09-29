@@ -223,13 +223,16 @@ export const useAsignaciones = () => {
       Estado: "Estado",
     };
 
+    //Crear un array para almacenar los campos faltantes
     const missingFields = [];
+
+    // Verificar cada campo requerido
     for (const [field, label] of Object.entries(requiredFields)) {
       if (
         !newAsignacion[field] ||
         (field === "Cantidad" && newAsignacion[field] <= 0)
       ) {
-        missingFields.push(label);
+        missingFields.push(label); 
       }
     }
 

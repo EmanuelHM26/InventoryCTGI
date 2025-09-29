@@ -40,8 +40,8 @@ export const loginUser = async (req, res) => {
     }
 
     res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      httpOnly: true, // Previene ataques de XSS (cross-site scripting)
+      secure: process.env.NODE_ENV === "production", // Solo enviar en HTTPS en producción
       maxAge: 24 * 60 * 60 * 1000,
     });
 

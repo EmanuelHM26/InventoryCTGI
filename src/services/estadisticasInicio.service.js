@@ -28,3 +28,6 @@ export const getEstadisticasInicioService = async () => {
     throw new Error('No se pudieron obtener las estadísticas: ' + error.message);
   }
 }
+
+// promise.all = ejecuta todas las consultas a la vez y devuelve los resultados en un solo array 
+// count = contar (eje ProductosConsumibles.count(): cuenta todos los productos consumibles)

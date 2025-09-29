@@ -159,9 +159,20 @@ export const getAsignacionesByDaysService = async (days = 7) => {
   }
 };
 
+
+
+// new Date(): crea la fecha actual.
+// getDate(): obtiene el día del mes actual.
+// setDate(actual - days): resta los días indicados.
+// Ejemplo: si hoy es 28 sep 2025 y days = 7, fechaLimite será 21 sep 2025.
+
+//[Op.gte] = “greater than or equal” (mayor o igual que).
+//order = Ordena resultados por fecha de asignación, de más reciente a más antigua
+
+
 //Confirmar una asignación
 
-//Confirmar una asignación - VERSIÓN CORREGIDA
+
 //Confirmar una asignación - VERSIÓN CORREGIDA
 export const confirmarDevolucionService = async (idAsignaciones, { FechaDevolucion, HoraDevolucion, Novedad }) => {
   try {
