@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useForm } from "react-hook-form";
@@ -391,5 +394,145 @@ export const useEquiposTecnologicos = () => {
     sortedEquipos,
     watch,
     loading
+    ,
+    // Exportar a PDF
+    exportToPDF: async () => {
+      try {
+        const getBase64FromUrl = async (url) => {
+          const response = await fetch(url);
+          const blob = await response.blob();
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        };
+
+        const senaLogoBase64 = await getBase64FromUrl("/logosena.png");
+        const doc = new jsPDF();
+
+        // --- LOGO SENA ---
+        doc.addImage(senaLogoBase64, "PNG", 15, 10, 30, 25);
+
+        // --- TÍTULO EN VERDE CENTRADO ---
+        doc.setFontSize(22);
+        doc.setTextColor(57, 181, 74);
+        doc.setFont(undefined, "bold");
+        doc.text("Inventario CTGI", 105, 25, { align: "center" });
+
+        // --- SUBTÍTULO EN NEGRO ---
+        doc.setFontSize(18);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, "bold");
+        doc.text("Equipos tecnológicos", 15, 45);
+
+        // --- FECHA Y TOTAL ---
+        doc.setFontSize(12);
+        doc.setFont(undefined, "bold");
+        doc.text(`Fecha:`, 15, 55);
+        doc.text(`Total:`, 15, 63);
+
+        doc.setFont(undefined, "normal");
+  doc.text(`${new Date().toLocaleDateString("es-ES")}`, 40, 55);
+  doc.text(`${sortedEquipos.length}`, 40, 63);
+
+        // --- DESCRIPCIÓN ---
+        doc.setFontSize(13);
+        doc.setFont(undefined, "bold");
+        doc.text("Descripción:", 15, 73);
+        doc.setFontSize(11);
+        doc.setFont(undefined, "normal");
+        doc.text(
+          "Este reporte contiene la lista de equipos tecnológicos registrados en el sistema.",
+          15,
+          80,
+          { maxWidth: 180 }
+        );
+
+        // --- TABLA ---
+        const tableData = sortedEquipos.map((eq) => [
+          String(eq.idequipostecnologicos || ""),
+          eq.Codigo || "",
+          eq.Nombre || "",
+          eq.Marca || "",
+          eq.Modelo || "",
+          eq.Estado || ""
+        ]);
+
+        autoTable(doc, {
+          head: [["ID", "Código", "Nombre", "Marca", "Modelo", "Estado"]],
+          body: tableData,
+          startY: 90,
+          styles: {
+            fontSize: 9,
+            cellPadding: 2,
+          },
+          headStyles: {
+            fillColor: [57, 181, 74],
+            textColor: 255,
+            fontStyle: "bold",
+          },
+        });
+
+        const fileName = `equipos_tecnologicos_${new Date().toISOString().split("T")[0]}.pdf`;
+        doc.save(fileName);
+
+        Swal.fire({
+          icon: "success",
+          title: "PDF generado",
+          text: "El archivo PDF se ha descargado correctamente.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error("Error al generar PDF:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error al generar PDF",
+          text: `Error: ${error.message}`,
+          showConfirmButton: true,
+        });
+      }
+    },
+    // Exportar a Excel
+    exportToExcel: () => {
+      try {
+        const wsData = [
+          ["ID", "Código", "Nombre", "Marca", "Modelo", "Estado"],
+          ...sortedEquipos.map((eq) => [
+            eq.idequipostecnologicos || "",
+            eq.Codigo || "",
+            eq.Nombre || "",
+            eq.Marca || "",
+            eq.Modelo || "",
+            eq.Estado || ""
+          ]),
+        ];
+
+        const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "EquiposTecnologicos");
+
+        const fileName = `equipos_tecnologicos_${new Date().toISOString().split("T")[0]}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
+
+        Swal.fire({
+          icon: "success",
+          title: "Excel generado",
+          text: "El archivo Excel se ha descargado correctamente.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } catch (error) {
+        console.error("Error al generar Excel:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error al generar Excel",
+          text: `Error: ${error.message}`,
+          showConfirmButton: true,
+        });
+      }
+    }
   };
 };
