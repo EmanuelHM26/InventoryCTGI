@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import Swal from "sweetalert2"; // Cambiar toast por Swal
+import Swal from "sweetalert2";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -8,17 +8,14 @@ import { useForm } from "react-hook-form";
 
 export const useUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
-  const [roles, setRoles] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [newUser, setNewUser] = useState({
     Nombre: "",
     Apellido: "",
     TipoDocumento: "",
     NumeroDocumento: "",
-    Usuario: "",
     Correo: "",
     IdTiposDocumentos: "",
-    IdRol: 3,
   });
 
   const {
@@ -36,9 +33,7 @@ export const useUsuarios = () => {
       Apellido: "",
       TipoDocumento: "",
       NumeroDocumento: "",
-      Usuario: "",
       Correo: "",
-      IdRol: 3,
     },
   });
 
@@ -52,7 +47,6 @@ export const useUsuarios = () => {
 
   useEffect(() => {
     fetchUsuarios();
-    fetchRoles();
   }, []);
 
   const fetchUsuarios = async () => {
@@ -71,34 +65,6 @@ export const useUsuarios = () => {
         confirmButtonText: "Aceptar"
       });
     }
-  };
-
-  const fetchRoles = async () => {
-    try {
-      const response = await axios.get("http://localhost:3000/api/roles", {
-        withCredentials: true,
-      });
-      setRoles(response.data);
-    } catch (error) {
-      setRoles([
-        { IdRol: 1, NombreRol: "Administrador" },
-        { IdRol: 2, NombreRol: "Instructor" },
-        { IdRol: 3, NombreRol: "Aprendiz" },
-        { IdRol: 4, NombreRol: "Invitado" },
-      ]);
-      Swal.fire({
-        icon: "warning",
-        title: "Roles cargados por defecto",
-        text: "No se pudieron cargar los roles desde el servidor",
-        showConfirmButton: true,
-        confirmButtonText: "Entendido"
-      });
-    }
-  };
-
-  const getRolName = (idRol) => {
-    const rol = roles.find((r) => r.IdRol === idRol);
-    return rol ? rol.NombreRol : "Sin asignar";
   };
 
   const getIdTipoDocumento = (tipoDoc) => {
@@ -150,10 +116,8 @@ export const useUsuarios = () => {
         Apellido: "",
         TipoDocumento: "",
         NumeroDocumento: "",
-        Usuario: "",
         Correo: "",
         IdTiposDocumentos: "",
-        IdRol: 3,
       });
       fetchUsuarios();
     } catch (error) {
@@ -179,9 +143,7 @@ export const useUsuarios = () => {
     setValue("Apellido", user.Apellido);
     setValue("TipoDocumento", user.TipoDocumento);
     setValue("NumeroDocumento", user.NumeroDocumento);
-    setValue("Usuario", user.Usuario);
     setValue("Correo", user.Correo);
-    setValue("IdRol", user.IdRol);
     setShowModal(true);
     Swal.fire({
       icon: "info",
@@ -200,10 +162,8 @@ export const useUsuarios = () => {
       Apellido: "",
       TipoDocumento: "",
       NumeroDocumento: "",
-      Usuario: "",
       Correo: "",
       IdTiposDocumentos: "",
-      IdRol: 3,
     });
     reset();
     setShowModal(true);
@@ -257,26 +217,18 @@ export const useUsuarios = () => {
   };
 
   const filteredUsuarios = usuarios.filter((user) => {
-    const rolName = getRolName(user.IdRol);
     return (
       user.Nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.Apellido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.Usuario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.Correo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.NumeroDocumento?.toString().includes(searchTerm) ||
-      rolName.toLowerCase().includes(searchTerm.toLowerCase())
+      user.NumeroDocumento?.toString().includes(searchTerm)
     );
   });
 
   const sortedUsuarios = [...filteredUsuarios].sort((a, b) => {
-    let aVal, bVal;
-    if (sortConfig.key === "IdRol") {
-      aVal = getRolName(a.IdRol);
-      bVal = getRolName(b.IdRol);
-    } else {
-      aVal = a[sortConfig.key] || "";
-      bVal = b[sortConfig.key] || "";
-    }
+    let aVal = a[sortConfig.key] || "";
+    let bVal = b[sortConfig.key] || "";
+    
     if (aVal < bVal) {
       return sortConfig.direction === "ascending" ? -1 : 1;
     }
@@ -352,9 +304,7 @@ export const useUsuarios = () => {
         String(user.Apellido || ""),
         String(user.TipoDocumento || ""),
         String(user.NumeroDocumento || ""),
-        String(user.Usuario || ""),
         String(user.Correo || ""),
-        String(getRolName(user.IdRol)),
       ]);
 
       autoTable(doc, {
@@ -365,9 +315,7 @@ export const useUsuarios = () => {
             "Apellido",
             "Tipo Doc.",
             "Núm. Doc.",
-            "Usuario",
             "Correo",
-            "Rol",
           ],
         ],
         body: tableData,
@@ -413,9 +361,7 @@ export const useUsuarios = () => {
           "Apellido",
           "Tipo Doc.",
           "Número Doc.",
-          "Usuario",
           "Correo",
-          "Rol",
         ],
         ...sortedUsuarios.map((user) => [
           user.IdUsuario || "",
@@ -423,9 +369,7 @@ export const useUsuarios = () => {
           user.Apellido || "",
           user.TipoDocumento || "",
           user.NumeroDocumento || "",
-          user.Usuario || "",
           user.Correo || "",
-          getRolName(user.IdRol) || "",
         ]),
       ];
 
@@ -456,7 +400,6 @@ export const useUsuarios = () => {
 
   return {
     usuarios,
-    roles,
     showModal,
     setShowModal,
     newUser,
@@ -487,9 +430,6 @@ export const useUsuarios = () => {
     handleDeleteUser,
     exportToPDF,
     exportToExcel,
-    getRolName,
     itemsPerPage
   };
 };
-
-//
