@@ -9,7 +9,11 @@ import {
   FaChartLine,
   FaSignOutAlt,
   FaBars,
+<<<<<<< HEAD
   FaDoorOpen,
+=======
+  FaHistory,
+>>>>>>> d24e0aa77315e62b71e4de66f33ecc62f8aa8db8
 } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 
@@ -205,7 +209,7 @@ const Navbar = ({ onToggleCollapse, isCollapsed }) => {
         <div className="relative">
           <button
             onClick={() => handleSubMenuClick(setIsInventarioOpen, isInventarioOpen, "/dashboard/equipos-tecnologicos")}
-            className={`${linkClasses("", ["/dashboard/equipos-tecnologicos", "/dashboard/productos-consumibles"])} w-full ${isCollapsed ? 'justify-center' : 'justify-between'}`}
+            className={`${linkClasses("", ["/dashboard/equipos-tecnologicos", "/dashboard/productos-consumibles", "/dashboard/movimientos-consumibles"])} w-full ${isCollapsed ? 'justify-center' : 'justify-between'}`}
             title={isCollapsed ? "Ir a Inventario" : "Inventario"}
           >
             <div className="flex items-center">
@@ -218,14 +222,14 @@ const Navbar = ({ onToggleCollapse, isCollapsed }) => {
               />
             )}
             {/* Indicador activo para sidebar colapsado */}
-            {isCollapsed && isSectionActive(["/dashboard/equipos-tecnologicos", "/dashboard/productos-consumibles"]) && (
+            {isCollapsed && isSectionActive(["/dashboard/equipos-tecnologicos", "/dashboard/productos-consumibles", "/dashboard/movimientos-consumibles"]) && (
               <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-white rounded-r-full transition-all duration-300"></div>
             )}
           </button>
           
           {/* Submenú con animación suave */}
           <div className={`ml-6 mt-1 space-y-1 transition-all duration-300 ease-in-out overflow-hidden ${
-            !isCollapsed && isInventarioOpen ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'
+            !isCollapsed && isInventarioOpen ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
           }`}>
             <Link
               to="/dashboard/equipos-tecnologicos"
@@ -238,6 +242,13 @@ const Navbar = ({ onToggleCollapse, isCollapsed }) => {
               className={subLinkClasses("/dashboard/productos-consumibles")}
             >
               <span className="whitespace-nowrap">Productos Consumibles</span>
+            </Link>
+            <Link
+              to="/dashboard/movimientos-consumibles"
+              className={subLinkClasses("/dashboard/movimientos-consumibles")}
+            >
+              <FaHistory className="mr-2 flex-shrink-0" size={14} />
+              <span className="whitespace-nowrap">Movimientos</span>
             </Link>
           </div>
         </div>

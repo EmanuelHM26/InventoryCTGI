@@ -1,3 +1,4 @@
+// models/index.js
 import Usuario from '../models/UsuariosModel.js';
 import Asignaciones from '../models/AsignacionesModel.js';
 import ProductosConsumibles from '../models/ProductosConsumiblesModel.js';

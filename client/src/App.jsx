@@ -26,7 +26,12 @@ import Reportes from "./components/Reportes";
 import Profile from "./components/Profile";
 import Settings from "./components/Settings";
 import Help from "./components/Help";
+<<<<<<< HEAD
 import Ambientes from "./components/Ambientes";
+=======
+import MovimientosConsumibles from './components/MovimientosConsumibles';
+
+>>>>>>> d24e0aa77315e62b71e4de66f33ecc62f8aa8db8
 
 const App = () => {
   return (
@@ -62,7 +67,13 @@ const App = () => {
             <Route path="grupo" element={<Grupos />} />
             <Route path="reservas" element={<Reservas />} />
             <Route path="reportes" element={<Reportes />} />
+<<<<<<< HEAD
             <Route path="ambientes" element={<Ambientes />} />
+=======
+            <Route path="movimientos-consumibles" element={<MovimientosConsumibles />} />
+
+            
+>>>>>>> d24e0aa77315e62b71e4de66f33ecc62f8aa8db8
 
             <Route path="perfil" element={<Profile />} />
             <Route path="ajustes" element={<Settings />} />
