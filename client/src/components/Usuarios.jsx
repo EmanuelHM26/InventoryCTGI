@@ -13,11 +13,9 @@ import {
 import { useUsuarios } from "../hooks/useUsuarios";
 import { useAuth } from "../context/authContext";
 
-
 const Usuarios = () => {
   const {
     usuarios,
-    roles,
     showModal,
     setShowModal,
     newUser,
@@ -48,7 +46,6 @@ const Usuarios = () => {
     handleDeleteUser,
     exportToPDF,
     exportToExcel,
-    getRolName,
     itemsPerPage,
   } = useUsuarios();
 
@@ -126,34 +123,31 @@ const Usuarios = () => {
                   "Apellido",
                   "Tipo Doc.",
                   "Número Doc.",
-                  "Usuario",
                   "Correo",
-                  "Rol",
                   "Acciones",
                 ].map((header, index) => (
                   <th
                     key={index}
                     onClick={() => {
-                      if (index < 8) {
+                      if (index < 6) {
                         const keys = [
                           "IdUsuario",
                           "Nombre",
                           "Apellido",
                           "TipoDocumento",
                           "NumeroDocumento",
-                          "Usuario",
                           "Correo",
-                          "IdRol",
                         ];
                         requestSort(keys[index]);
                       }
                     }}
-                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 8 ? "cursor-pointer hover:bg-gray-100" : ""
-                      }`}
+                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
+                      index < 6 ? "cursor-pointer hover:bg-gray-100" : ""
+                    }`}
                   >
                     <div className="flex items-center">
                       {header}
-                      {index < 8 && (
+                      {index < 6 && (
                         <span className="ml-1">
                           {sortConfig.key ===
                             [
@@ -162,9 +156,7 @@ const Usuarios = () => {
                               "Apellido",
                               "TipoDocumento",
                               "NumeroDocumento",
-                              "Usuario",
                               "Correo",
-                              "IdRol",
                             ][index] &&
                             (sortConfig.direction === "ascending" ? "↑" : "↓")}
                         </span>
@@ -179,8 +171,9 @@ const Usuarios = () => {
                 currentUsuarios.map((userItem, index) => (
                   <tr
                     key={userItem.IdUsuario}
-                    className={`hover:bg-blue-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      }`}
+                    className={`hover:bg-blue-50 transition-colors duration-150 ${
+                      index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    }`}
                   >
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                       {userItem.IdUsuario || ""}
@@ -197,31 +190,8 @@ const Usuarios = () => {
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                       {userItem.NumeroDocumento || ""}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {userItem.Usuario || ""}
-                    </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                       {userItem.Correo || ""}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${userItem.IdRol === 1
-                              ? "bg-red-100 text-red-800"
-                              : userItem.IdRol === 2
-                                ? "bg-blue-100 text-blue-800"
-                                : userItem.IdRol === 3
-                                  ? "bg-green-100 text-green-800"
-                                  : userItem.IdRol === 4
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : userItem.IdRol === 5
-                                      ? "bg-purple-100 text-purple-800"
-                                      : "bg-gray-100 text-gray-800"
-                            }`}
-                        >
-                          {getRolName(userItem.IdRol)}
-                        </span>
-                      </td>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
@@ -250,7 +220,7 @@ const Usuarios = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="9"
+                    colSpan="7"
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     No se encontraron usuarios
@@ -272,10 +242,11 @@ const Usuarios = () => {
               <button
                 onClick={() => paginate(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`p-2 rounded-md ${currentPage === 1
-                  ? "text-gray-300 cursor-not-allowed"
-                  : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                className={`p-2 rounded-md ${
+                  currentPage === 1
+                    ? "text-gray-300 cursor-not-allowed"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
               >
                 <ChevronLeft size={18} />
               </button>
@@ -296,10 +267,11 @@ const Usuarios = () => {
                   <button
                     key={idx}
                     onClick={() => paginate(pageNumber)}
-                    className={`w-10 h-10 rounded-md ${currentPage === pageNumber
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                      }`}
+                    className={`w-10 h-10 rounded-md ${
+                      currentPage === pageNumber
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
                   >
                     {pageNumber}
                   </button>
@@ -309,10 +281,11 @@ const Usuarios = () => {
               <button
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`p-2 rounded-md ${currentPage === totalPages
-                  ? "text-gray-300 cursor-not-allowed"
-                  : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                className={`p-2 rounded-md ${
+                  currentPage === totalPages
+                    ? "text-gray-300 cursor-not-allowed"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
               >
                 <ChevronRight size={18} />
               </button>
@@ -352,10 +325,11 @@ const Usuarios = () => {
                         "El nombre solo puede contener letras y espacios, y no puede iniciar con espacio",
                     },
                   })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.Nombre
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                    }`}
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
+                    errors.Nombre
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
                 />
                 {errors.Nombre && (
                   <p className="text-red-500 text-xs mt-1">
@@ -385,10 +359,11 @@ const Usuarios = () => {
                         "El apellido solo puede contener letras y espacios, y no puede iniciar con espacio",
                     },
                   })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.Apellido
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                    }`}
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
+                    errors.Apellido
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
                 />
                 {errors.Apellido && (
                   <p className="text-red-500 text-xs mt-1">
@@ -404,10 +379,11 @@ const Usuarios = () => {
                   {...register("TipoDocumento", {
                     required: "Debe seleccionar un tipo de documento",
                   })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.TipoDocumento
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                    }`}
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
+                    errors.TipoDocumento
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
                 >
                   <option value="">Seleccionar tipo</option>
                   <option value="CC">CC - Cédula de Ciudadanía</option>
@@ -435,10 +411,11 @@ const Usuarios = () => {
                         "El número de documento debe tener entre 6 y 15 dígitos",
                     },
                   })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.NumeroDocumento
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                    }`}
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
+                    errors.NumeroDocumento
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
                 />
                 {errors.NumeroDocumento && (
                   <p className="text-red-500 text-xs mt-1">
@@ -446,52 +423,7 @@ const Usuarios = () => {
                   </p>
                 )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Usuario
-                </label>
-                <input
-                  type="text"
-                  {...register("Usuario", {
-                    required: "El usuario es obligatorio",
-                    minLength: {
-                      value: 3,
-                      message: "El usuario debe tener al menos 3 caracteres",
-                    },
-                    maxLength: {
-                      value: 20,
-                      message: "El usuario no puede exceder 20 caracteres",
-                    },
-                    pattern: {
-                      value: /^[a-zA-Z0-9_]+$/,
-                      message:
-                        "El usuario solo puede contener letras, números y guiones bajos",
-                    },
-                    validate: value => {
-                      if (/^\d+$/.test(value)) {
-                        return "El usuario no puede ser solo números";
-                      }
-                      if (/^[_]+$/.test(value)) {
-                        return "El usuario no puede ser solo guiones bajos";
-                      }
-                      if (/^[^a-zA-Z0-9]+$/.test(value)) {
-                        return "El usuario no puede ser solo caracteres especiales";
-                      }
-                      return true;
-                    },
-                  })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.Usuario
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                    }`}
-                />
-                {errors.Usuario && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.Usuario.message}
-                  </p>
-                )}
-              </div>
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Correo
                 </label>
@@ -511,43 +443,15 @@ const Usuarios = () => {
                       return true;
                     },
                   })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.Correo
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                    }`}
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
+                    errors.Correo
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
                 />
                 {errors.Correo && (
                   <p className="text-red-500 text-xs mt-1">
                     {errors.Correo.message}
-                  </p>
-                )}
-              </div>
-              {/* NUEVO CAMPO PARA ROL */}
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Rol
-                </label>
-                <select
-                  {...register("IdRol", {
-                    required: "Debe seleccionar un rol",
-                  })}
-                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${errors.IdRol
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-300 focus:ring-blue-500"
-                    }`}
-                >
-                  <option value="">Seleccione un rol</option>
-                  {roles
-                    .filter((rol) => rol.NombreRol === 'Instructor' || rol.NombreRol === 'Administrativo')
-                    .map((rol) => (
-                      <option key={rol.IdRol} value={rol.IdRol}>
-                        {rol.NombreRol}
-                      </option>
-                    ))}
-                </select>
-                {errors.IdRol && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.IdRol.message}
                   </p>
                 )}
               </div>
@@ -563,10 +467,11 @@ const Usuarios = () => {
               <button
                 onClick={handleCreateUser}
                 disabled={Object.keys(errors).length > 0}
-                className={`px-4 py-2 text-white rounded-lg transition-colors duration-200 ${Object.keys(errors).length > 0
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-                  }`}
+                className={`px-4 py-2 text-white rounded-lg transition-colors duration-200 ${
+                  Object.keys(errors).length > 0
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
               >
                 {newUser.IdUsuario ? "Actualizar" : "Crear"}
               </button>
@@ -579,5 +484,3 @@ const Usuarios = () => {
 };
 
 export default Usuarios;
-
-//
