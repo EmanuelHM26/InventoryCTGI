@@ -26,6 +26,7 @@ import Reportes from "./components/Reportes";
 import Profile from "./components/Profile";
 import Settings from "./components/Settings";
 import Help from "./components/Help";
+import MovimientosConsumibles from './components/MovimientosConsumibles';
 
 
 const App = () => {
@@ -62,6 +63,8 @@ const App = () => {
             <Route path="grupo" element={<Grupos />} />
             <Route path="reservas" element={<Reservas />} />
             <Route path="reportes" element={<Reportes />} />
+            <Route path="movimientos-consumibles" element={<MovimientosConsumibles />} />
+
             
 
             <Route path="perfil" element={<Profile />} />
