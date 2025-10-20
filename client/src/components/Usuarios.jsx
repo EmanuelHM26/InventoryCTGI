@@ -124,12 +124,13 @@ const Usuarios = () => {
                   "Tipo Doc.",
                   "Número Doc.",
                   "Correo",
+                  "Celular",
                   "Acciones",
                 ].map((header, index) => (
                   <th
                     key={index}
                     onClick={() => {
-                      if (index < 6) {
+                      if (index < 7) {
                         const keys = [
                           "IdUsuario",
                           "Nombre",
@@ -137,8 +138,10 @@ const Usuarios = () => {
                           "TipoDocumento",
                           "NumeroDocumento",
                           "Correo",
+                          "Celular",
                         ];
                         requestSort(keys[index]);
+
                       }
                     }}
                     className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
@@ -157,6 +160,7 @@ const Usuarios = () => {
                               "TipoDocumento",
                               "NumeroDocumento",
                               "Correo",
+                              "Celular",
                             ][index] &&
                             (sortConfig.direction === "ascending" ? "↑" : "↓")}
                         </span>
@@ -194,6 +198,9 @@ const Usuarios = () => {
                       {userItem.Correo || ""}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                      {userItem.Celular || ""}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
                         {user?.rol === "Administrador" && (
                           <>
@@ -220,7 +227,7 @@ const Usuarios = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="8"
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     No se encontraron usuarios
