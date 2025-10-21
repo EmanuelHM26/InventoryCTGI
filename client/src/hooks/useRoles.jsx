@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import configAxios from "../api/configAxios";
 
 export const useRoles = () => {
   const [roles, setRoles] = useState([]);
@@ -22,7 +23,7 @@ export const useRoles = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/roles", {
+      const response = await configAxios.get("api/roles", {
         withCredentials: true,
       });
       setRoles(response.data);
@@ -44,8 +45,8 @@ export const useRoles = () => {
       }
 
       if (newRole.IdRol) {
-        await axios.put(
-          `http://localhost:3000/api/roles/${newRole.IdRol}`,
+        await configAxios.put(
+          `api/roles/${newRole.IdRol}`,
           { NombreRol: newRole.NombreRol },
           { withCredentials: true }
         );
@@ -56,8 +57,8 @@ export const useRoles = () => {
           confirmButtonText: "Aceptar"
         });
       } else {
-        await axios.post(
-          "http://localhost:3000/api/roles",
+        await configAxios.post(
+          "api/roles",
           { NombreRol: newRole.NombreRol },
           { withCredentials: true }
         );
@@ -108,7 +109,7 @@ export const useRoles = () => {
 
     if (result.isConfirmed) {
       try {
-        await axios.delete(`http://localhost:3000/api/roles/${id}`, {
+        await configAxios.delete(`api/roles/${id}`, {
           withCredentials: true,
         });
         fetchRoles();

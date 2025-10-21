@@ -5,6 +5,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { useForm } from "react-hook-form";
+import configAxios from "../api/configAxios";
 
 export const useUsuariosSoftware = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -85,7 +86,7 @@ export const useUsuariosSoftware = () => {
 
   const fetchUsuarios = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/users");
+      const response = await configAxios.get("api/users");
 
       // Mapear los campos correctamente
       const usuariosConEstado = response.data.map((user) => ({
@@ -110,7 +111,7 @@ export const useUsuariosSoftware = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/roles");
+      const response = await configAxios.get("api/roles");
       setRoles(response.data);
     } catch (error) {
       console.error("Error al obtener roles:", error);
@@ -170,7 +171,7 @@ export const useUsuariosSoftware = () => {
       return;
     }
     try {
-      await axios.post("http://localhost:3000/api/users", data);
+      await configAxios.post("api/users", data);
       await Swal.fire({
         icon: "success",
         title: "Usuario creado",
@@ -211,7 +212,7 @@ export const useUsuariosSoftware = () => {
 
     if (result.isConfirmed) {
       try {
-        await axios.delete(`http://localhost:3000/api/users/${id}`);
+        await configAxios.delete(`api/users/${id}`);
         fetchUsuarios();
         Swal.fire({
           icon: "success",
@@ -264,8 +265,8 @@ export const useUsuariosSoftware = () => {
     }
 
     try {
-      await axios.put(
-        `http://localhost:3000/api/users/${editingUser.IdRegistroLogin}`,
+      await configAxios.put(
+        `api/users/${editingUser.IdRegistroLogin}`,
         {
           Usuario: editingUser.Usuario,
           Correo: editingUser.Correo,
@@ -372,8 +373,8 @@ export const useUsuariosSoftware = () => {
   // Función para activar/desactivar usuario
   const toggleUserActivation = async (userId, isCurrentlyActive) => {
     try {
-      const response = await axios.put(
-        `http://localhost:3000/api/admin/users/${userId}/toggle-activation`, // ← Ruta corregida
+      const response = await configAxios.put(
+        `api/admin/users/${userId}/toggle-activation`, // ← Ruta corregida
         {
           activate: !isCurrentlyActive,
         },
@@ -433,8 +434,8 @@ export const useUsuariosSoftware = () => {
   // Función para cambiar rol de usuario
   const changeUserRole = async (userId, newRoleId) => {
     try {
-      await axios.put(
-        `http://localhost:3000/api/admin/users/${userId}/role`,
+      await configAxios.put(
+        `api/admin/users/${userId}/role`,
         {
           newRoleId: parseInt(newRoleId),
         },

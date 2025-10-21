@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import configAxios from "../api/configAxios";
 
 const SearchGlobal = ({ onSearch }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,7 +40,7 @@ const SearchGlobal = ({ onSearch }) => {
     setIsLoading(true);
     try {
       // Realizar petición a la API con manejo de errores mejorado
-      const response = await axios.get(`http://localhost:3000/api/search?term=${encodeURIComponent(term)}`);
+      const response = await configAxios.get(`api/search?term=${encodeURIComponent(term)}`);
       
       // Verificar la respuesta
       if (response && response.data) {

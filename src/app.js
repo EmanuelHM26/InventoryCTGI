@@ -23,7 +23,7 @@ const app = express();
 
 // cors = es un mecanismo de seguridad que controla (dominios,puertos..) pueden hacer peticiones al backend 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: ['http://localhost:5173', 'http://frontend:5173'],
     credentials: true
 }));
 

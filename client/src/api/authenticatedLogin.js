@@ -3,23 +3,21 @@ import configAxios from "./configAxios";
 // Registro de usuario
 export const registerUser = async (userData) => {
   try {
-    const response = await configAxios.post("/register", userData);
+    const response = await configAxios.post("/api/register", userData);
     return response.data;
   } catch (error) {
-    // console.error("Error al registrar usuario:", error.response?.data || error.message);
     console.error(
       "Error al registrar usuario:",
       error.response?.data || error.message
     );
-    res.status(500).json({ message: "Error al registrar usuario", error });
+    throw error;
   }
 };
-
 
 // Inicio de sesión
 export const loginUser = async (credentials) => {
   try {
-    const response = await configAxios.post("/login", credentials);
+    const response = await configAxios.post("/api/login", credentials);
     return response.data;
   } catch (error) {
     console.error(
@@ -39,13 +37,7 @@ export const loginUser = async (credentials) => {
 // Cerrar sesión
 export const logoutUser = async () => {
   try {
-    const response = await configAxios.post(
-      "/logout",
-      {},
-      {
-        withCredentials: true, // Asegúrate de incluir las cookies
-      }
-    );
+    const response = await configAxios.post("/api/logout", {});
     return response.data;
   } catch (error) {
     console.error(
@@ -56,14 +48,11 @@ export const logoutUser = async () => {
   }
 };
 
-// Verificar token refrescar pagina
-
+// Verificar token al refrescar página
 export const validateToken = async () => {
   try {
-    const response = await configAxios.get("/verify-token", {
-      withCredentials: true, // Asegúrate de incluir las cookies
-    });
-    return response.data; // Devuelve los datos del usuario si el token es válido
+    const response = await configAxios.get("/api/verify-token");
+    return response.data;
   } catch (error) {
     console.error(
       "Error al validar el token:",
@@ -73,11 +62,10 @@ export const validateToken = async () => {
   }
 };
 
+// Obtener usuario autenticado
 export const getAuthenticatedUser = async () => {
   try {
-    const response = await configAxios.get("/auth/me", {
-      withCredentials: true,
-    });
+    const response = await configAxios.get("/api/auth/me");
     return response.data;
   } catch (error) {
     console.error(

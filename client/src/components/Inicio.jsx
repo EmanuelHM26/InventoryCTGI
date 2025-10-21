@@ -6,6 +6,7 @@ import Card from "../components/Card";
 import { FaUsers, FaFileInvoice, FaUserFriends, FaTruck } from "react-icons/fa";
 import SearchGlobal from "../components/SearchGlobal";
 import AccionesRapidas from "../components/AccionesRapidas";
+import configAxios from "../api/configAxios";
 
 const Inicio = () => {
   const [cardData, setCardData] = useState([]);
@@ -19,7 +20,7 @@ const Inicio = () => {
     try {
       setError(null);      
       // Asegúrate de que la URL coincida con tu configuración del servidor
-      const res = await axios.get("http://localhost:3000/api/contar-estadisticas", {
+      const res = await configAxios.get("api/contar-estadisticas", {
         withCredentials: true,
         timeout: 10000 // Timeout de 10 segundos
       });

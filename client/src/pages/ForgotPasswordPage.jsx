@@ -1,6 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import axios from "axios";
+import configAxios from "../api/configAxios"; 
 import Swal from "sweetalert2";
 
 const ForgotPasswordPage = () => {
@@ -8,7 +8,8 @@ const ForgotPasswordPage = () => {
 
   const onSubmit = async (data) => {
     try {
-      await axios.post("http://localhost:3000/api/forgot-password", { Correo: data.correo });
+      // Usar configAxios en lugar de axios
+      await configAxios.post("/api/forgot-password", { Correo: data.correo });
 
       Swal.fire({
         icon: "success",

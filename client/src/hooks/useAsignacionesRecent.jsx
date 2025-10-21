@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import configAxios from "../api/configAxios";
 // axios: para hacer la petición HTTP a tu backend.
 
 export const useAsignacionesRecent = () => {
@@ -21,8 +22,7 @@ export const useAsignacionesRecent = () => {
   // Función para obtener asignaciones recientes desde el backend
   const fetchRecentAsignaciones = async () => {
     try {
-      const response = await axios.get(
-        `http://localhost:3000/api/asignaciones/recent?days=${diasFiltro}`,
+      const response = await configAxios.get(`api/asignaciones/recent?days=${diasFiltro}`,
         { withCredentials: true }
       );
       setAsignaciones(response.data);

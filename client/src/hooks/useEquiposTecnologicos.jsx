@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { useForm } from "react-hook-form";
+import configAxios from "../api/configAxios";
 
 
 // Hook personalizado para gestionar equipos tecnológicos
@@ -48,8 +49,7 @@ export const useEquiposTecnologicos = () => {
   const fetchEquipos = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        "http://localhost:3000/api/equipostecnologicos",
+      const response = await configAxios.get("api/equipostecnologicos",
         { withCredentials: true }
       );
       setEquipos(response.data);
@@ -69,8 +69,7 @@ export const useEquiposTecnologicos = () => {
   // Función para verificar si el código ya existe
   const checkCodigoExists = async (codigo, excludeId = null) => {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/equipostecnologicos",
+      const response = await configAxios.get("api/equipostecnologicos",
         { withCredentials: true }
       );
       const equipos = response.data;
@@ -120,8 +119,8 @@ export const useEquiposTecnologicos = () => {
 
       if (equipoId) {
         // Modo edición
-        await axios.put(
-          `http://localhost:3000/api/equipostecnologicos/${equipoId}`,
+        await configAxios.put(
+          `api/equipostecnologicos/${equipoId}`,
           equipoData,
           { withCredentials: true }
         );
@@ -134,8 +133,8 @@ export const useEquiposTecnologicos = () => {
         });
       } else {
         // Modo creación
-        await axios.post(
-          "http://localhost:3000/api/equipostecnologicos",
+        await configAxios.post(
+          "api/equipostecnologicos",
           equipoData,
           { withCredentials: true }
         );
@@ -211,8 +210,8 @@ export const useEquiposTecnologicos = () => {
     if (result.isConfirmed) {
       try {
         setLoading(true);
-        await axios.delete(
-          `http://localhost:3000/api/equipostecnologicos/${id}`,
+        await configAxios.delete(
+          `api/equipostecnologicos/${id}`,
           { withCredentials: true }
         );
         

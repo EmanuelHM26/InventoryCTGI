@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # Base de datos MariaDB
+  database:
+    image: mariadb:10.4
+    container_name: inventoryctgi_db_prod
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: losamores123
+      MYSQL_DATABASE: mydb
+    volumes:
+      - mariadb_data_prod:/var/lib/mysql
+    networks:
+      - inventoryctgi_network
+
+  # Backend (Node.js + Express)
+  backend:
+    build:
+      context: ./src
+      dockerfile: Dockerfile.prod
+    container_name: inventoryctgi_backend_prod
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: database
+      DB_USER: root
+      DB_PASS: losamores123
+      DB_NAME: mydb
+      DB_PORT: 3306
+      PORT: 3000
+      JWT_SECRET: EMND@project_cl@v3_S3cr3t_2025!
+      NODE_ENV: production
+      EMAIL_USER: emanuelhuertas2604@gmail.com
+      EMAIL_PASS: vedr xvqu ftnl ltjo
+    depends_on:
+      - database
+    networks:
+      - inventoryctgi_network
+
+  # Frontend (React + Vite)
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.prod
+    container_name: inventoryctgi_frontend_prod
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - inventoryctgi_network
+
+networks:
+  inventoryctgi_network:
+    driver: bridge
+
+volumes:
+  mariadb_data_prod:

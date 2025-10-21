@@ -5,6 +5,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 export { useMovimientosConsumibles } from '../hooks/useMovimientosConsumibles';
+import configAxios from "../api/configAxios";
 
 
 export const useProductosConsumibles = () => {
@@ -32,8 +33,8 @@ export const useProductosConsumibles = () => {
 
   const fetchProductos = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/productosconsumibles",
+      const response = await configAxios.get(
+        "api/productosconsumibles",
         { withCredentials: true }
       );
       setProductos(response.data);
@@ -47,7 +48,7 @@ export const useProductosConsumibles = () => {
       let response;
       if (newProducto.IdProductosConsumibles) {
         response = await axios.put(
-          `http://localhost:3000/api/productosconsumibles/${newProducto.IdProductosConsumibles}`,
+          `api/productosconsumibles/${newProducto.IdProductosConsumibles}`,
           newProducto,
           { withCredentials: true }
         );
@@ -57,8 +58,8 @@ export const useProductosConsumibles = () => {
           newProducto
         );
       } else {
-        response = await axios.post(
-          "http://localhost:3000/api/productosconsumibles",
+        response = await configAxios.post(
+          "api/productosconsumibles",
           newProducto,
           { withCredentials: true }
         );
@@ -108,8 +109,8 @@ export const useProductosConsumibles = () => {
 
     if (result.isConfirmed) {
       try {
-        await axios.delete(
-          `http://localhost:3000/api/productosconsumibles/${id}`,
+        await configAxios.delete(
+          `api/productosconsumibles/${id}`,
           { withCredentials: true }
         );
         fetchProductos();

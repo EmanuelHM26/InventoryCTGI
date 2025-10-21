@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import configAxios from "../api/configAxios";
 
 export const useMovimientos = (actualizarProductoLocal) => {
   const [movimientos, setMovimientos] = useState([]);
@@ -34,8 +35,8 @@ export const useMovimientos = (actualizarProductoLocal) => {
 
   const fetchMovimientos = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/movimientosconsumibles",
+      const response = await configAxios.get(
+        "api/movimientosconsumibles",
         { withCredentials: true }
       );
       setMovimientos(response.data.rows || response.data);
@@ -51,8 +52,8 @@ export const useMovimientos = (actualizarProductoLocal) => {
 
   const fetchProductos = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/productosconsumibles",
+      const response = await configAxios.get(
+        "api/productosconsumibles",
         { withCredentials: true }
       );
       setProductos(response.data);
@@ -78,8 +79,8 @@ export const useMovimientos = (actualizarProductoLocal) => {
         Motivo: motivo,
       };
 
-      await axios.post(
-        "http://localhost:3000/api/movimientosconsumibles",
+      await configAxios.post(
+        "api/movimientosconsumibles",
         movimientoData,
         { withCredentials: true }
       );

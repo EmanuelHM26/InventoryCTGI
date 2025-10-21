@@ -1,7 +1,7 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import configAxios from "../api/configAxios"; 
 import Swal from "sweetalert2";
 
 const ResetPasswordPage = () => {
@@ -22,7 +22,8 @@ const ResetPasswordPage = () => {
     }
 
     try {
-      await axios.post("http://localhost:3000/api/reset-password", {
+      // Usar configAxios en lugar de axios
+      await configAxios.post("/api/reset-password", {
         token,
         nuevaPassword: data.password,
       });

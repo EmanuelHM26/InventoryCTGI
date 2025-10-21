@@ -2,6 +2,7 @@
 import { useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import configAxios from "../api/configAxios";
 
 export const useMovimientosConsumibles = (actualizarProductoLocal) => {
   const [showModalMovimiento, setShowModalMovimiento] = useState(false);
@@ -12,8 +13,8 @@ export const useMovimientosConsumibles = (actualizarProductoLocal) => {
 
   const realizarMovimiento = async (producto, tipo, cantidad, motivo) => {
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/movimientosconsumibles",
+      const response = await configAxios.post(
+        "api/movimientosconsumibles",
         {
           IdProductoConsumible: producto.IdProductosConsumibles,
           TipoMovimiento: tipo,
