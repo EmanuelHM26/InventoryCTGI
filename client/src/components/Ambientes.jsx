@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Edit, Trash2, FileText, Download, Upload } from "lucide-react";
 import Swal from "sweetalert2";
-import axios from "../api/configAxios";
+import configAxios from "../api/configAxios";
 
 // librerías para export/import
 import * as XLSX from "xlsx";
@@ -13,7 +13,7 @@ export default function Ambientes() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ codigo: "", nombre: "" });
+  const [form, setForm] = useState({ codigo: "", nombre: "" }); // Eliminado estado del formulario
 
   useEffect(() => {
     fetchAmbientes();
@@ -22,8 +22,13 @@ export default function Ambientes() {
   async function fetchAmbientes() {
     try {
       setLoading(true);
-      const res = await axios.get("/ambientes");
-      setAmbientes(res.data || []);
+      const res = await configAxios.get("/ambientes");
+      // Asegurarnos de que cada ambiente tenga un estado
+      const ambientesConEstado = res.data.map(amb => ({
+        ...amb,
+        estado: amb.estado || "Disponible"
+      }));
+      setAmbientes(ambientesConEstado || []);
     } catch (err) {
       console.error("Error cargando ambientes (detalle):", err);
       Swal.fire({
@@ -36,6 +41,63 @@ export default function Ambientes() {
       setLoading(false);
     }
   }
+
+  // Función para cambiar el estado de un ambiente
+  const cambiarEstadoAmbiente = async (ambiente) => {
+    const nuevoEstado = ambiente.estado === "Disponible" ? "Asignado" : "Disponible";
+    
+    const result = await Swal.fire({
+      title: `¿Cambiar estado a ${nuevoEstado}?`,
+      text: `¿Estás seguro de que quieres cambiar el estado del ambiente "${ambiente.nombre}" a "${nuevoEstado}"?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, cambiar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setLoading(true);
+        const payload = {
+          codigo: ambiente.codigo,
+          nombre: ambiente.nombre,
+          estado: nuevoEstado
+        };
+
+        await configAxios.put(`/ambientes/${ambiente.idAmbiente ?? ambiente.id}`, payload);
+        
+        // Actualizar el estado local
+        setAmbientes(prev => 
+          prev.map(a => 
+            (a.idAmbiente ?? a.id) === (ambiente.idAmbiente ?? ambiente.id) 
+              ? { ...a, estado: nuevoEstado }
+              : a
+          )
+        );
+
+        Swal.fire({
+          title: "Estado actualizado",
+          text: `El ambiente "${ambiente.nombre}" ahora está "${nuevoEstado}"`,
+          icon: "success",
+          confirmButtonText: "Aceptar"
+        });
+
+      } catch (err) {
+        console.error("Error cambiando estado del ambiente:", err);
+        const serverMsg = err.response?.data?.message || err.message || "Error al cambiar el estado";
+        Swal.fire({ 
+          title: "Error al cambiar estado", 
+          text: serverMsg, 
+          icon: "error", 
+          confirmButtonText: "Aceptar" 
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   // Función para importar desde Excel/CSV
   const importFromExcel = (event) => {
@@ -194,9 +256,11 @@ export default function Ambientes() {
           }
         }
 
+        // Todos los ambientes importados serán "Disponible" por defecto
         ambientesToImport.push({
           codigo: codigoNumero,
-          nombre: nombre.toString().trim()
+          nombre: nombre.toString().trim(),
+          estado: "Disponible" // Siempre disponible por defecto
         });
       });
 
@@ -230,7 +294,7 @@ export default function Ambientes() {
 
       for (const ambiente of ambientesToImport) {
         try {
-          await axios.post("/ambientes", ambiente);
+          await configAxios.post("/ambientes", ambiente);
           successCount++;
         } catch (error) {
           console.error(`Error creando ambiente ${ambiente.nombre}:`, error);
@@ -264,22 +328,39 @@ export default function Ambientes() {
     }
   };
 
+  // Función para obtener el color del badge según el estado
+  const getEstadoBadgeColor = (estado) => {
+    const estadoNormalizado = estado || "Disponible";
+    switch (estadoNormalizado) {
+      case "Disponible":
+        return "bg-green-100 text-green-800 border border-green-200 hover:bg-green-200 cursor-pointer";
+      case "Asignado":
+        return "bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200 cursor-pointer";
+      default:
+        return "bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200 cursor-pointer";
+    }
+  };
+
   function openNew() {
     setEditing(null);
-    setForm({ codigo: "", nombre: "" });
+    setForm({ codigo: "", nombre: "" }); // Solo código y nombre
     setShowModal(true);
   }
 
   function openEdit(item) {
     setEditing(item);
-    setForm({ codigo: item.codigo ?? "", nombre: item.nombre ?? "" });
+    setForm({ 
+      codigo: item.codigo ?? "", 
+      nombre: item.nombre ?? ""
+      // No incluir estado en el formulario de edición
+    });
     setShowModal(true);
   }
 
   function closeModal() {
     setShowModal(false);
     setEditing(null);
-    setForm({ codigo: "", nombre: "" });
+    setForm({ codigo: "", nombre: "" }); // Solo código y nombre
   }
 
   function handleChange(e) {
@@ -294,14 +375,20 @@ export default function Ambientes() {
       return;
     }
 
-    const payload = { codigo: Number(form.codigo), nombre: form.nombre.toString().trim() };
+    const payload = { 
+      codigo: Number(form.codigo), 
+      nombre: form.nombre.toString().trim(),
+      estado: "Disponible" // Siempre disponible por defecto
+    };
+
+    console.log("Enviando payload:", payload); // Debug
 
     try {
       if (editing) {
-        await axios.put(`/ambientes/${editing.idAmbiente ?? editing.id}`, payload);
+        await configAxios.put(`/ambientes/${editing.idAmbiente ?? editing.id}`, payload);
         Swal.fire({ title: "Ambiente actualizado", text: `Se actualizó "${payload.nombre}"`, icon: "success", confirmButtonText: "Aceptar" });
       } else {
-        await axios.post("/ambientes", payload);
+        await configAxios.post("/ambientes", payload);
         Swal.fire({ title: "Ambiente creado", text: `Se creó "${payload.nombre}"`, icon: "success", confirmButtonText: "Aceptar" });
       }
       closeModal();
@@ -324,7 +411,7 @@ export default function Ambientes() {
     });
     if (!result.isConfirmed) return;
     try {
-      await axios.delete(`/ambientes/${item.idAmbiente ?? item.id}`);
+      await configAxios.delete(`/ambientes/${item.idAmbiente ?? item.id}`);
       Swal.fire({ title: "Ambiente eliminado", text: `"${item.nombre}" eliminado.`, icon: "success", confirmButtonText: "Aceptar" });
       setAmbientes(prev => prev.filter(a => (a.idAmbiente ?? a.id) !== (item.idAmbiente ?? item.id)));
     } catch (err) {
@@ -344,6 +431,7 @@ export default function Ambientes() {
       ID: a.idAmbiente ?? a.id,
       CODIGO: a.codigo,
       NOMBRE: a.nombre,
+      ESTADO: a.estado || "Disponible"
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -366,11 +454,12 @@ export default function Ambientes() {
       doc.text("Lista de Ambientes", 14, 15);
       
       // Datos para la tabla
-      const head = [["ID", "CÓDIGO", "NOMBRE"]];
+      const head = [["ID", "CÓDIGO", "NOMBRE", "ESTADO"]];
       const body = ambientes.map(a => [
         a.idAmbiente ?? a.id,
         a.codigo,
-        a.nombre
+        a.nombre,
+        a.estado || "Disponible"
       ]);
       
       // Usar autoTable correctamente
@@ -443,41 +532,65 @@ export default function Ambientes() {
           </div>
         </div>
 
+        {/* Tabla con columnas simétricas */}
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">ID</th>
+                <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Código</th>
+                <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-2/6">Nombre</th>
+                <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Estado</th>
+                <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">Acciones</th>
               </tr>
             </thead>
 
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
-                <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-500">Cargando...</td></tr>
+                <tr>
+                  <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                    Cargando...
+                  </td>
+                </tr>
               ) : ambientes.length === 0 ? (
-                <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-500">No hay ambientes.</td></tr>
+                <tr>
+                  <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                    No hay ambientes.
+                  </td>
+                </tr>
               ) : (
                 ambientes.map((a) => (
                   <tr key={a.idAmbiente ?? a.id} className="hover:bg-blue-50 transition-colors duration-150">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{a.idAmbiente ?? a.id}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{a.codigo}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{a.nombre}</td>
-
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
-                      <div className="flex justify-end items-center space-x-2">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center w-1/6">
+                      {a.idAmbiente ?? a.id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center w-1/6">
+                      {a.codigo}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center w-2/6">
+                      {a.nombre}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center w-1/6">
+                      <span 
+                        onClick={() => cambiarEstadoAmbiente(a)}
+                        className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full transition-colors duration-200 ${getEstadoBadgeColor(a.estado)}`}
+                        title={`Haz clic para cambiar el estado (actual: ${a.estado || "Disponible"})`}
+                      >
+                        {a.estado || "Disponible"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center w-1/6">
+                      <div className="flex justify-center items-center space-x-3">
                         <button
                           onClick={() => openEdit(a)}
-                          className="p-1 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors duration-200"
+                          className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors duration-200"
                           title="Editar ambiente"
                         >
                           <Edit size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(a)}
-                          className="p-1 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition-colors duration-200"
+                          className="p-2 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition-colors duration-200"
                           title="Eliminar ambiente"
                         >
                           <Trash2 size={16} />
@@ -491,6 +604,7 @@ export default function Ambientes() {
           </table>
         </div>
 
+        {/* Modal simplificado sin campo Estado */}
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-white rounded shadow-lg w-full max-w-lg p-6">
@@ -498,16 +612,36 @@ export default function Ambientes() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Código</label>
-                  <input name="codigo" value={form.codigo} onChange={handleChange} className="w-full border px-3 py-2 rounded" type="number" />
+                  <input 
+                    name="codigo" 
+                    value={form.codigo} 
+                    onChange={handleChange} 
+                    className="w-full border px-3 py-2 rounded" 
+                    type="number" 
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Nombre</label>
-                  <input name="nombre" value={form.nombre} onChange={handleChange} className="w-full border px-3 py-2 rounded" type="text" required />
+                  <label className="block text-sm font-medium mb-1">Nombre *</label>
+                  <input 
+                    name="nombre" 
+                    value={form.nombre} 
+                    onChange={handleChange} 
+                    className="w-full border px-3 py-2 rounded" 
+                    type="text" 
+                    required 
+                  />
+                </div>
+                <div className="text-sm text-gray-500">
+                  <p>El ambiente se creará con estado <span className="font-semibold text-green-600">"Disponible"</span> por defecto.</p>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
-                  <button type="button" onClick={closeModal} className="px-4 py-2 rounded border">Cancelar</button>
-                  <button type="submit" className="px-4 py-2 rounded bg-indigo-600 text-white">Guardar</button>
+                  <button type="button" onClick={closeModal} className="px-4 py-2 rounded border hover:bg-gray-50 transition-colors duration-200">
+                    Cancelar
+                  </button>
+                  <button type="submit" className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition-colors duration-200">
+                    {editing ? "Actualizar" : "Crear"}
+                  </button>
                 </div>
               </form>
             </div>
