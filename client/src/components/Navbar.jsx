@@ -9,11 +9,11 @@ import {
   FaChartLine,
   FaSignOutAlt,
   FaBars,
-<<<<<<< HEAD
+
   FaDoorOpen,
-=======
+
   FaHistory,
->>>>>>> d24e0aa77315e62b71e4de66f33ecc62f8aa8db8
+
 } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 
