@@ -1,13 +1,14 @@
 import service from "../services/ambientes.service.js";
 
-export const create = async (req, res) => {
+export const createAmbiente = async (req, res) => {
   try {
     console.log("POST /api/ambientes body:", req.body);
     const { codigo, nombre, estado } = req.body;
 
-    if (codigo == null || nombre == null || nombre.toString().trim() === "") {
-      return res.status(400).json({ message: "codigo y nombre son requeridos" });
+    if (nombre == null || nombre.toString().trim() === "") {
+      return res.status(400).json({ message: "El nombre es obligatorio" });
     }
+
     const codigoNum = Number(codigo);
     if (Number.isNaN(codigoNum)) {
       return res.status(400).json({ message: "codigo debe ser un número" });
@@ -25,20 +26,13 @@ export const create = async (req, res) => {
     });
     return res.status(201).json(created);
   } catch (err) {
-    console.error("Error en controller.create ambientes:", {
-      message: err.message,
-      code: err.code,
-      errno: err.errno,
-      sqlMessage: err.sqlMessage,
-      sql: err.sql,
-      stack: err.stack,
-    });
+    console.error("Error en controller.create ambientes:", err);
     const clientMsg = err.sqlMessage || err.message || "Error creando ambiente";
     return res.status(err.status || 500).json({ message: clientMsg, code: err.code });
   }
 };
 
-export const list = async (req, res) => {
+export const getAllAmbientes = async (req, res) => {
   try {
     const rows = await service.getAll();
     res.json(rows);
@@ -48,7 +42,7 @@ export const list = async (req, res) => {
   }
 };
 
-export const getOne = async (req, res) => {
+export const getAmbienteById = async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     const item = await service.getById(id);
@@ -58,7 +52,7 @@ export const getOne = async (req, res) => {
   }
 };
 
-export const update = async (req, res) => {
+export const updateAmbiente = async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     
@@ -74,7 +68,7 @@ export const update = async (req, res) => {
   }
 };
 
-export const remove = async (req, res) => {
+export const removeAmbiente = async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     await service.remove(id);
@@ -84,4 +78,10 @@ export const remove = async (req, res) => {
   }
 };
 
-export default { create, list, getOne, update, remove };
+export default { 
+  create: createAmbiente, 
+  list: getAllAmbientes, 
+  getOne: getAmbienteById, 
+  update: updateAmbiente, 
+  remove: removeAmbiente 
+};
