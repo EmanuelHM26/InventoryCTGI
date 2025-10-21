@@ -28,6 +28,7 @@ import Settings from "./components/Settings";
 import Help from "./components/Help";
 import MovimientosConsumibles from './components/MovimientosConsumibles';
 
+import Ambientes from "./components/Ambientes";
 
 const App = () => {
   return (
@@ -66,6 +67,7 @@ const App = () => {
             <Route path="movimientos-consumibles" element={<MovimientosConsumibles />} />
 
             
+            <Route path="ambientes" element={<Ambientes />} />
 
             <Route path="perfil" element={<Profile />} />
             <Route path="ajustes" element={<Settings />} />
