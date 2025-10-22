@@ -15,6 +15,7 @@ export const useUsuarios = () => {
     TipoDocumento: "",
     NumeroDocumento: "",
     Correo: "",
+    Celular: "",
     IdTiposDocumentos: "",
   });
 
@@ -34,6 +35,7 @@ export const useUsuarios = () => {
       TipoDocumento: "",
       NumeroDocumento: "",
       Correo: "",
+      Celular: "",
     },
   });
 
@@ -117,6 +119,7 @@ export const useUsuarios = () => {
         TipoDocumento: "",
         NumeroDocumento: "",
         Correo: "",
+        Celular: "",
         IdTiposDocumentos: "",
       });
       fetchUsuarios();
@@ -144,6 +147,7 @@ export const useUsuarios = () => {
     setValue("TipoDocumento", user.TipoDocumento);
     setValue("NumeroDocumento", user.NumeroDocumento);
     setValue("Correo", user.Correo);
+    setValue("Celular", user.Celular);
     setShowModal(true);
     Swal.fire({
       icon: "info",
@@ -163,6 +167,7 @@ export const useUsuarios = () => {
       TipoDocumento: "",
       NumeroDocumento: "",
       Correo: "",
+      Celular: "",
       IdTiposDocumentos: "",
     });
     reset();
@@ -221,7 +226,8 @@ export const useUsuarios = () => {
       user.Nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.Apellido?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.Correo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.NumeroDocumento?.toString().includes(searchTerm)
+      user.NumeroDocumento?.toString().includes(searchTerm) ||
+      user.Celular?.toString().includes(searchTerm)
     );
   });
 
@@ -305,6 +311,7 @@ export const useUsuarios = () => {
         String(user.TipoDocumento || ""),
         String(user.NumeroDocumento || ""),
         String(user.Correo || ""),
+        String(user.Celular || ""),
       ]);
 
       autoTable(doc, {
@@ -316,6 +323,7 @@ export const useUsuarios = () => {
             "Tipo Doc.",
             "Núm. Doc.",
             "Correo",
+            "Celular",
           ],
         ],
         body: tableData,
@@ -362,6 +370,7 @@ export const useUsuarios = () => {
           "Tipo Doc.",
           "Número Doc.",
           "Correo",
+          "Celular",
         ],
         ...sortedUsuarios.map((user) => [
           user.IdUsuario || "",
@@ -370,6 +379,7 @@ export const useUsuarios = () => {
           user.TipoDocumento || "",
           user.NumeroDocumento || "",
           user.Correo || "",
+          user.Celular || "",
         ]),
       ];
 

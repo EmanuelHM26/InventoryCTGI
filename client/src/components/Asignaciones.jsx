@@ -74,7 +74,6 @@ const Asignaciones = () => {
               onClick={() => {
                 setNewAsignacion({
                   IdUsuario: "",
-                  Usuario: "",
                   Nombre: "",
                   Apellido: "",
                   Documento: "",
@@ -108,7 +107,6 @@ const Asignaciones = () => {
               <tr>
                 {[
                   "ID",
-                  "Usuario",
                   "Nombre",
                   "Apellido",
                   "Documento",
@@ -136,9 +134,7 @@ const Asignaciones = () => {
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.IdAsignaciones}
                     </td>
-                    <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                      {asignacion.Usuario?.Usuario || "N/A"}
-                    </td>
+
                     <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                       {asignacion.Nombre}
                     </td>
@@ -333,7 +329,7 @@ const Asignaciones = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Usuario <span className="text-red-500">*</span>
+                  Listado Nombres <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={newAsignacion.IdUsuario}
@@ -707,14 +703,6 @@ const Asignaciones = () => {
                   Información del Usuario
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">
-                      Usuario
-                    </label>
-                    <p className="text-gray-900 font-bold text-xl">
-                      {selectedAsignacion.Usuario?.Usuario || "N/A"}
-                    </p>
-                  </div>
 
                   <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
                     <label className="block text-sm font-medium text-gray-600 mb-2">

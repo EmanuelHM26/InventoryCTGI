@@ -23,20 +23,13 @@ const Usuario = sequelize.define("Usuario", {
       type: DataTypes.BIGINT(12),
       allowNull: false,
     },
-    Usuario: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-    },
+    
     Correo: {
       type: DataTypes.STRING(200),
       allowNull: false,
     },
     IdTiposDocumentos: {
       type: DataTypes.TINYINT(12),
-      allowNull: false,
-    },
-    IdRol: {
-      type: DataTypes.TINYINT(4),
       allowNull: false,
     },
     FechaCreacion: {
@@ -59,6 +52,11 @@ const Usuario = sequelize.define("Usuario", {
       allowNull: false,
       defaultValue: sequelize.literal("CURRENT_TIME"),
     },
+
+    Celular: {
+    type: DataTypes.STRING(15),
+    allowNull: false,
+},
   },
   {
     tableName: "usuarios",
