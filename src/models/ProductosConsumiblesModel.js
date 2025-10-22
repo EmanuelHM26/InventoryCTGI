@@ -17,6 +17,15 @@ const ProductosConsumibles = sequelize.define('ProductosConsumibles', {
     allowNull: false,
     defaultValue: 0,
   },
+  UnidadMedida: {
+    type: DataTypes.ENUM('unidad', 'gramaje'),
+    allowNull: false,
+    defaultValue: 'unidad'
+  },
+  ValorMedida: {
+    type: DataTypes.STRING(50),
+    allowNull: true, // Solo aplica para gramaje
+  },
 }, {
   tableName: 'productosconsumibles',
   timestamps: false,
@@ -24,7 +33,7 @@ const ProductosConsumibles = sequelize.define('ProductosConsumibles', {
   collate: 'utf8_general_ci',
 });
 
-// Función para configurar las asociaciones de ProductosConsumibles
+// Las asociaciones se mantienen igual
 export const setupProductosConsumiblesAssociations = (models) => {
   ProductosConsumibles.hasMany(models.MovimientosConsumibles, {
     foreignKey: 'IdProductoConsumible',

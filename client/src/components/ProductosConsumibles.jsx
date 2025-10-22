@@ -3,15 +3,15 @@ import {
   Edit,
   Trash2,
   Plus,
-  Minus, // AGREGAR ESTA IMPORTACIÓN
+  Minus,
   X,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
 import { FileText, Download } from "lucide-react";
 import { useProductosConsumibles } from "../hooks/useProductosConsumibles";
-import { useMovimientosConsumibles } from "../hooks/useMovimientosConsumibles"; // IMPORTAR EL HOOK
-import ModalMovimiento from "../components/ModalMovimiento"; // IMPORTAR EL MODAL
+import { useMovimientosConsumibles } from "../hooks/useMovimientosConsumibles";
+import ModalMovimiento from "../components/ModalMovimiento";
 
 const ProductosConsumibles = () => {
   const {
@@ -30,6 +30,7 @@ const ProductosConsumibles = () => {
     paginate,
     itemsPerPage,
     requestSort,
+    sortConfig,
     sortedProductos,
     currentProductos,
     indexOfFirstItem,
@@ -132,6 +133,8 @@ const ProductosConsumibles = () => {
                 setNewProducto({
                   Nombre: "",
                   CantidadDisponible: "",
+                  UnidadMedida: "unidad",
+                  ValorMedida: ""
                 });
                 setShowModal(true);
               }}
@@ -147,21 +150,22 @@ const ProductosConsumibles = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                {["ID", "Nombre", "Cantidad", "Acciones"].map(
+                {["ID", "Nombre", "Medida", "Cantidad", "Acciones"].map(
                   (header, index) => (
                     <th
                       key={index}
                       onClick={() => {
-                        if (index < 3) {
+                        if (index < 4) {
                           const keys = [
                             "IdProductosConsumibles",
                             "Nombre",
+                            "UnidadMedida",
                             "CantidadDisponible",
                           ];
                           requestSort(keys[index]);
                         }
                       }}
-                      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 3 ? "cursor-pointer hover:bg-gray-100" : ""
+                      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 4 ? "cursor-pointer hover:bg-gray-100" : ""
                         }`}
                     >
                       {header}
@@ -182,9 +186,20 @@ const ProductosConsumibles = () => {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                       {producto.Nombre}
+                      {producto.UnidadMedida === 'gramaje' && producto.ValorMedida && (
+                        <span className="text-xs text-gray-500 ml-2">
+                          ({producto.ValorMedida})
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {producto.CantidadDisponible}
+                      {producto.UnidadMedida === 'unidad' ? 'Unidades' : 'Gramaje'}
+                      {producto.UnidadMedida === 'gramaje' && producto.ValorMedida && (
+                        <div className="text-xs text-gray-500">{producto.ValorMedida}</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                      {producto.CantidadDisponible} {producto.UnidadMedida === 'unidad' ? 'unidades' : 'unidades'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
@@ -231,7 +246,7 @@ const ProductosConsumibles = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="4"
+                    colSpan="5"
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     No se encontraron productos consumibles
@@ -249,11 +264,6 @@ const ProductosConsumibles = () => {
               Mostrando {isNaN(indexOfFirstItem) ? 0 : indexOfFirstItem + 1} a{" "}
               {isNaN(indexOfLastItem) ? 0 : Math.min(indexOfLastItem, sortedProductos.length)} de{" "}
               {sortedProductos.length} productos
-              {/* Debug temporal */}
-              <div style={{ display: 'none' }}>
-                Debug: indexOfFirstItem={indexOfFirstItem}, indexOfLastItem={indexOfLastItem},
-                sortedProductos.length={sortedProductos.length}, currentPage={currentPage}
-              </div>
             </div>
             <div className="flex space-x-1">
               <button
@@ -318,6 +328,7 @@ const ProductosConsumibles = () => {
                     })
                   }
                   className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Ej: Colbón, Cartulinas, Cinta"
                 />
               </div>
               <div>
@@ -325,7 +336,8 @@ const ProductosConsumibles = () => {
                   Cantidad Disponible
                 </label>
                 <input
-                  type="text"
+                  type="number"
+                  min="0"
                   value={newProducto.CantidadDisponible}
                   onChange={(e) =>
                     setNewProducto({
@@ -334,8 +346,51 @@ const ProductosConsumibles = () => {
                     })
                   }
                   className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Cantidad inicial"
                 />
               </div>
+
+              {/* NUEVO: Unidad de Medida */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Unidad de Medida
+                </label>
+                <select
+                  value={newProducto.UnidadMedida}
+                  onChange={(e) =>
+                    setNewProducto({
+                      ...newProducto,
+                      UnidadMedida: e.target.value,
+                      ValorMedida: e.target.value === 'unidad' ? '' : newProducto.ValorMedida
+                    })
+                  }
+                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="unidad">Por Unidad</option>
+                  <option value="gramaje">Por Gramaje/Peso</option>
+                </select>
+              </div>
+
+              {/* NUEVO: Campo para valor de medida (solo visible si es gramaje) */}
+              {newProducto.UnidadMedida === 'gramaje' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Peso/Medida
+                  </label>
+                  <input
+                    type="text"
+                    value={newProducto.ValorMedida}
+                    onChange={(e) =>
+                      setNewProducto({
+                        ...newProducto,
+                        ValorMedida: e.target.value,
+                      })
+                    }
+                    placeholder="Ej: 250g, 1kg, 500ml"
+                    className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">

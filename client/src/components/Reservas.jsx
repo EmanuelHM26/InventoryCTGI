@@ -15,87 +15,88 @@ import { useReservas } from "../hooks/useReservas";
 
 const Reservas = () => {
   const {
-    usuarios,
-    activeTab,
-    showModal,
-    setShowModal,
-    newReserva,
-    setNewReserva,
-    currentPage,
-    searchTerm,
-    setSearchTerm,
-    barcodeMode,
-    setBarcodeMode,
-    scannedEquipment,
-    setScannedEquipment,
-    showBarcodeInstructions,
-    setShowBarcodeInstructions,
-    handleCreateReserva,
-    handleEditReserva,
-    handleDeleteReserva,
-    handleCheckReservaFija,
-    formatDate,
-    requestSort,
-    sortedReservas,
-    indexOfFirstItem,
-    indexOfLastItem,
-    currentReservas,
-    totalPages,
-    paginate,
-    handleTabChange,
-    handleBarcodeScan,
-    getTableHeaders,
-    exportToPDF,
-    exportToExcel,
-    inputErrors,
-    setInputErrors,
-    //equiposTecnologicos,
-    showEquiposModal,
-    setShowEquiposModal,
-    selectedReservaEquipos,
-    handleShowEquipos,
+  usuarios,
+  activeTab,
+  showModal,
+  setShowModal,
+  newReserva,
+  setNewReserva,
+  currentPage,
+  searchTerm,
+  setSearchTerm,
+  barcodeMode,
+  setBarcodeMode,
+  scannedEquipment,
+  setScannedEquipment,
+  showBarcodeInstructions,
+  setShowBarcodeInstructions,
+  inputErrors,
+  setInputErrors,
+  handleCreateReserva,
+  handleEditReserva,
+  handleDeleteReserva,
+  handleCheckReservaFija,
+  handleBarcodeScan,
+  getTableHeaders,
+  exportToPDF,
+  exportToExcel,
+  formatDate,
+  requestSort,
+  sortedReservas,
+  indexOfFirstItem,
+  indexOfLastItem,
+  currentReservas,
+  totalPages,
+  paginate,
+  handleTabChange,
+  showEquiposModal,
+  setShowEquiposModal,
+  selectedReservaEquipos,
+  handleShowEquipos,
+  ambientes,
   } = useReservas();
 
-  // Función para obtener la fecha mínima (hoy)
-  const getTodayDate = () => {
-    const today = new Date();
-    // Ajustar la hora para evitar problemas de zona horaria
-    return today.toISOString().split("T")[0];
+  const validateField = (field, value) => {
+    const trimmed = value?.toString().trim();
+    switch (field) {
+      case "nombrePrograma":
+        if (!trimmed) return "El nombre del programa es requerido";
+  if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'-]+$/.test(value)) return "Solo letras y espacios";
+        if (value.trim() === "") return "No puede contener solo espacios";
+        break;
+      case "ficha":
+        if (!value) return "La ficha es requerida";
+        if (!/^[0-9]+$/.test(value)) return "Solo se permiten números";
+        break;
+      case "materialReservado":
+        if (!trimmed) return "El material es requerido";
+        if (/^\s/.test(value)) return "No puede comenzar con espacio";
+  if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü0-9,\s'"-]+$/.test(value)) return "Solo letras, números y comas";
+        break;
+      case "IdUsuario":
+        if (!value) return "Debe seleccionar un usuario";
+        break;
+      case "fecha": {
+        if (!value) return "La fecha es requerida";
+        const fechaSeleccionada = new Date(value);
+        const fechaHoy = new Date();
+        fechaHoy.setHours(0, 0, 0, 0);
+        if (fechaSeleccionada < fechaHoy) return "No se pueden seleccionar fechas pasadas";
+        break;
+      }
+      default:
+        return "";
+    }
+    return "";
   };
 
-  const validateField = (field, value) => {
-    // Eliminar espacios al inicio para validaciones que lo requieran
-  const trimmed = value.trimStart();
-  switch (field) {
-    case "nombrePrograma":
-      if (!trimmed) return "El nombre del programa es requerido";
-      if (/^\s/.test(value)) return "No puede comenzar con espacio";
-      if (!/^[A-Za-z ]+$/.test(value)) return "Solo letras y espacios";
-      break;
-    case "ficha":
-      if (!value) return "La ficha es requerida";
-      if (!/^[0-9]+$/.test(value)) return "Solo se permiten números";
-      break;
-    case "materialReservado":
-      if (!trimmed) return "El material es requerido";
-      if (/^\s/.test(value)) return "No puede comenzar con espacio";
-      if (!/^[A-Za-z0-9, ]+$/.test(value)) return "Solo letras, números y comas";
-      break;
-    case "IdUsuario":
-      if (!value) return "Debe seleccionar un usuario";
-      break;
-    case "fecha":{
-      if (!value) return "La fecha es requerida";
-      const fechaSeleccionada = new Date(value);
-      const fechaHoy = new Date();
-      fechaHoy.setHours(0, 0, 0, 0);
-      if (fechaSeleccionada < fechaHoy) return "No se pueden seleccionar fechas pasadas";
-      break;}
-    default:
-      return "";
-  }
-  return "";
-};
+  const getTodayDate = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
   
 //función para limpiar equipos escaneados:
 const removeScannedEquipment = (codeToRemove) => {
@@ -120,6 +121,25 @@ const removeScannedEquipment = (codeToRemove) => {
     if (activeTab === "fijas") {
       return (
         <>
+          {/* AGREGAR BOTONES DE ESCANEO AL INICIO */}
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <button
+              type="button"
+              onClick={() => {
+                setBarcodeMode("equipment");
+                setShowBarcodeInstructions(true);
+                setTimeout(() => setShowBarcodeInstructions(false), 2000);
+              }}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Escanear Material
+            </button>
+            {showBarcodeInstructions && (
+              <p className="text-xs mt-2 text-green-600 animate-pulse">
+                Escanee los códigos de los materiales...
+              </p>
+            )}
+          </div>
           {/* Nombre del Programa */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -201,6 +221,43 @@ const removeScannedEquipment = (codeToRemove) => {
               </span>
             )}
           </div>
+
+          {/* AGREGAR LISTA DE MATERIALES ESCANEADOS */}
+          {scannedEquipment.length > 0 && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h4 className="font-semibold text-green-900 mb-2">
+                Materiales Escaneados
+              </h4>
+              <div className="space-y-2">
+                {scannedEquipment.map((equipment, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center bg-white p-2 rounded border"
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-sm font-mono font-semibold">{equipment.code}</span>
+                      <span className="text-xs text-gray-500">
+                        {equipment.equipo?.Nombre || 'Sin nombre'} - {equipment.equipo?.Marca || 'Sin marca'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">
+                        x{equipment.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeScannedEquipment(equipment.code)}
+                        className="text-red-500 hover:text-red-700 transition-colors"
+                        title="Eliminar equipo"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       );
     } else {
@@ -307,6 +364,37 @@ const removeScannedEquipment = (codeToRemove) => {
             />
             {inputErrors.ficha && (
               <span className="text-red-500 text-xs">{inputErrors.ficha}</span>
+            )}
+          </div>
+
+          {/* Ambiente */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Ambiente
+            </label>
+            <select
+              value={newReserva.IdAmbiente || ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                setNewReserva({ ...newReserva, IdAmbiente: value });
+                setInputErrors((prev) => ({
+                  ...prev,
+                  IdAmbiente: !value ? "Debe seleccionar un ambiente" : "",
+                }));
+              }}
+              className={`border p-2 rounded-lg w-full ${
+                inputErrors.IdAmbiente ? "border-red-500" : "border-gray-300"
+              }`}
+            >
+              <option value="">Seleccione un ambiente</option>
+              {ambientes.map((ambiente) => (
+                <option key={ambiente.idAmbiente} value={ambiente.idAmbiente}>
+                  {ambiente.nombre}
+                </option>
+              ))}
+            </select>
+            {inputErrors.IdAmbiente && (
+              <span className="text-red-500 text-xs">{inputErrors.IdAmbiente}</span>
             )}
           </div>
 
@@ -605,14 +693,20 @@ const removeScannedEquipment = (codeToRemove) => {
                           {reserva.idReservaDiaria}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {reserva.Usuario?.Usuario || "N/A"}
+                          {reserva.Usuario 
+                            ? `${reserva.Usuario.Nombre} ${reserva.Usuario.Apellido}` 
+                            : "N/A"}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          {reserva.Usuario?.NumeroDocumento || "N/A"}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           {reserva.ficha}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {reserva.materialReservado}
+                          {reserva.Ambiente?.nombre || "N/A"}
                         </td>
+                        {/* materialReservado moved to actions button */}
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           {formatDate(reserva.fecha)}
                         </td>
@@ -634,11 +728,10 @@ const removeScannedEquipment = (codeToRemove) => {
                             >
                               <Trash2 size={16} />
                             </button>
-                            {/* Botón Ver Equipos */}
                             <button
                               onClick={() => handleShowEquipos(reserva)}
                               className="p-1 rounded-full bg-green-100 hover:bg-green-200 text-green-600 transition-colors duration-200"
-                              title="Ver equipos tecnológicos"
+                              title="Ver material reservado"
                             >
                               <Eye size={16} />
                             </button>
@@ -802,7 +895,17 @@ const removeScannedEquipment = (codeToRemove) => {
                   </div>
                 ))
               ) : (
-                <div className="text-gray-500 text-center">No hay equipos asignados a esta reserva.</div>
+                selectedReservaEquipos.materialReservado ? (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedReservaEquipos.materialReservado.split(',').map((m, i) => (
+                      <span key={i} className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm">
+                        {m.trim()}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 text-center">No hay equipos asignados a esta reserva.</div>
+                )
               )}
             </div>
           </div>

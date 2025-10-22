@@ -4,6 +4,8 @@ import Swal from "sweetalert2";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+export { useMovimientosConsumibles } from '../hooks/useMovimientosConsumibles';
+
 
 export const useProductosConsumibles = () => {
   const [productos, setProductos] = useState([]);
@@ -11,6 +13,8 @@ export const useProductosConsumibles = () => {
   const [newProducto, setNewProducto] = useState({
     Nombre: "",
     CantidadDisponible: "",
+    UnidadMedida: "",
+    ValorMedida: "",
   });
 
   // Estados para búsqueda, paginación y ordenación
@@ -336,3 +340,4 @@ export const useProductosConsumibles = () => {
     indexOfLastItem
   };
 };
+

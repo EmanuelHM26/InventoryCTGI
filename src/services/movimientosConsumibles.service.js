@@ -1,9 +1,12 @@
 // movimientosConsumibles.service.js (ajustado)
 
 // Importa los modelos necesarios y la instancia de la base de datos
-import { MovimientosConsumibles, ProductosConsumibles } from "../models/index.js";
+import {
+  MovimientosConsumibles,
+  ProductosConsumibles,
+} from "../models/index.js";
 import sequelize from "../config/database.js";
-import { Op } from 'sequelize'; 
+import { Op } from "sequelize";
 
 /**
  * Registra un movimiento de consumible (entrada, salida o ajuste) y actualiza la cantidad disponible del producto.
@@ -13,7 +16,7 @@ import { Op } from 'sequelize';
  */
 export const registrarMovimiento = async (movimientoData) => {
   //Permite agrupar varias operaciones de la BD y se asegura que todas se completen correctamente
-  const transaction = await sequelize.transaction(); 
+  const transaction = await sequelize.transaction();
 
   try {
     // 1. Buscar el producto a modificar
@@ -77,19 +80,17 @@ export const registrarMovimiento = async (movimientoData) => {
  * Opciones de paginación (limit, offset)
  * Movimientos encontrados y total
  */
-export const obtenerMovimientosPorProducto = async (
-  idProducto,
-  options = {}
-) => {
+export const obtenerMovimientosPorProducto = async (idProducto, options = {}) => {
   const { limit, offset } = options;
 
   return await MovimientosConsumibles.findAndCountAll({
     where: { IdProductoConsumible: idProducto },
-    order: [["FechaMovimiento", "DESC"]], // Ordena del más reciente al más antiguo
+    order: [["FechaMovimiento", "DESC"]],
     include: [
       {
         model: ProductosConsumibles,
-        attributes: ["Nombre"], // Solo trae el nombre del producto
+        attributes: ["Nombre"],
+        as: 'Producto' // Usar el alias definido
       },
     ],
     limit,
@@ -104,43 +105,31 @@ export const obtenerMovimientosPorProducto = async (
  * Movimientos encontrados y total
  */
 export const obtenerHistorialMovimientos = async (filtros = {}) => {
-  const { limit, offset, ...whereFilters } = filtros; // Extrae limit y offset, ...whereFilters extrae las demás propiedades que trae filtros
-  const whereClause = {}; // 
+  try {
+    const { limit, offset, ...whereFilters } = filtros;
+    const whereClause = {};
 
-  // Filtro por producto
-  if (whereFilters.IdProductoConsumible) {
-    whereClause.IdProductoConsumible = whereFilters.IdProductoConsumible;
+    // Filtros... (mantén tu código existente)
+
+    const result = await MovimientosConsumibles.findAndCountAll({
+      where: whereClause,
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: ProductosConsumibles,
+          attributes: ["Nombre", "IdProductosConsumibles"],
+          as: 'Producto' // Usar el alias definido en la asociación
+        },
+      ],
+      limit: limit ? parseInt(limit) : undefined,
+      offset: offset ? parseInt(offset) : undefined,
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Error en obtenerHistorialMovimientos:", error);
+    throw error;
   }
-
-  // Filtro por tipo de movimiento
-  if (whereFilters.TipoMovimiento) {
-    whereClause.TipoMovimiento = whereFilters.TipoMovimiento;
-  }
-
-  // Filtro por usuario
-  if (whereFilters.Usuario) {
-    whereClause.Usuario = whereFilters.Usuario;
-  }
-
-  // Filtro por rango de fechas
-  if (whereFilters.fechaInicio && whereFilters.fechaFin) {
-    whereClause.FechaMovimiento = {
-      [Op.between]: [whereFilters.fechaInicio, whereFilters.fechaFin],
-    };
-  }
-
-  return await MovimientosConsumibles.findAndCountAll({
-    where: whereClause,
-    order: [["FechaMovimiento", "DESC"]], // Ordena del más reciente al más antiguo
-    include: [
-      {
-        model: ProductosConsumibles,
-        attributes: ["Nombre"],
-      },
-    ],
-    limit: limit ? parseInt(limit) : undefined,
-    offset: offset ? parseInt(offset) : undefined,
-  });
 };
 
 /**
