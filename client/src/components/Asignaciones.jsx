@@ -8,7 +8,8 @@ import { Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, X, Check, Eye } 
 
 const Asignaciones = () => {
  const {
-    usuarios, showModal, showNovedadModal, selectedNovedad,
+    usuarios, showModal, showNovedadModal, selectedNovedad, showAmbientesPanel, ambienteSearchTerm, 
+    filteredAmbientes,
     showDetailsModal, selectedAsignacion, formTouched, newAsignacion,
     currentPage, searchTerm, barcodeMode, scannedEquipment,
     showBarcodeInstructions, currentAsignaciones, sortedAsignaciones,
@@ -16,6 +17,8 @@ const Asignaciones = () => {
     setSearchTerm, setShowModal, setShowNovedadModal,
     setShowDetailsModal, setFormTouched, setNewAsignacion,
     setBarcodeMode, setScannedEquipment, setShowBarcodeInstructions,
+    setShowAmbientesPanel, 
+    setAmbienteSearchTerm, handleSelectAmbiente,
     handleBarcodeScan, handleUsuarioChange, handleCreateAsignacion,
     handleEditAsignacion, handleDeleteAsignacion, handleConfirmarDevolucion,
     handleShowDetails, paginate, handleRemoveScannedEquipment,
@@ -80,6 +83,8 @@ const Asignaciones = () => {
                   FechaAsignacion: getTodayLocal(),
                   HoraAsignacion: "",
                   Observacion: "",
+                  Ambiente: "", 
+                  CodigoAmbiente: "",
                   FechaDevolucion: null,
                   HoraDevolucion: null,
                   Novedad: "",
@@ -439,7 +444,7 @@ const Asignaciones = () => {
                 )}
               </div>
 
-              <div>
+             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Observación
                 </label>
@@ -521,6 +526,67 @@ const Asignaciones = () => {
                 )}
               </div>
             </div>
+
+            <div className="md:col-span-2"> {/* Ocupa 2 columnas en pantallas medianas */}
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Ambiente
+  </label>
+  <div className="flex flex-col sm:flex-row gap-3">
+    {/* Input de ambiente (más largo) */}
+    <div className="flex-1">
+      <input
+        type="text"
+        value={newAsignacion.Ambiente ? 
+          `${newAsignacion.Ambiente} (Código: ${newAsignacion.CodigoAmbiente})` : 
+          "No seleccionado"
+        }
+        readOnly
+        className="border p-3 rounded-lg w-full bg-gray-50 text-gray-700 focus:outline-none border-gray-300 h-full"
+        placeholder="No se ha seleccionado un ambiente"
+      />
+    </div>
+    
+    {/* Botón de selección */}
+    <button
+      type="button"
+      onClick={() => setShowAmbientesPanel(true)}
+      className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 whitespace-nowrap flex items-center justify-center gap-2 font-medium shadow-sm hover:shadow-md"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+        />
+      </svg>
+      Seleccionar Ambiente
+    </button>
+  </div>
+  
+  {/* Información adicional del ambiente seleccionado */}
+  {newAsignacion.Ambiente && (
+    <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+      <div className="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+        <span className="text-sm text-green-700 font-medium">
+          Ambiente seleccionado: <strong>{newAsignacion.Ambiente}</strong>
+          {newAsignacion.CodigoAmbiente && (
+            <span className="ml-2 text-green-600">(Código: {newAsignacion.CodigoAmbiente})</span>
+          )}
+        </span>
+      </div>
+    </div>
+  )}
+</div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -860,6 +926,74 @@ const Asignaciones = () => {
                   </div>
                 </div>
               )}
+
+              {/* Solo Ambiente en Información Adicional */}
+<div className="bg-gray-100 rounded-xl p-6 mb-8 shadow-lg border border-gray-200">
+  <h4 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+    <div className="w-3 h-3 bg-green-600 rounded-full mr-3"></div>
+    Información Adicional
+  </h4>
+  
+  <div className="grid grid-cols-1 gap-6">
+    {/* Solo Ambiente */}
+    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+      <label className="block text-sm font-medium text-gray-600 mb-3 flex items-center">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5 mr-2 text-indigo-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+          />
+        </svg>
+        Ambiente
+      </label>
+      <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+        <p className="text-gray-900 font-bold text-lg">
+          {(() => {
+            // Primero verificar si hay campos separados de ambiente
+            if (selectedAsignacion.Ambiente) {
+              return (
+                <>
+                  <span className="block mb-2">{selectedAsignacion.Ambiente}</span>
+                  {selectedAsignacion.CodigoAmbiente && (
+                    <span className="text-sm font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">
+                      Código: {selectedAsignacion.CodigoAmbiente}
+                    </span>
+                  )}
+                </>
+              );
+            }
+            
+            // Si no, intentar extraer de la observación (compatibilidad con registros antiguos)
+            const observacion = selectedAsignacion.Observacion || "";
+            const ambienteMatch = observacion.match(/Asignado en (.+?) \(Código: (\d+)\)/);
+            
+            if (ambienteMatch) {
+              return (
+                <>
+                  <span className="block mb-2">{ambienteMatch[1]}</span>
+                  <span className="text-sm font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">
+                    Código: {ambienteMatch[2]}
+                  </span>
+                </>
+              );
+            }
+            
+            return <span className="text-gray-400 italic">No especificado</span>;
+          })()}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+              
             </div>
 
             {/* Footer con gradiente gris elegante (igual que el header) */}
@@ -877,12 +1011,131 @@ const Asignaciones = () => {
         </div>
       )}
 
+      {/* Panel lateral de selección de ambientes */}
+      {showAmbientesPanel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-end z-50">
+          <div className="bg-white w-full max-w-md h-full overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-6 z-10">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-2xl font-bold">Seleccionar Ambiente</h3>
+                <button
+                  onClick={() => {
+                    setShowAmbientesPanel(false);
+                    setAmbienteSearchTerm("");
+                  }}
+                  className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all duration-200"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Buscar por código o nombre..."
+                  value={ambienteSearchTerm}
+                  onChange={(e) => setAmbienteSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border-2 border-white bg-white bg-opacity-20 backdrop-blur-sm text-white placeholder-white placeholder-opacity-70 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+                />
+                <Search
+                  size={20}
+                  className="absolute left-3 top-3.5 text-white opacity-70"
+                />
+                {ambienteSearchTerm && (
+                  <button
+                    onClick={() => setAmbienteSearchTerm("")}
+                    className="absolute right-3 top-3.5 text-white hover:text-gray-200"
+                  >
+                    <X size={20} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {filteredAmbientes.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <div className="mb-4">
+                    <Search size={48} className="mx-auto text-gray-300" />
+                  </div>
+                  <p className="text-lg">No se encontraron ambientes</p>
+                </div>
+              ) : (
+                filteredAmbientes.map((ambiente) => (
+                  <div
+                    key={ambiente.idAmbiente || ambiente.id}
+                    className="bg-white border-2 border-gray-200 rounded-xl p-5 hover:border-indigo-500 hover:shadow-lg transition-all duration-200 cursor-pointer group"
+                    onClick={() => handleSelectAmbiente(ambiente)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="bg-indigo-100 text-indigo-600 rounded-lg p-2 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-200">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-6 w-6"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                              />
+                            </svg>
+                          </div>
+                          <div>
+                            <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                              Código: {ambiente.codigo}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <h4 className="text-lg font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-200">
+                          {ambiente.nombre}
+                        </h4>
+                        
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                            ambiente.estado === 'Disponible' 
+                              ? 'bg-green-100 text-green-800 border border-green-200' 
+                              : 'bg-blue-100 text-blue-800 border border-blue-200'
+                          }`}>
+                            {ambiente.estado || 'Disponible'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectAmbiente(ambiente);
+                        }}
+                        className="ml-4 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-semibold shadow-md hover:shadow-lg"
+                      >
+                        Seleccionar
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      
+
       {/* Componente lector de códigos de barras */}
       <BarcodeReader
         onScan={handleBarcodeScan}
         isActive={showModal} // Solo activo cuando el modal está abierto
       />
     </div>
+
+    
   );
 };
 

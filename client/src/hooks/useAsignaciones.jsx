@@ -9,6 +9,9 @@ export const useAsignaciones = () => {
   const [asignaciones, setAsignaciones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [ambientes, setAmbientes] = useState([]);
+  const [showAmbientesPanel, setShowAmbientesPanel] = useState(false);
+  const [ambienteSearchTerm, setAmbienteSearchTerm] = useState("");
   const [showNovedadModal, setShowNovedadModal] = useState(false);
   const [selectedNovedad, setSelectedNovedad] = useState("");
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -22,6 +25,8 @@ export const useAsignaciones = () => {
     FechaAsignacion: "",
     HoraAsignacion: "",
     Observacion: "",
+    Ambiente: "", 
+    CodigoAmbiente: "",
     FechaDevolucion: null,
     HoraDevolucion: null,
     Novedad: "",
@@ -46,6 +51,7 @@ export const useAsignaciones = () => {
   useEffect(() => {
     fetchAsignaciones();
     fetchUsuarios();
+    fetchAmbientes();
   }, []);
 
   const fetchAsignaciones = async () => {
@@ -83,6 +89,48 @@ export const useAsignaciones = () => {
       });
     }
   };
+
+  // Función para obtener los ambientes
+  const fetchAmbientes = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/ambientes", {
+        withCredentials: true,
+      });
+      setAmbientes(response.data);
+    } catch (error) {
+      console.error("Error al obtener ambientes:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudieron cargar los ambientes",
+        showConfirmButton: true,
+      });
+    }
+  };
+
+   // Función para seleccionar un ambiente
+  const handleSelectAmbiente = (ambiente) => {
+    setNewAsignacion({
+      ...newAsignacion,
+      Ambiente: ambiente.nombre,
+      CodigoAmbiente: ambiente.codigo
+    });
+    setShowAmbientesPanel(false);
+    
+    Swal.fire({
+      icon: "success",
+      title: "Ambiente seleccionado",
+      text: `${ambiente.nombre}`,
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  };
+
+  // Filtrar ambientes por búsqueda
+  const filteredAmbientes = ambientes.filter(amb => 
+    amb.nombre?.toLowerCase().includes(ambienteSearchTerm.toLowerCase()) ||
+    amb.codigo?.toString().includes(ambienteSearchTerm)
+  );
 
   // Función para manejar códigos de barras escaneados
   const handleBarcodeScan = async (scannedCode) => {
@@ -321,6 +369,8 @@ export const useAsignaciones = () => {
         FechaAsignacion: "",
         HoraAsignacion: "",
         Observacion: "",
+        Ambiente: "", 
+        CodigoAmbiente: "",
         FechaDevolucion: null,
         HoraDevolucion: null,
         Novedad: "",
@@ -748,14 +798,18 @@ export const useAsignaciones = () => {
     asignaciones,
     usuarios,
     showModal,
+    ambientes,
     showNovedadModal,
     selectedNovedad,
     showDetailsModal,
+    showAmbientesPanel,
     selectedAsignacion,
     formTouched,
     newAsignacion,
     currentPage,
     searchTerm,
+    ambienteSearchTerm,
+    filteredAmbientes,
     sortConfig,
     barcodeMode,
     scannedEquipment,
@@ -771,7 +825,9 @@ export const useAsignaciones = () => {
     setShowNovedadModal,
     setSelectedNovedad,
     setShowDetailsModal,
+    setShowAmbientesPanel,
     setSelectedAsignacion,
+    setAmbienteSearchTerm,
     setFormTouched,
     setNewAsignacion,
     setBarcodeMode,
@@ -785,6 +841,7 @@ export const useAsignaciones = () => {
     handleConfirmarDevolucion,
     handleShowNovedad,
     handleShowDetails,
+    handleSelectAmbiente,
     requestSort,
     paginate,
     exportToPDF,
