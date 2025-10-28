@@ -126,6 +126,7 @@ export const useReservas = () => {
 
   const handleCreateReserva = async () => {
     try {
+      console.log("handleCreateReserva called", { activeTab, newReserva, scannedEquipment });
       // Limpiar errores previos
       setInputErrors({});
       let errors = {};
@@ -145,11 +146,11 @@ export const useReservas = () => {
             "Solo se permiten letras (A-Z, a-z) sin espacios ni caracteres especiales";
         }
 
-        // Validar ficha
-        if (!newReserva.ficha?.trim()) {
-          errors.ficha = "La ficha es requerida";
-        } else if (!fichaRegex.test(newReserva.ficha.trim())) {
-          errors.ficha = "Solo se permiten números";
+        // La ficha para reservas diarias es opcional en la UI — si se provee, validar formato
+        if (newReserva.ficha && newReserva.ficha.trim() !== "") {
+          if (!fichaRegex.test(newReserva.ficha.trim())) {
+            errors.ficha = "Solo se permiten números";
+          }
         }
 
         // Validar material reservado (permitir letras acentuadas, números, espacios, comas, apóstrofos y guiones)
@@ -166,6 +167,17 @@ export const useReservas = () => {
         // Si hay errores, mostrarlos y no continuar
         if (Object.keys(errors).length > 0) {
           setInputErrors(errors);
+          // Mostrar un resumen visible al usuario para evitar que parezca que no hace nada
+          const listHtml = Object.values(errors)
+            .filter(Boolean)
+            .map((m) => `<li>${m}</li>`)
+            .join("");
+          Swal.fire({
+            icon: "error",
+            title: "Errores en el formulario",
+            html: `<ul style='text-align:left'>${listHtml}</ul>`,
+            confirmButtonColor: "#3085d6",
+          });
           return;
         }
 
@@ -202,11 +214,11 @@ export const useReservas = () => {
           errors.IdAmbiente = "Debe seleccionar un ambiente";
         }
 
-        // Validar ficha
-        if (!newReserva.ficha?.trim()) {
-          errors.ficha = "La ficha es requerida";
-        } else if (!fichaRegex.test(newReserva.ficha.trim())) {
-          errors.ficha = "Solo se permiten números";
+        // La ficha para reservas diarias es opcional — si se provee, validar formato
+        if (newReserva.ficha && newReserva.ficha.trim() !== "") {
+          if (!fichaRegex.test(newReserva.ficha.trim())) {
+            errors.ficha = "Solo se permiten números";
+          }
         }
 
         // Validar material reservado (debe haber al menos un equipo escaneado)
@@ -230,6 +242,16 @@ export const useReservas = () => {
         // Si hay errores, mostrarlos y no continuar
         if (Object.keys(errors).length > 0) {
           setInputErrors(errors);
+          const listHtml = Object.values(errors)
+            .filter(Boolean)
+            .map((m) => `<li>${m}</li>`)
+            .join("");
+          Swal.fire({
+            icon: "error",
+            title: "Errores en el formulario",
+            html: `<ul style='text-align:left'>${listHtml}</ul>`,
+            confirmButtonColor: "#3085d6",
+          });
           return;
         }
 
@@ -252,11 +274,14 @@ export const useReservas = () => {
         const reservaData = {
           IdUsuario: newReserva.IdUsuario,
           IdAmbiente: newReserva.IdAmbiente, // incluir ambiente seleccionado
-          ficha: newReserva.ficha.trim(),
           materialReservado: newReserva.materialReservado || scannedEquipment.map(eq => eq.code).join(', '),
           fecha: fechaFormateada,
           equiposEscaneados: equiposParaEnviar, // Enviar los equipos con sus IDs
         };
+        // Incluir ficha solo si se proporcionó
+        if (newReserva.ficha && newReserva.ficha.trim() !== "") {
+          reservaData.ficha = newReserva.ficha.trim();
+        }
 
         if (newReserva.idReservaDiaria) {
           await axios.put(
@@ -613,23 +638,23 @@ const handleScan = useCallback((codigo) => {
     }
   } else if (barcodeMode === "equipment") {
     const equipoEncontrado = equiposTecnologicos.find(
-      (equipo) => equipo.Codigo === scannedCode
+      (equipo) => String(equipo.Codigo).trim() === String(scannedCode).trim()
     );
 
     if (equipoEncontrado) {
       const existingEquipment = scannedEquipment.find(
-        (eq) => eq.code === scannedCode
+        (eq) => String(eq.code).trim() === String(scannedCode).trim()
       );
       let nuevosEquipos;
       if (existingEquipment) {
         nuevosEquipos = scannedEquipment.map((eq) =>
-          eq.code === scannedCode ? { ...eq, quantity: eq.quantity + 1 } : eq
+          String(eq.code).trim() === String(scannedCode).trim() ? { ...eq, quantity: eq.quantity + 1 } : eq
         );
       } else {
         nuevosEquipos = [
           ...scannedEquipment,
           { 
-            code: scannedCode, 
+            code: scannedCode.trim(), 
             quantity: 1,
             equipo: equipoEncontrado
           },
@@ -658,7 +683,6 @@ const handleScan = useCallback((codigo) => {
         "ID",
         "Nombre Programa",
         "Ficha",
-        "Material Reservado",
         "Estado",
         "Acciones",
       ];
@@ -667,7 +691,6 @@ const handleScan = useCallback((codigo) => {
         "ID",
           "Nombre",
           "Número de documento",
-          "Ficha",
           "Ambiente",
           "Fecha",
           "Acciones",
@@ -857,8 +880,24 @@ const handleScan = useCallback((codigo) => {
     }
   };
 
-  const handleShowEquipos = (reserva) => {
-    setSelectedReservaEquipos(reserva);
+  const handleShowEquipos = async (reserva) => {
+    // Conseguir la información detallada de cada equipo
+    let equiposInfo = [];
+    if (reserva.materialReservado) {
+      const codigoEquipos = reserva.materialReservado.split(',').map(c => c.trim());
+      equiposInfo = equiposTecnologicos.filter(eq => codigoEquipos.includes(eq.Codigo));
+    }
+
+    // Determinar si es una reserva fija o diaria para el ID correcto
+    const reservaConInfo = {
+      ...reserva,
+      equiposInfo,
+      // Si tiene idReservaFija es una reserva fija, si no, usa idReservaDiaria
+      id: reserva.idReservaFija || reserva.idReservaDiaria,
+      tipo: reserva.idReservaFija ? 'fija' : 'diaria'
+    };
+
+    setSelectedReservaEquipos(reservaConInfo);
     setShowEquiposModal(true);
   };
 

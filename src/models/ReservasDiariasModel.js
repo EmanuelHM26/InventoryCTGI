@@ -29,7 +29,7 @@ const ReservasDiarias = sequelize.define("ReservasDiarias", {
   },
   ficha: {
     type: DataTypes.STRING(50),
-    allowNull: false,
+    allowNull: true,
   },
   materialReservado: {
     type: DataTypes.STRING(100),
