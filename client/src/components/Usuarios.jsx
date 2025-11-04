@@ -462,6 +462,31 @@ const Usuarios = () => {
                   </p>
                 )}
               </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Celular
+                </label>
+                <input
+                  type="tel"
+                  {...register("Celular", {
+                    required: "El celular es obligatorio",
+                    pattern: {
+                      value: /^\d{7,15}$/,
+                      message: "El celular debe tener entre 7 y 15 dígitos",
+                    },
+                  })}
+                  className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:border-transparent ${
+                    errors.Celular
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
+                />
+                {errors.Celular && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.Celular.message}
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
