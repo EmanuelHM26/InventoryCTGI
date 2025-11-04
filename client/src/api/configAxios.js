@@ -4,21 +4,26 @@ import axios from "axios";
 const getApiConfig = () => {
   const isDocker = import.meta.env.VITE_IS_DOCKER === 'true';
   const apiUrl = import.meta.env.VITE_API_URL;
+  const mode = import.meta.env.MODE;
 
   console.log("🔧 Configuración de entorno:");
   console.log("   - VITE_API_URL:", apiUrl);
   console.log("   - VITE_IS_DOCKER:", isDocker);
-  console.log("   - Modo:", import.meta.env.MODE);
+  console.log("   - MODE:", mode);
 
-  // En Docker producción (rutas relativas)
-  if (isDocker && apiUrl === '/api') {
+  // ⚠️ IMPORTANTE: El navegador NUNCA puede resolver "http://backend:3000"
+  // Solo funciona dentro de la red Docker entre contenedores
+
+  // Producción con Nginx (rutas relativas con proxy)
+  if (mode === 'production' && apiUrl === '/api') {
     return {
-      baseURL: '', // Nginx manejará el proxy a /api
+      baseURL: '', // Nginx proxy: /api -> backend:3000
       withCredentials: true
     };
   }
 
-  // Desarrollo (Docker y local)
+  // Desarrollo (local o Docker)
+  // En Docker, el backend DEBE exponerse en localhost:3000
   return {
     baseURL: apiUrl || "http://localhost:3000",
     withCredentials: true
@@ -36,7 +41,7 @@ const configAxios = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials,
-  timeout: 30000, // Aumentado para producción
+  timeout: 30000,
 });
 
 // Interceptor para debug

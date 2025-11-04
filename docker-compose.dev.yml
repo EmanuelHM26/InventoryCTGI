@@ -15,7 +15,12 @@ services:
       - mariadb_data_dev:/var/lib/mysql
     networks:
       - inventoryctgi_network
-
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pRoot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
   # Backend (Node.js + Express)
   backend:
     build:
@@ -49,12 +54,14 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
+      args: 
+        ENV_FILE: .env.docker
     container_name: inventoryctgi_frontend_dev
     restart: unless-stopped
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: http://localhost:3000
+      VITE_API_URL: http://backend:3000
     depends_on:
       - backend
     volumes:
