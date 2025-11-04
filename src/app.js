@@ -14,7 +14,8 @@ import grupoRoutes from "./routes/grupo.routes.js";
 import reservasFijasRoutes from "./routes/reservasFijas.routes.js";
 import reservasDiariasRoutes from "./routes/reservasDiarias.routes.js";
 import contarEstadisticasInicioRoutes from "./routes/estadisticasInicio.routes.js";
-import movimientosConsumiblesRoutes from "./routes/movimientosConsumibles.routes.js"
+import movimientosConsumiblesRoutes from "./routes/movimientosConsumibles.routes.js";
+import ambientesRoutes from "./routes/ambientes.routes.js";
 
 import cookieParser from "cookie-parser";
 
@@ -84,6 +85,12 @@ app.use('/api', contarEstadisticasInicioRoutes);
 // Registrar las rutas de movimientos consumibles
 
 app.use('/api', movimientosConsumiblesRoutes);
+
+// Registrar las rutas de ambientes
+app.use("/ambientes", ambientesRoutes);
+
+// Cambia o añade esta línea para exponer la API con el prefijo /api
+app.use("/api/ambientes", ambientesRoutes);
 
 export default app;
 

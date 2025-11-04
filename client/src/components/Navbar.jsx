@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, NavLink } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import {
   FaHome,
@@ -9,6 +9,7 @@ import {
   FaChartLine,
   FaSignOutAlt,
   FaBars,
+  FaDoorOpen,
 } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 
@@ -37,6 +38,16 @@ const Navbar = ({ onToggleCollapse, isCollapsed }) => {
   // Roles visible solo para Admin
   const canSeeRoles = isAdmin;
 
+  // --- Añade UNA de las siguientes según lo que necesites ---
+  // Opción A: visible para todos
+  const canSeeAmbientes = true;
+
+  // Opción B: visible solo para Admin y Subdirector
+  // const canSeeAmbientes = isAdmin || isSubdirector;
+
+  // Opción C: misma regla que Roles
+  // const canSeeAmbientes = canSeeRoles;
+  
   // Función para determinar si un enlace está activo
   const isActiveLink = (path) => {
     return location.pathname === path;
@@ -261,6 +272,24 @@ const Navbar = ({ onToggleCollapse, isCollapsed }) => {
               {!isCollapsed && <span className="whitespace-nowrap transition-opacity duration-300">Usuarios Software</span>}
               {/* Indicador activo para sidebar colapsado */}
               {isCollapsed && isActiveLink("/dashboard/usuarios-software") && (
+                <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-white rounded-r-full transition-all duration-300"></div>
+              )}
+            </Link>
+          </div>
+        )}
+
+        {/* Ambientes */}
+        {canSeeAmbientes && (
+          <div className="relative">
+            <Link 
+              to="/dashboard/ambientes" 
+              className={linkClasses("/dashboard/ambientes")}
+              title="Ambientes"
+            >
+              <FaDoorOpen className={`flex-shrink-0 transition-all duration-300 ${isCollapsed ? 'text-lg mx-auto' : 'mr-3'}`} />
+              {!isCollapsed && <span className="whitespace-nowrap transition-opacity duration-300">Ambientes</span>}
+              {/* Indicador activo para sidebar colapsado */}
+              {isCollapsed && isActiveLink("/dashboard/ambientes") && (
                 <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-white rounded-r-full transition-all duration-300"></div>
               )}
             </Link>
