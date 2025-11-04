@@ -9,7 +9,7 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_ROOT_PASSWORD: Root
       MYSQL_DATABASE: mydb
     volumes:
       - mariadb_data_dev:/var/lib/mysql
@@ -28,7 +28,7 @@ services:
     environment:
       DB_HOST: database
       DB_USER: root
-      DB_PASS: 
+      DB_PASS: Root
       DB_NAME: mydb
       DB_PORT: 3306
       PORT: 3000
