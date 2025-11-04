@@ -27,42 +27,9 @@ export const createReservaDiariaService = async (data) => {
 // as: "Usuario" → es el alias de la relación.
 // attributes: ["IdUsuario", "Usuario"] → indica qué columnas del usuario quieres mostrar (solo el id y el nombre, en este caso).
 
-// Obtener todas las reservas diarias
-export const getAllReservasDiariasService = async () => {
-  try {
-    const reservas = await ReservasDiarias.findAll({
-      include: [
-        {
-          model: Usuario,
-          as: "Usuario",
-          attributes: ["IdUsuario", "Usuario"],
-        },
-      ],
-      order: [['fecha', 'DESC']]
-    });
-    return reservas;
-  } catch (error) {
-    throw new Error(`Error al obtener las reservas diarias: ${error.message}`);
-  }
-};
 
-// Obtener una reserva diaria por ID
-export const getReservaDiariaByIdService = async (idReservaDiaria) => {
-  try {
-    const reserva = await ReservasDiarias.findOne({
-      where: {
-        idReservaDiaria: idReservaDiaria,
-      },
-      include: [{ model: Usuario, as: "Usuario" }], // Incluye los datos del usuario relacionado
-    });
-    if (!reserva) {
-      throw new Error("Reserva diaria no encontrada");
-    }
-    return reserva;
-  } catch (error) {
-    throw new Error(`Error al obtener la reserva diaria: ${error.message}`);
-  }
-};
+
+
 
 // Actualizar una reserva diaria
 export const updateReservaDiariaService = async (idReservaDiaria, data) => {
@@ -100,9 +67,62 @@ export const deleteReservaDiariaService = async (idReservaDiaria) => {
   }
 };
 
+import Ambiente from '../models/AmbientesModel.js';
 
+// Modificar getAllReservasDiariasService:
+export const getAllReservasDiariasService = async () => {
+  try {
+    const reservas = await ReservasDiarias.findAll({
+      include: [
+        {
+          model: Usuario,
+          as: "Usuario",
+          attributes: ["IdUsuario", "Nombre", "Apellido", "NumeroDocumento"],
+        },
+        {
+          model: Ambiente,
+          as: "Ambiente",
+          attributes: ["idAmbiente", "nombre"],
+        },
+      ],
+      order: [['fecha', 'DESC']]
+    });
+    return reservas;
+  } catch (error) {
+    throw new Error(`Error al obtener las reservas diarias: ${error.message}`);
+  }
+};
 
-// Obtener reservas por fecha
+// Modificar getReservaDiariaByIdService:
+export const getReservaDiariaByIdService = async (idReservaDiaria) => {
+  try {
+    const reserva = await ReservasDiarias.findOne({
+      where: {
+        idReservaDiaria: idReservaDiaria,
+      },
+      include: [
+        { 
+          model: Usuario, 
+          as: "Usuario",
+          attributes: ["IdUsuario", "Nombre", "Apellido", "NumeroDocumento"]
+        },
+        {
+          model: Ambiente,
+          as: "Ambiente",
+          attributes: ["idAmbiente", "nombre"]
+        }
+      ],
+    });
+    if (!reserva) {
+      throw new Error("Reserva diaria no encontrada");
+    }
+    return reserva;
+  } catch (error) {
+    throw new Error(`Error al obtener la reserva diaria: ${error.message}`);
+  }
+};
+
+// Modificar getReservasByFechaService:
 export const getReservasByFechaService = async (fecha) => {
   try {
     const reservas = await ReservasDiarias.findAll({
@@ -111,7 +131,12 @@ export const getReservasByFechaService = async (fecha) => {
         {
           model: Usuario,
           as: "Usuario",
-          attributes: ["IdUsuario", "Usuario"],
+          attributes: ["IdUsuario", "Nombre", "Apellido", "NumeroDocumento"],
+        },
+        {
+          model: Ambiente,
+          as: "Ambiente",
+          attributes: ["idAmbiente", "nombre"],
         },
       ],
       order: [['ficha', 'ASC']]
@@ -122,6 +147,7 @@ export const getReservasByFechaService = async (fecha) => {
   }
 };
 
+// Obtener reservas por fecha
 
 
 // NO SE SI PONER ESTE CODIGO
