@@ -1,29 +1,71 @@
 import React from "react";
 import { useAsignaciones } from "../hooks/useAsignaciones";
-import BarcodeReader from './BarcodeReader';
-import { Search, Edit, Trash2, ChevronLeft, ChevronRight, Plus, X, Check, Eye } from "lucide-react";
-
-
-
+import BarcodeReader from "./BarcodeReader";
+import {
+  Search,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  X,
+  Check,
+  Eye,
+} from "lucide-react";
 
 const Asignaciones = () => {
- const {
-    usuarios, showModal, showNovedadModal, selectedNovedad, showAmbientesPanel, ambienteSearchTerm, 
+  const {
+    usuarios,
+    showModal,
+    showNovedadModal,
+    selectedNovedad,
+    showAmbientesPanel,
+    ambienteSearchTerm,
     filteredAmbientes,
-    showDetailsModal, selectedAsignacion, formTouched, newAsignacion,
-    currentPage, searchTerm, barcodeMode, scannedEquipment,
-    showBarcodeInstructions, currentAsignaciones, sortedAsignaciones,
-    indexOfFirstItem, indexOfLastItem, totalPages,
-    setSearchTerm, setShowModal, setShowNovedadModal,
-    setShowDetailsModal, setFormTouched, setNewAsignacion,
-    setBarcodeMode, setScannedEquipment, setShowBarcodeInstructions,
-    setShowAmbientesPanel, 
-    setAmbienteSearchTerm, handleSelectAmbiente,
-    handleBarcodeScan, handleUsuarioChange, handleCreateAsignacion,
-    handleEditAsignacion, handleDeleteAsignacion, handleConfirmarDevolucion,
-    handleShowDetails, paginate, handleRemoveScannedEquipment,
-    exportToPDF, exportToExcel, getTodayLocal, formatDate
-  } = useAsignaciones()
+    showDetailsModal,
+    selectedAsignacion,
+    formTouched,
+    newAsignacion,
+    currentPage,
+    searchTerm,
+    barcodeMode,
+    scannedEquipment,
+    showBarcodeInstructions,
+    currentAsignaciones,
+    sortedAsignaciones,
+    indexOfFirstItem,
+    indexOfLastItem,
+    totalPages,
+    showEquipmentsModal,
+    selectedEquipments,
+    setShowEquipmentsModal,
+    handleShowEquipments,
+    setSearchTerm,
+    setShowModal,
+    setShowNovedadModal,
+    setShowDetailsModal,
+    setFormTouched,
+    setNewAsignacion,
+    setBarcodeMode,
+    setScannedEquipment,
+    setShowBarcodeInstructions,
+    setShowAmbientesPanel,
+    setAmbienteSearchTerm,
+    handleSelectAmbiente,
+    handleBarcodeScan,
+    handleUsuarioChange,
+    handleCreateAsignacion,
+    handleEditAsignacion,
+    handleDeleteAsignacion,
+    handleConfirmarDevolucion,
+    handleShowDetails,
+    paginate,
+    handleRemoveScannedEquipment,
+    exportToPDF,
+    exportToExcel,
+    getTodayLocal,
+    formatDate,
+  } = useAsignaciones();
 
   return (
     <div className="px-4 py-20 md:px-8 lg:px-2 max-w-full bg-gray-50 min-h-screen">
@@ -61,7 +103,22 @@ const Asignaciones = () => {
                 className="flex items-center justify-center bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-sm"
                 title="Exportar a PDF"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 16v-8m0 8l-3-3m3 3l3-3M4 4h16v16H4V4z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="mr-2"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    d="M12 16v-8m0 8l-3-3m3 3l3-3M4 4h16v16H4V4z"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
                 PDF
               </button>
               <button
@@ -69,7 +126,22 @@ const Asignaciones = () => {
                 className="flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm"
                 title="Exportar a Excel"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 4h16v16H4V4zm8 4v8m0 0l-3-3m3 3l3-3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="mr-2"
+                  width="16"
+                  height="16"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    d="M4 4h16v16H4V4zm8 4v8m0 0l-3-3m3 3l3-3"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
                 Excel
               </button>
             </div>
@@ -83,7 +155,7 @@ const Asignaciones = () => {
                   FechaAsignacion: getTodayLocal(),
                   HoraAsignacion: "",
                   Observacion: "",
-                  Ambiente: "", 
+                  Ambiente: "",
                   CodigoAmbiente: "",
                   FechaDevolucion: null,
                   HoraDevolucion: null,
@@ -444,7 +516,7 @@ const Asignaciones = () => {
                 )}
               </div>
 
-             <div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Observación
                 </label>
@@ -494,6 +566,93 @@ const Asignaciones = () => {
                   )}
               </div>
 
+              <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ambiente <span className="text-red-500">*</span>
+              </label>
+              <div className="flex flex-col sm:flex-row gap-3">
+                {/* Input de ambiente (más largo) */}
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={
+                      newAsignacion.Ambiente
+                        ? `${newAsignacion.Ambiente} (Código: ${newAsignacion.CodigoAmbiente})`
+                        : ""
+                    }
+                    readOnly
+                    className={`border p-3 rounded-lg w-full bg-gray-50 text-gray-700 focus:outline-none h-full ${
+                      !newAsignacion.Ambiente
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-300"
+                    }`}
+                    placeholder="No se ha seleccionado un ambiente"
+                  />
+                </div>
+
+                {/* Botón de selección */}
+                <button
+                  type="button"
+                  onClick={() => setShowAmbientesPanel(true)}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 whitespace-nowrap flex items-center justify-center gap-2 font-medium shadow-sm hover:shadow-md"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                    />
+                  </svg>
+                  Seleccionar Ambiente
+                </button>
+              </div>
+
+              {/* Mensaje de error si no se ha seleccionado */}
+              {!newAsignacion.Ambiente && formTouched && (
+                <p className="text-red-500 text-xs mt-1">
+                  Este campo es obligatorio
+                </p>
+              )}
+
+              {/* Información adicional del ambiente seleccionado */}
+              {newAsignacion.Ambiente && (
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4 text-green-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span className="text-sm text-green-700 font-medium">
+                      Ambiente seleccionado:{" "}
+                      <strong>{newAsignacion.Ambiente}</strong>
+                      {newAsignacion.CodigoAmbiente && (
+                        <span className="ml-2 text-green-600">
+                          (Código: {newAsignacion.CodigoAmbiente})
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Item <span className="text-red-500">*</span>
@@ -527,66 +686,7 @@ const Asignaciones = () => {
               </div>
             </div>
 
-            <div className="md:col-span-2"> {/* Ocupa 2 columnas en pantallas medianas */}
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Ambiente
-  </label>
-  <div className="flex flex-col sm:flex-row gap-3">
-    {/* Input de ambiente (más largo) */}
-    <div className="flex-1">
-      <input
-        type="text"
-        value={newAsignacion.Ambiente ? 
-          `${newAsignacion.Ambiente} (Código: ${newAsignacion.CodigoAmbiente})` : 
-          "No seleccionado"
-        }
-        readOnly
-        className="border p-3 rounded-lg w-full bg-gray-50 text-gray-700 focus:outline-none border-gray-300 h-full"
-        placeholder="No se ha seleccionado un ambiente"
-      />
-    </div>
-    
-    {/* Botón de selección */}
-    <button
-      type="button"
-      onClick={() => setShowAmbientesPanel(true)}
-      className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 whitespace-nowrap flex items-center justify-center gap-2 font-medium shadow-sm hover:shadow-md"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-5 w-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-        />
-      </svg>
-      Seleccionar Ambiente
-    </button>
-  </div>
-  
-  {/* Información adicional del ambiente seleccionado */}
-  {newAsignacion.Ambiente && (
-    <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-      <div className="flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-        <span className="text-sm text-green-700 font-medium">
-          Ambiente seleccionado: <strong>{newAsignacion.Ambiente}</strong>
-          {newAsignacion.CodigoAmbiente && (
-            <span className="ml-2 text-green-600">(Código: {newAsignacion.CodigoAmbiente})</span>
-          )}
-        </span>
-      </div>
-    </div>
-  )}
-</div>
+            
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -617,7 +717,6 @@ const Asignaciones = () => {
               )}
             </div>
 
-            
             {/* Mostrar equipos escaneados */}
             {scannedEquipment.length > 0 && (
               <div className="mb-4 mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -680,7 +779,8 @@ const Asignaciones = () => {
                   !newAsignacion.Cantidad ||
                   newAsignacion.Cantidad <= 0 ||
                   !newAsignacion.Item ||
-                  !newAsignacion.Estado
+                  !newAsignacion.Estado ||
+                  !newAsignacion.Ambiente
                 }
                 className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
                   !newAsignacion.IdUsuario ||
@@ -690,7 +790,8 @@ const Asignaciones = () => {
                   !newAsignacion.Cantidad ||
                   newAsignacion.Cantidad <= 0 ||
                   !newAsignacion.Item ||
-                  !newAsignacion.Estado
+                  !newAsignacion.Estado ||
+                  !newAsignacion.Ambiente
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-blue-600 text-white hover:bg-blue-700"
                 }`}
@@ -769,7 +870,6 @@ const Asignaciones = () => {
                   Información del Usuario
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
                   <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
                     <label className="block text-sm font-medium text-gray-600 mb-2">
                       Nombre Completo
@@ -868,10 +968,30 @@ const Asignaciones = () => {
                     <label className="block text-sm font-medium text-gray-600 mb-2">
                       Cantidad
                     </label>
-                    <div className="flex items-center">
+                    <div className="flex items-center justify-between">
                       <div className="bg-green-100 text-green-800 px-4 py-3 rounded-full font-bold text-2xl shadow-md">
                         {selectedAsignacion.Cantidad}
                       </div>
+                      <button
+                        onClick={() => handleShowEquipments(selectedAsignacion)}
+                        className="ml-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold text-sm shadow-md hover:shadow-lg flex items-center gap-2"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                          />
+                        </svg>
+                        Ver Equipos
+                      </button>
                     </div>
                   </div>
 
@@ -928,72 +1048,68 @@ const Asignaciones = () => {
               )}
 
               {/* Solo Ambiente en Información Adicional */}
-<div className="bg-gray-100 rounded-xl p-6 mb-8 shadow-lg border border-gray-200">
-  <h4 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
-    <div className="w-3 h-3 bg-green-600 rounded-full mr-3"></div>
-    Información Adicional
-  </h4>
-  
-  <div className="grid grid-cols-1 gap-6">
-    {/* Solo Ambiente */}
-    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
-      <label className="block text-sm font-medium text-gray-600 mb-3 flex items-center">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5 mr-2 text-indigo-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-          />
-        </svg>
-        Ambiente
-      </label>
-      <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-        <p className="text-gray-900 font-bold text-lg">
-          {(() => {
-            // Primero verificar si hay campos separados de ambiente
-            if (selectedAsignacion.Ambiente) {
-              return (
-                <>
-                  <span className="block mb-2">{selectedAsignacion.Ambiente}</span>
-                  {selectedAsignacion.CodigoAmbiente && (
-                    <span className="text-sm font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">
-                      Código: {selectedAsignacion.CodigoAmbiente}
-                    </span>
-                  )}
-                </>
-              );
-            }
-            
-            // Si no, intentar extraer de la observación (compatibilidad con registros antiguos)
-            const observacion = selectedAsignacion.Observacion || "";
-            const ambienteMatch = observacion.match(/Asignado en (.+?) \(Código: (\d+)\)/);
-            
-            if (ambienteMatch) {
-              return (
-                <>
-                  <span className="block mb-2">{ambienteMatch[1]}</span>
-                  <span className="text-sm font-semibold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">
-                    Código: {ambienteMatch[2]}
-                  </span>
-                </>
-              );
-            }
-            
-            return <span className="text-gray-400 italic">No especificado</span>;
-          })()}
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
-              
+              <div className="bg-gray-100 rounded-xl p-6 mb-8 shadow-lg border border-gray-200">
+                <h4 className="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+                  <div className="w-3 h-3 bg-green-600 rounded-full mr-3"></div>
+                  Ambiente
+                </h4>
+
+                <div className="grid grid-cols-1 gap-6">
+                  {/* Solo Ambiente */}
+                  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                    <label className="text-sm font-medium text-gray-600 mb-3 flex items-center">
+                    
+                    </label>
+                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                      <p className="text-gray-900 font-bold text-lg">
+                        {(() => {
+                          // Primero verificar si hay campos separados de ambiente
+                          if (selectedAsignacion.Ambiente) {
+                            return (
+                              <>
+                                <span className="block mb-2">
+                                  {selectedAsignacion.Ambiente}
+                                </span>
+                                {selectedAsignacion.CodigoAmbiente && (
+                                  <span className="text-sm font-semibold text-green-600 bg-green-200 px-3 py-1 rounded-full">
+                                    Código: {selectedAsignacion.CodigoAmbiente}
+                                  </span>
+                                )}
+                              </>
+                            );
+                          }
+
+                          // Si no, intentar extraer de la observación (compatibilidad con registros antiguos)
+                          const observacion =
+                            selectedAsignacion.Observacion || "";
+                          const ambienteMatch = observacion.match(
+                            /Asignado en (.+?) \(Código: (\d+)\)/
+                          );
+
+                          if (ambienteMatch) {
+                            return (
+                              <>
+                                <span className="block mb-2">
+                                  {ambienteMatch[1]}
+                                </span>
+                                <span className="text-sm font-semibold text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                                  Código: {ambienteMatch[2]}
+                                </span>
+                              </>
+                            );
+                          }
+
+                          return (
+                            <span className="text-gray-400 italic">
+                              No especificado
+                            </span>
+                          );
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Footer con gradiente gris elegante (igual que el header) */}
@@ -1011,11 +1127,113 @@ const Asignaciones = () => {
         </div>
       )}
 
+      {/* Modal para mostrar códigos de equipos */}
+      {showEquipmentsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-0 w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 text-white">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-2xl font-bold mb-1">
+                    Equipos Tecnológicos
+                  </h3>
+                  <p className="text-blue-100 text-sm">Reserva Diaria</p>
+                </div>
+                <button
+                  onClick={() => setShowEquipmentsModal(false)}
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-all duration-200"
+                >
+                  <X size={24} className="text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Contenido */}
+            <div className="p-8 overflow-y-auto max-h-[calc(80vh-180px)]">
+              <div className="mb-6">
+                <h4 className="text-sm font-semibold text-gray-600 mb-4 uppercase tracking-wide">
+                  Materiales reservados:
+                </h4>
+
+                {selectedEquipments && selectedEquipments.length > 0 ? (
+                  <div className="space-y-3">
+                    {selectedEquipments.map((equipment, index) => (
+                      <div
+                        key={index}
+                        className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="bg-blue-100 p-2 rounded-lg">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 text-blue-600"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-blue-600 font-bold text-sm uppercase tracking-wide">
+                              {equipment.split("-")[0] || equipment}
+                            </p>
+                            <p className="text-gray-600 text-sm mt-1">
+                              {equipment.split("-")[1] || "Equipo tecnológico"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-12 w-12 mx-auto mb-3 opacity-50"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                      />
+                    </svg>
+                    <p className="text-sm">No hay equipos registrados</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowEquipmentsModal(false)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Panel lateral de selección de ambientes */}
       {showAmbientesPanel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-end z-50">
           <div className="bg-white w-full max-w-md h-full overflow-y-auto shadow-2xl">
-            <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-6 z-10">
+            <div className="sticky top-0 bg-gradient-to-r from-green-600 to-green-600 text-white p-6 z-10">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-2xl font-bold">Seleccionar Ambiente</h3>
                 <button
@@ -1028,7 +1246,7 @@ const Asignaciones = () => {
                   <X size={24} />
                 </button>
               </div>
-              
+
               <div className="relative">
                 <input
                   type="text"
@@ -1064,13 +1282,13 @@ const Asignaciones = () => {
                 filteredAmbientes.map((ambiente) => (
                   <div
                     key={ambiente.idAmbiente || ambiente.id}
-                    className="bg-white border-2 border-gray-200 rounded-xl p-5 hover:border-indigo-500 hover:shadow-lg transition-all duration-200 cursor-pointer group"
+                    className="bg-white border-2 border-gray-200 rounded-xl p-5 hover:border-green-500 hover:shadow-lg transition-all duration-200 cursor-pointer group"
                     onClick={() => handleSelectAmbiente(ambiente)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="bg-indigo-100 text-indigo-600 rounded-lg p-2 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-200">
+                          <div className="bg-green-100 text-green-600 rounded-lg p-2 group-hover:bg-green-600 group-hover:text-white transition-colors duration-200">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               className="h-6 w-6"
@@ -1087,23 +1305,25 @@ const Asignaciones = () => {
                             </svg>
                           </div>
                           <div>
-                            <span className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                            <span className="text-sm font-semibold text-green-600 bg-green-50 px-3 py-1 rounded-full">
                               Código: {ambiente.codigo}
                             </span>
                           </div>
                         </div>
-                        
-                        <h4 className="text-lg font-bold text-gray-800 mb-2 group-hover:text-indigo-600 transition-colors duration-200">
+
+                        <h4 className="text-lg font-bold text-gray-800 mb-2 group-hover:text-green-700 transition-colors duration-200">
                           {ambiente.nombre}
                         </h4>
-                        
+
                         <div className="flex items-center gap-2">
-                          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                            ambiente.estado === 'Disponible' 
-                              ? 'bg-green-100 text-green-800 border border-green-200' 
-                              : 'bg-blue-100 text-blue-800 border border-blue-200'
-                          }`}>
-                            {ambiente.estado || 'Disponible'}
+                          <span
+                            className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                              ambiente.estado === "Disponible"
+                                ? "bg-green-100 text-green-800 border border-green-200"
+                                : "bg-blue-100 text-blue-800 border border-blue-200"
+                            }`}
+                          >
+                            {ambiente.estado || "Disponible"}
                           </span>
                         </div>
                       </div>
@@ -1113,7 +1333,7 @@ const Asignaciones = () => {
                           e.stopPropagation();
                           handleSelectAmbiente(ambiente);
                         }}
-                        className="ml-4 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-semibold shadow-md hover:shadow-lg"
+                        className="ml-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 font-semibold shadow-md hover:shadow-lg"
                       >
                         Seleccionar
                       </button>
@@ -1126,16 +1346,12 @@ const Asignaciones = () => {
         </div>
       )}
 
-      
-
       {/* Componente lector de códigos de barras */}
       <BarcodeReader
         onScan={handleBarcodeScan}
         isActive={showModal} // Solo activo cuando el modal está abierto
       />
     </div>
-
-    
   );
 };
 

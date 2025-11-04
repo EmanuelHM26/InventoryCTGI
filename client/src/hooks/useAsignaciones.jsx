@@ -16,6 +16,8 @@ export const useAsignaciones = () => {
   const [selectedNovedad, setSelectedNovedad] = useState("");
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedAsignacion, setSelectedAsignacion] = useState(null);
+  const [showEquipmentsModal, setShowEquipmentsModal] = useState(false);
+  const [selectedEquipments, setSelectedEquipments] = useState([]);
   const [formTouched, setFormTouched] = useState(false);
   const [newAsignacion, setNewAsignacion] = useState({
     IdUsuario: "",
@@ -25,7 +27,7 @@ export const useAsignaciones = () => {
     FechaAsignacion: "",
     HoraAsignacion: "",
     Observacion: "",
-    Ambiente: "", 
+    Ambiente: "",
     CodigoAmbiente: "",
     FechaDevolucion: null,
     HoraDevolucion: null,
@@ -108,15 +110,15 @@ export const useAsignaciones = () => {
     }
   };
 
-   // Función para seleccionar un ambiente
+  // Función para seleccionar un ambiente
   const handleSelectAmbiente = (ambiente) => {
     setNewAsignacion({
       ...newAsignacion,
       Ambiente: ambiente.nombre,
-      CodigoAmbiente: ambiente.codigo
+      CodigoAmbiente: ambiente.codigo,
     });
     setShowAmbientesPanel(false);
-    
+
     Swal.fire({
       icon: "success",
       title: "Ambiente seleccionado",
@@ -127,9 +129,10 @@ export const useAsignaciones = () => {
   };
 
   // Filtrar ambientes por búsqueda
-  const filteredAmbientes = ambientes.filter(amb => 
-    amb.nombre?.toLowerCase().includes(ambienteSearchTerm.toLowerCase()) ||
-    amb.codigo?.toString().includes(ambienteSearchTerm)
+  const filteredAmbientes = ambientes.filter(
+    (amb) =>
+      amb.nombre?.toLowerCase().includes(ambienteSearchTerm.toLowerCase()) ||
+      amb.codigo?.toString().includes(ambienteSearchTerm)
   );
 
   // Función para manejar códigos de barras escaneados
@@ -149,7 +152,7 @@ export const useAsignaciones = () => {
             IdUsuario: usuario.IdUsuario.toString(),
             Nombre: usuario.Nombre,
             Apellido: usuario.Apellido,
-            Documento: usuario.NumeroDocumento || ""
+            Documento: usuario.NumeroDocumento || "",
           });
 
           Swal.fire({
@@ -196,7 +199,8 @@ export const useAsignaciones = () => {
         }
 
         // Actualizar cantidad total
-        const totalQuantity = scannedEquipment.reduce((sum, eq) => sum + eq.quantity, 0) + 1;
+        const totalQuantity =
+          scannedEquipment.reduce((sum, eq) => sum + eq.quantity, 0) + 1;
         setNewAsignacion({
           ...newAsignacion,
           Cantidad: totalQuantity.toString(),
@@ -224,7 +228,9 @@ export const useAsignaciones = () => {
 
   // Función para eliminar un equipo escaneado
   const handleRemoveScannedEquipment = (codeToRemove) => {
-    const updatedEquipment = scannedEquipment.filter(eq => eq.code !== codeToRemove);
+    const updatedEquipment = scannedEquipment.filter(
+      (eq) => eq.code !== codeToRemove
+    );
     setScannedEquipment(updatedEquipment);
 
     // Actualizar cantidad total (número de equipos únicos)
@@ -253,7 +259,6 @@ export const useAsignaciones = () => {
       Nombre: usuario ? usuario.Nombre : "",
       Apellido: usuario ? usuario.Apellido : "",
       Documento: usuario ? usuario.NumeroDocumento || "" : "",
-      
     });
   };
 
@@ -267,6 +272,7 @@ export const useAsignaciones = () => {
       Cantidad: "Cantidad",
       Item: "Item",
       Estado: "Estado",
+      Ambiente: "Ambiente" 
     };
 
     const missingFields = [];
@@ -288,7 +294,9 @@ export const useAsignaciones = () => {
       Swal.fire({
         icon: "warning",
         title: "Campos requeridos",
-        text: `Por favor complete los siguientes campos: ${missingFields.join(", ")}`,
+        text: `Por favor complete los siguientes campos: ${missingFields.join(
+          ", "
+        )}`,
         showConfirmButton: true,
         confirmButtonText: "Cerrar",
       });
@@ -331,16 +339,17 @@ export const useAsignaciones = () => {
         const now = new Date();
 
         // Formatear fecha como YYYY-MM-DD
-        const today = now.toISOString().split('T')[0];
+        const today = now.toISOString().split("T")[0];
         // Formatear hora como HH:MM:SS
-        const currentTime = now.toTimeString().split(' ')[0];
+        const currentTime = now.toTimeString().split(" ")[0];
 
         const asignacionData = {
           ...newAsignacion,
           FechaAsignacion: today, // Se establece automáticamente
           HoraAsignacion: currentTime, // Se establece automáticamente
           FechaDevolucion: null, // Debe ser null al crear
-          HoraDevolucion: null // Debe ser null al crear
+          HoraDevolucion: null, // Debe ser null al crear
+          CodigosEquipos: scannedEquipment.map(eq => eq.code).join(',')
         };
 
         await axios.post(
@@ -369,7 +378,7 @@ export const useAsignaciones = () => {
         FechaAsignacion: "",
         HoraAsignacion: "",
         Observacion: "",
-        Ambiente: "", 
+        Ambiente: "",
         CodigoAmbiente: "",
         FechaDevolucion: null,
         HoraDevolucion: null,
@@ -382,7 +391,9 @@ export const useAsignaciones = () => {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: error.response?.data?.message || "Ocurrió un error al guardar la asignación",
+        text:
+          error.response?.data?.message ||
+          "Ocurrió un error al guardar la asignación",
         showConfirmButton: true,
         confirmButtonText: "Cerrar",
       });
@@ -416,7 +427,6 @@ export const useAsignaciones = () => {
       confirmButtonText: "Sí, editar",
       cancelButtonText: "Cancelar",
     });
-
   };
 
   const handleDeleteAsignacion = async (id) => {
@@ -429,7 +439,7 @@ export const useAsignaciones = () => {
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
-      reverseButtons: true
+      reverseButtons: true,
     });
 
     if (result.isConfirmed) {
@@ -466,7 +476,7 @@ export const useAsignaciones = () => {
       showCancelButton: true,
       confirmButtonText: "Sí",
       cancelButtonText: "No",
-      reverseButtons: true
+      reverseButtons: true,
     });
 
     let novedad = "";
@@ -477,7 +487,7 @@ export const useAsignaciones = () => {
         inputLabel: "Novedad",
         inputPlaceholder: "Escribe aquí la novedad...",
         inputAttributes: {
-          'aria-label': 'Escribe aquí la novedad'
+          "aria-label": "Escribe aquí la novedad",
         },
         showCancelButton: true,
         confirmButtonText: "Guardar",
@@ -486,7 +496,7 @@ export const useAsignaciones = () => {
           if (!value) {
             return "Debes escribir una novedad";
           }
-        }
+        },
       });
 
       if (novedadInput) {
@@ -561,6 +571,26 @@ export const useAsignaciones = () => {
     setShowDetailsModal(true);
   };
 
+ const handleShowEquipments = (asignacion) => {
+  let equipmentCodes = [];
+  
+  // Intentar obtener de CodigosEquipos
+  if (asignacion.CodigosEquipos) {
+    equipmentCodes = asignacion.CodigosEquipos.split(',').map(code => code.trim());
+  }
+  // Si no existe, intentar extraer de la observación (compatibilidad con registros antiguos)
+  else if (asignacion.Observacion) {
+    // Buscar patrones de códigos en la observación
+    const matches = asignacion.Observacion.match(/[A-Z0-9]+\*\d+/g);
+    if (matches) {
+      equipmentCodes = matches;
+    }
+  }
+  
+  setSelectedEquipments(equipmentCodes);
+  setShowEquipmentsModal(true);
+};
+
   // Funciones para la tabla mejorada
   const requestSort = (key) => {
     let direction = "ascending";
@@ -578,11 +608,10 @@ export const useAsignaciones = () => {
     }
 
     const fullName = asignacion.Usuario
-      ? `${asignacion.Usuario.Nombre || ""} ${asignacion.Usuario.Apellido || ""
+      ? `${asignacion.Usuario.Nombre || ""} ${
+          asignacion.Usuario.Apellido || ""
         }`.toLowerCase()
       : "";
-
-    
 
     return (
       asignacion.Observacion?.toLowerCase().includes(searchTermLower) ||
@@ -717,8 +746,9 @@ export const useAsignaciones = () => {
         },
       });
 
-      const fileName = `asignaciones_${new Date().toISOString().split("T")[0]
-        }.pdf`;
+      const fileName = `asignaciones_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
       doc.save(fileName);
 
       Swal.fire({
@@ -772,8 +802,9 @@ export const useAsignaciones = () => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Asignaciones");
 
-      const fileName = `asignaciones_${new Date().toISOString().split("T")[0]
-        }.xlsx`;
+      const fileName = `asignaciones_${
+        new Date().toISOString().split("T")[0]
+      }.xlsx`;
       XLSX.writeFile(workbook, fileName);
 
       Swal.fire({
@@ -819,6 +850,8 @@ export const useAsignaciones = () => {
     indexOfFirstItem,
     indexOfLastItem,
     totalPages,
+    showEquipmentsModal,
+    selectedEquipments,
     // Funciones
     setSearchTerm,
     setShowModal,
@@ -849,5 +882,7 @@ export const useAsignaciones = () => {
     getTodayLocal,
     formatDate,
     handleRemoveScannedEquipment,
+    setShowEquipmentsModal,
+    handleShowEquipments,
   };
 };

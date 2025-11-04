@@ -63,6 +63,22 @@ const Asignaciones = sequelize.define('Asignaciones', {
     type: DataTypes.STRING(100),
     allowNull: false,
   },
+
+  Ambiente: {
+  type: DataTypes.STRING(100),
+  allowNull: false, 
+},
+CodigoAmbiente: {
+  type: DataTypes.STRING(20),
+  allowNull: false, 
+},
+
+  
+CodigosEquipos: {
+  type: DataTypes.TEXT,
+  allowNull: true,
+  defaultValue: null,
+},
   Estado: {
     type: DataTypes.STRING(45),
     allowNull: false,
