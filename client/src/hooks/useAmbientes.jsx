@@ -54,64 +54,9 @@ export const useAmbientes = () => {
     }
   }
 
-  const cambiarEstadoAmbiente = async (ambiente) => {
-    const nuevoEstado = ambiente.estado === "Disponible" ? "Asignado" : "Disponible";
-    
-    const result = await Swal.fire({
-      title: `¿Cambiar estado a ${nuevoEstado}?`,
-      text: `¿Estás seguro de que quieres cambiar el estado del ambiente "${ambiente.nombre}" a "${nuevoEstado}"?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sí, cambiar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-    });
-
-    if (result.isConfirmed) {
-      try {
-        setLoading(true);
-        
-        // Usar el ID correcto (idAmbiente es la primary key)
-        const ambienteId = ambiente.idAmbiente || ambiente.id;
-        
-        const payload = {
-          codigo: ambiente.codigo,
-          nombre: ambiente.nombre,
-          estado: nuevoEstado
-        };
-
-        await configAxios.put(`/ambientes/${ambienteId}`, payload);
-        
-        setAmbientes(prev => 
-          prev.map(a => 
-            (a.idAmbiente || a.id) === ambienteId 
-              ? { ...a, estado: nuevoEstado }
-              : a
-          )
-        );
-
-        Swal.fire({
-          title: "Estado actualizado",
-          text: `El ambiente "${ambiente.nombre}" ahora está "${nuevoEstado}"`,
-          icon: "success",
-          confirmButtonText: "Aceptar"
-        });
-
-      } catch (err) {
-        console.error("Error cambiando estado del ambiente:", err);
-        const serverMsg = err.response?.data?.message || err.message || "Error al cambiar el estado";
-        Swal.fire({ 
-          title: "Error al cambiar estado", 
-          text: serverMsg, 
-          icon: "error", 
-          confirmButtonText: "Aceptar" 
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
+  // NOTE: La opción de cambiar el estado desde la tabla de Ambientes fue eliminada.
+  // El estado "Asignado" sigue existiendo en el modelo para uso futuro,
+  // pero aquí no se ofrece funcionalidad para cambiarlo manualmente.
 
   const openNew = () => {
     setEditing(null);
@@ -146,19 +91,23 @@ export const useAmbientes = () => {
       return;
     }
 
-    const payload = { 
-      codigo: Number(form.codigo), 
-      nombre: form.nombre.toString().trim(),
-      estado: "Disponible"
-    };
-
     try {
       if (editing) {
-        // Usar el ID correcto para edición
+        // Al editar no se modifica el campo 'estado' desde la tabla de Ambientes.
+        const payload = { 
+          codigo: Number(form.codigo), 
+          nombre: form.nombre.toString().trim()
+        };
         const editingId = editing.idAmbiente || editing.id;
         await configAxios.put(`/ambientes/${editingId}`, payload);
         Swal.fire({ title: "Ambiente actualizado", text: `Se actualizó "${payload.nombre}"`, icon: "success", confirmButtonText: "Aceptar" });
       } else {
+        // Al crear siempre se establece 'Disponible' por defecto.
+        const payload = { 
+          codigo: Number(form.codigo), 
+          nombre: form.nombre.toString().trim(),
+          estado: "Disponible"
+        };
         await configAxios.post("/ambientes", payload);
         Swal.fire({ title: "Ambiente creado", text: `Se creó "${payload.nombre}"`, icon: "success", confirmButtonText: "Aceptar" });
       }
@@ -182,7 +131,6 @@ export const useAmbientes = () => {
     });
     if (!result.isConfirmed) return;
     try {
-      // Usar el ID correcto para eliminación
       const itemId = item.idAmbiente || item.id;
       await configAxios.delete(`/ambientes/${itemId}`);
       Swal.fire({ title: "Ambiente eliminado", text: `"${item.nombre}" eliminado.`, icon: "success", confirmButtonText: "Aceptar" });
@@ -196,13 +144,14 @@ export const useAmbientes = () => {
 
   const getEstadoBadgeColor = (estado) => {
     const estadoNormalizado = estado || "Disponible";
+    // Sin cursor-pointer ni hover: no se puede cambiar el estado desde la UI de Ambientes.
     switch (estadoNormalizado) {
       case "Disponible":
-        return "bg-green-100 text-green-800 border border-green-200 hover:bg-green-200 cursor-pointer";
+        return "bg-green-100 text-green-800 border border-green-200";
       case "Asignado":
-        return "bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200 cursor-pointer";
+        return "bg-blue-100 text-blue-800 border border-blue-200";
       default:
-        return "bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200 cursor-pointer";
+        return "bg-gray-100 text-gray-800 border border-gray-200";
     }
   };
 
@@ -302,8 +251,9 @@ export const useAmbientes = () => {
         try {
           const payload = {
             codigo: Number(item.CODIGO || item.codigo),
-            nombre: (item.NOMBRE || item.nombre).toString().trim(),
-            estado: (item.ESTADO || item.estado || "Disponible").toString()
+            nombre: (item.NOMBRE || item.nombre)?.toString().trim(),
+            // Al importar siempre se crea como 'Disponible' (no se permite cambiar estado desde Ambientes)
+            estado: "Disponible"
           };
 
           if (!payload.nombre) {
@@ -379,7 +329,6 @@ export const useAmbientes = () => {
     handleChange,
     handleSubmit,
     handleDelete,
-    cambiarEstadoAmbiente,
     exportToPDF,
     exportToExcel,
     importFromExcel,
