@@ -2,6 +2,7 @@ import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
 import Usuario from "../models/UsuariosModel.js";
 import EquiposTecnologicos from "../models/EquiposTecnologicosModel.js";
+import Ambiente from "../models/AmbientesModel.js";
 
 const ReservasDiarias = sequelize.define("ReservasDiarias", {
   idReservaDiaria: {
@@ -18,9 +19,17 @@ const ReservasDiarias = sequelize.define("ReservasDiarias", {
       key: 'IdUsuario', // llave primaria de la tabla referenciada
     },
   },
+  IdAmbiente: {
+  type: DataTypes.INTEGER,
+  allowNull: true,
+  references: {
+    model: 'ambientes',
+    key: 'idAmbiente',
+    },
+  },
   ficha: {
     type: DataTypes.STRING(50),
-    allowNull: false,
+    allowNull: true,
   },
   materialReservado: {
     type: DataTypes.STRING(100),
@@ -57,6 +66,15 @@ ReservasDiarias.hasMany(EquiposTecnologicos, {
   as: 'Equipos'
 });
 
+// Cada equipo tecnológico pertenece a una reserva diaria
+
+
+// Al final del archivo, antes del export:
+ReservasDiarias.belongsTo(Ambiente, {
+  foreignKey: 'IdAmbiente',
+  targetKey: 'idAmbiente',
+  as: 'Ambiente'
+});
 
 
 export default ReservasDiarias;

@@ -27,7 +27,6 @@ import Profile from "./components/Profile";
 import Settings from "./components/Settings";
 import Help from "./components/Help";
 import MovimientosConsumibles from './components/MovimientosConsumibles';
-
 import Ambientes from "./components/Ambientes";
 
 const App = () => {

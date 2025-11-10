@@ -15,87 +15,88 @@ import { useReservas } from "../hooks/useReservas";
 
 const Reservas = () => {
   const {
-    usuarios,
-    activeTab,
-    showModal,
-    setShowModal,
-    newReserva,
-    setNewReserva,
-    currentPage,
-    searchTerm,
-    setSearchTerm,
-    barcodeMode,
-    setBarcodeMode,
-    scannedEquipment,
-    setScannedEquipment,
-    showBarcodeInstructions,
-    setShowBarcodeInstructions,
-    handleCreateReserva,
-    handleEditReserva,
-    handleDeleteReserva,
-    handleCheckReservaFija,
-    formatDate,
-    requestSort,
-    sortedReservas,
-    indexOfFirstItem,
-    indexOfLastItem,
-    currentReservas,
-    totalPages,
-    paginate,
-    handleTabChange,
-    handleBarcodeScan,
-    getTableHeaders,
-    exportToPDF,
-    exportToExcel,
-    inputErrors,
-    setInputErrors,
-    //equiposTecnologicos,
-    showEquiposModal,
-    setShowEquiposModal,
-    selectedReservaEquipos,
-    handleShowEquipos,
+  usuarios,
+  activeTab,
+  showModal,
+  setShowModal,
+  newReserva,
+  setNewReserva,
+  currentPage,
+  searchTerm,
+  setSearchTerm,
+  barcodeMode,
+  setBarcodeMode,
+  scannedEquipment,
+  setScannedEquipment,
+  showBarcodeInstructions,
+  setShowBarcodeInstructions,
+  inputErrors,
+  setInputErrors,
+  handleCreateReserva,
+  handleEditReserva,
+  handleDeleteReserva,
+  handleCheckReservaFija,
+  handleBarcodeScan,
+  getTableHeaders,
+  exportToPDF,
+  exportToExcel,
+  formatDate,
+  requestSort,
+  sortedReservas,
+  indexOfFirstItem,
+  indexOfLastItem,
+  currentReservas,
+  totalPages,
+  paginate,
+  handleTabChange,
+  showEquiposModal,
+  setShowEquiposModal,
+  selectedReservaEquipos,
+  handleShowEquipos,
+  ambientes,
   } = useReservas();
 
-  // Función para obtener la fecha mínima (hoy)
-  const getTodayDate = () => {
-    const today = new Date();
-    // Ajustar la hora para evitar problemas de zona horaria
-    return today.toISOString().split("T")[0];
+  const validateField = (field, value) => {
+    const trimmed = value?.toString().trim();
+    switch (field) {
+      case "nombrePrograma":
+        if (!trimmed) return "El nombre del programa es requerido";
+  if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s'-]+$/.test(value)) return "Solo letras y espacios";
+        if (value.trim() === "") return "No puede contener solo espacios";
+        break;
+      case "ficha":
+        if (!value) return "La ficha es requerida";
+        if (!/^[0-9]+$/.test(value)) return "Solo se permiten números";
+        break;
+      case "materialReservado":
+        if (!trimmed) return "El material es requerido";
+        if (/^\s/.test(value)) return "No puede comenzar con espacio";
+  if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü0-9,\s'"-]+$/.test(value)) return "Solo letras, números y comas";
+        break;
+      case "IdUsuario":
+        if (!value) return "Debe seleccionar un usuario";
+        break;
+      case "fecha": {
+        if (!value) return "La fecha es requerida";
+        const fechaSeleccionada = new Date(value);
+        const fechaHoy = new Date();
+        fechaHoy.setHours(0, 0, 0, 0);
+        if (fechaSeleccionada < fechaHoy) return "No se pueden seleccionar fechas pasadas";
+        break;
+      }
+      default:
+        return "";
+    }
+    return "";
   };
 
-  const validateField = (field, value) => {
-    // Eliminar espacios al inicio para validaciones que lo requieran
-  const trimmed = value.trimStart();
-  switch (field) {
-    case "nombrePrograma":
-      if (!trimmed) return "El nombre del programa es requerido";
-      if (/^\s/.test(value)) return "No puede comenzar con espacio";
-      if (!/^[A-Za-z ]+$/.test(value)) return "Solo letras y espacios";
-      break;
-    case "ficha":
-      if (!value) return "La ficha es requerida";
-      if (!/^[0-9]+$/.test(value)) return "Solo se permiten números";
-      break;
-    case "materialReservado":
-      if (!trimmed) return "El material es requerido";
-      if (/^\s/.test(value)) return "No puede comenzar con espacio";
-      if (!/^[A-Za-z0-9, ]+$/.test(value)) return "Solo letras, números y comas";
-      break;
-    case "IdUsuario":
-      if (!value) return "Debe seleccionar un usuario";
-      break;
-    case "fecha":{
-      if (!value) return "La fecha es requerida";
-      const fechaSeleccionada = new Date(value);
-      const fechaHoy = new Date();
-      fechaHoy.setHours(0, 0, 0, 0);
-      if (fechaSeleccionada < fechaHoy) return "No se pueden seleccionar fechas pasadas";
-      break;}
-    default:
-      return "";
-  }
-  return "";
-};
+  const getTodayDate = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
   
 //función para limpiar equipos escaneados:
 const removeScannedEquipment = (codeToRemove) => {
@@ -120,6 +121,25 @@ const removeScannedEquipment = (codeToRemove) => {
     if (activeTab === "fijas") {
       return (
         <>
+          {/* AGREGAR BOTONES DE ESCANEO AL INICIO */}
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <button
+              type="button"
+              onClick={() => {
+                setBarcodeMode("equipment");
+                setShowBarcodeInstructions(true);
+                setTimeout(() => setShowBarcodeInstructions(false), 2000);
+              }}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Escanear Material
+            </button>
+            {showBarcodeInstructions && (
+              <p className="text-xs mt-2 text-green-600 animate-pulse">
+                Escanee los códigos de los materiales...
+              </p>
+            )}
+          </div>
           {/* Nombre del Programa */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -201,6 +221,43 @@ const removeScannedEquipment = (codeToRemove) => {
               </span>
             )}
           </div>
+
+          {/* AGREGAR LISTA DE MATERIALES ESCANEADOS */}
+          {scannedEquipment.length > 0 && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h4 className="font-semibold text-green-900 mb-2">
+                Materiales Escaneados
+              </h4>
+              <div className="space-y-2">
+                {scannedEquipment.map((equipment, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center bg-white p-2 rounded border"
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-sm font-mono font-semibold">{equipment.code}</span>
+                      <span className="text-xs text-gray-500">
+                        {equipment.equipo?.Nombre || 'Sin nombre'} - {equipment.equipo?.Marca || 'Sin marca'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">
+                        x{equipment.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeScannedEquipment(equipment.code)}
+                        className="text-red-500 hover:text-red-700 transition-colors"
+                        title="Eliminar equipo"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       );
     } else {
@@ -275,7 +332,7 @@ const removeScannedEquipment = (codeToRemove) => {
               <option value="">Seleccione un usuario</option>
               {usuarios.map((u) => (
                 <option key={u.IdUsuario} value={u.IdUsuario}>
-                  {u.Usuario}
+                  {u.NumeroDocumento} - {u.Nombre} {u.Apellido}
                 </option>
               ))}
             </select>
@@ -283,30 +340,36 @@ const removeScannedEquipment = (codeToRemove) => {
               <span className="text-red-500 text-xs">{inputErrors.IdUsuario}</span>
             )}
           </div>
+ 
 
-          {/* Ficha */}
+          {/* Ambiente */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ficha
+              Ambiente
             </label>
-            <input
-              type="text"
-              value={newReserva.ficha || ""}
+            <select
+              value={newReserva.IdAmbiente || ""}
               onChange={(e) => {
                 const value = e.target.value;
-                setNewReserva({ ...newReserva, ficha: value });
+                setNewReserva({ ...newReserva, IdAmbiente: value });
                 setInputErrors((prev) => ({
                   ...prev,
-                  ficha: validateField("ficha", value),
+                  IdAmbiente: !value ? "Debe seleccionar un ambiente" : "",
                 }));
               }}
-              placeholder="Ingresa el número de la ficha"
               className={`border p-2 rounded-lg w-full ${
-                inputErrors.ficha ? "border-red-500" : "border-gray-300"
+                inputErrors.IdAmbiente ? "border-red-500" : "border-gray-300"
               }`}
-            />
-            {inputErrors.ficha && (
-              <span className="text-red-500 text-xs">{inputErrors.ficha}</span>
+            >
+              <option value="">Seleccione un ambiente</option>
+              {ambientes.map((ambiente) => (
+                <option key={ambiente.idAmbiente} value={ambiente.idAmbiente}>
+                  {ambiente.nombre}
+                </option>
+              ))}
+            </select>
+            {inputErrors.IdAmbiente && (
+              <span className="text-red-500 text-xs">{inputErrors.IdAmbiente}</span>
             )}
           </div>
 
@@ -543,9 +606,6 @@ const removeScannedEquipment = (codeToRemove) => {
                           {reserva.ficha}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {reserva.materialReservado}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${
                               reserva.Estado === "Disponible"
@@ -591,6 +651,13 @@ const removeScannedEquipment = (codeToRemove) => {
                             >
                               <Check size={16} />
                             </button>
+                            <button
+                              onClick={() => handleShowEquipos(reserva)}
+                              className="p-1 rounded-full bg-green-100 hover:bg-green-200 text-green-600 transition-colors duration-200"
+                              title="Ver material reservado"
+                            >
+                              <Eye size={16} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -605,14 +672,17 @@ const removeScannedEquipment = (codeToRemove) => {
                           {reserva.idReservaDiaria}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {reserva.Usuario?.Usuario || "N/A"}
+                          {reserva.Usuario 
+                            ? `${reserva.Usuario.Nombre} ${reserva.Usuario.Apellido}` 
+                            : "N/A"}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {reserva.ficha}
+                          {reserva.Usuario?.NumeroDocumento || "N/A"}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {reserva.materialReservado}
+                          {reserva.Ambiente?.nombre || "N/A"}
                         </td>
+                        {/* materialReservado moved to actions button */}
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           {formatDate(reserva.fecha)}
                         </td>
@@ -634,11 +704,10 @@ const removeScannedEquipment = (codeToRemove) => {
                             >
                               <Trash2 size={16} />
                             </button>
-                            {/* Botón Ver Equipos */}
                             <button
                               onClick={() => handleShowEquipos(reserva)}
                               className="p-1 rounded-full bg-green-100 hover:bg-green-200 text-green-600 transition-colors duration-200"
-                              title="Ver equipos tecnológicos"
+                              title="Ver material reservado"
                             >
                               <Eye size={16} />
                             </button>
@@ -715,36 +784,9 @@ const removeScannedEquipment = (codeToRemove) => {
       </div>
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg mx-4 max-h-[95vh] overflow-y-auto border border-blue-100 relative animate-fade-in">
-            <button
-              onClick={() => {
-                setShowModal(false);
-                setBarcodeMode("user");
-                setScannedEquipment([]);
-                setShowBarcodeInstructions(false);
-              }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors"
-              title="Cerrar"
-            >
-              <X size={24} />
-            </button>
-            <h2 className="text-2xl font-bold mb-2 text-center text-blue-700 mt-8">
-              {activeTab === "fijas"
-                ? newReserva.idReservaFija
-                  ? "Editar Reserva Fija"
-                  : "Crear Nueva Reserva Fija"
-                : newReserva.idReservaDiaria
-                ? "Editar Reserva Diaria"
-                : "Crear Nueva Reserva Diaria"}
-            </h2>
-            <p className="text-gray-500 text-center mb-6">
-              {activeTab === "fijas"
-                ? "Completa los datos para la reserva fija."
-                : "Completa los datos para la reserva diaria."}
-            </p>
-            <div className="grid grid-cols-1 gap-5 mb-6">{getFormFields()}</div>
-            <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative transform transition-all duration-300 ease-out scale-100 opacity-100">
+            <div className="p-6 sm:p-8">
               <button
                 onClick={() => {
                   setShowModal(false);
@@ -752,16 +794,51 @@ const removeScannedEquipment = (codeToRemove) => {
                   setScannedEquipment([]);
                   setShowBarcodeInstructions(false);
                 }}
-                className="px-5 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200 font-semibold"
+                className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors duration-200 rounded-full p-1 hover:bg-gray-100"
+                title="Cerrar"
               >
-                Cancelar
+                <X size={20} />
               </button>
-              <button
-                onClick={handleCreateReserva}
-                className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold shadow"
-              >
-                Crear
-              </button>
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-blue-700 text-center mb-2">
+                  {activeTab === "fijas"
+                    ? newReserva.idReservaFija
+                      ? "Editar Reserva Fija"
+                      : "Crear Nueva Reserva Fija"
+                    : newReserva.idReservaDiaria
+                    ? "Editar Reserva Diaria"
+                    : "Crear Nueva Reserva Diaria"}
+                </h2>
+                <p className="text-gray-500 text-center text-sm">
+                  {activeTab === "fijas"
+                    ? "Completa los datos para la reserva fija."
+                    : "Completa los datos para la reserva diaria."}
+                </p>
+              </div>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-5">{getFormFields()}</div>
+                <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      setBarcodeMode("user");
+                      setScannedEquipment([]);
+                      setShowBarcodeInstructions(false);
+                    }}
+                    className="px-5 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-gray-300"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleCreateReserva}
+                    className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {activeTab === "fijas"
+                      ? newReserva.idReservaFija ? "Guardar Cambios" : "Crear Reserva"
+                      : newReserva.idReservaDiaria ? "Guardar Cambios" : "Crear Reserva"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -771,39 +848,93 @@ const removeScannedEquipment = (codeToRemove) => {
 
       {/* Modal de Equipos Tecnológicos */}
       {showEquiposModal && selectedReservaEquipos && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-blue-700">
-                Equipos Tecnológicos - Reserva #{selectedReservaEquipos.idReservaDiaria}
-              </h2>
-              <button
-                onClick={() => setShowEquiposModal(false)}
-                className="text-gray-400 hover:text-red-500 transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <div className="space-y-4">
-              {selectedReservaEquipos.materialesEscaneados && selectedReservaEquipos.materialesEscaneados.length > 0 ? (
-                selectedReservaEquipos.materialesEscaneados.map((eq, idx) => (
-                  <div key={idx} className="bg-gray-50 rounded-lg p-4 shadow flex flex-col md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <div className="font-semibold text-gray-700">Nombre: <span className="font-normal">{eq.equipo?.Nombre || "Sin nombre"}</span></div>
-                      <div className="text-gray-600 text-sm">Código: <span className="font-mono">{eq.code}</span></div>
-                      <div className="text-gray-600 text-sm">Marca: {eq.equipo?.Marca || "Sin marca"}</div>
-                      <div className="text-gray-600 text-sm">Modelo: {eq.equipo?.Modelo || "Sin modelo"}</div>
-                    </div>
-                    <div className="mt-2 md:mt-0">
-                      <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 font-bold text-lg">
-                        x{eq.quantity}
-                      </span>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 ease-out scale-100 opacity-100">
+            <div className="p-6 sm:p-8">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-blue-700">
+                    Equipos Tecnológicos
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {selectedReservaEquipos.tipo === 'fija' ? 'Reserva Fija' : 'Reserva Diaria'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowEquiposModal(false)}
+                  className="text-gray-400 hover:text-red-500 transition-colors duration-200 rounded-full p-1.5 hover:bg-gray-100"
+                  title="Cerrar"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                {selectedReservaEquipos.materialesEscaneados && selectedReservaEquipos.materialesEscaneados.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedReservaEquipos.materialesEscaneados.map((eq, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-gray-50 rounded-xl p-4 shadow-sm hover:shadow transition-shadow duration-200 flex flex-col border border-gray-100"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-3">
+                            <div>
+                              <div className="font-mono text-lg text-blue-600 mb-1">{eq.code}</div>
+                              <div className="text-sm text-gray-600">
+                                {eq.equipo?.Nombre || "Sin nombre"} - {eq.equipo?.Marca || "N/A"}
+                              </div>
+                            </div>
+                            <div className="grid gap-1 text-sm text-gray-600">
+                              <div>Marca: <span className="text-gray-700">{eq.equipo?.Marca || "N/A"}</span></div>
+                              <div>Modelo: <span className="text-gray-700">{eq.equipo?.Modelo || "N/A"}</span></div>
+                            </div>
+                          </div>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium ml-3">
+                            x{eq.quantity}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : selectedReservaEquipos.materialReservado ? (
+                  <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                    <h3 className="text-sm font-medium text-gray-700 mb-3">Materiales reservados:</h3>
+                    <div className="flex flex-col gap-2">
+                      {selectedReservaEquipos.materialReservado.split(',').map((code, i) => {
+                        const equipment = selectedReservaEquipos.equiposInfo?.find(eq => eq.Codigo === code.trim());
+                        return (
+                          <div
+                            key={i}
+                            className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm shadow-sm hover:shadow-md transition-shadow duration-200"
+                          >
+                            <div className="font-mono text-blue-700">{code.trim()}</div>
+                            {equipment && (
+                              <div className="text-gray-600 text-sm mt-1">
+                                {equipment.Nombre} - {equipment.Marca}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="text-gray-500 text-center">No hay equipos asignados a esta reserva.</div>
-              )}
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <div className="mb-2">No hay equipos asignados a esta reserva</div>
+                    <div className="text-sm">Los equipos aparecerán aquí una vez sean asignados</div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-gray-100 flex justify-end">
+                <button
+                  onClick={() => setShowEquiposModal(false)}
+                  className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
         </div>
