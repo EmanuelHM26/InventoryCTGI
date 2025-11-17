@@ -22,7 +22,7 @@ export const useAsignacionesRecent = () => {
   // Función para obtener asignaciones recientes desde el backend
   const fetchRecentAsignaciones = async () => {
     try {
-      const response = await configAxios.get(`api/asignaciones/recent?days=${diasFiltro}`,
+      const response = await configAxios.get(`/api/asignaciones/recent?days=${diasFiltro}`,
         { withCredentials: true }
       );
       setAsignaciones(response.data);

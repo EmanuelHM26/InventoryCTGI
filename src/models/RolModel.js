@@ -3,17 +3,20 @@ import sequelize from "../config/database.js";
 
 const Role = sequelize.define("Role", {
   IdRol: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.TINYINT, // ← TINYINT(4) como en BD
     primaryKey: true,
     autoIncrement: true,
+    field: "idrol", // ← TODO MINÚSCULAS como en BD
   },
   NombreRol: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(45),
     allowNull: false,
+    field: "NombreRol",
   },
 }, {
-  tableName: "rol", // Nombre de la tabla en la base de datos
-  timestamps: false, // Si no tienes columnas de timestamps como createdAt o updatedAt
+  tableName: "rol",
+  timestamps: false,
+  underscored: false,
 });
 
 export default Role;

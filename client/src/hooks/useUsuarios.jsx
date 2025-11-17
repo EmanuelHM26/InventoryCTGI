@@ -5,6 +5,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { useForm } from "react-hook-form";
+import configAxios from "../api/configAxios";
 
 export const useUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -53,7 +54,7 @@ export const useUsuarios = () => {
 
   const fetchUsuarios = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/usuarios", {
+      const response = await configAxios.get("api/usuarios", {
         withCredentials: true,
       });
       setUsuarios(response.data);
@@ -87,8 +88,8 @@ export const useUsuarios = () => {
       };
 
       if (newUser.IdUsuario) {
-        await axios.put(
-          `http://localhost:3000/api/usuarios/${newUser.IdUsuario}`,
+        await configAxios.put(
+          `api/usuarios/${newUser.IdUsuario}`,
           userData,
           { withCredentials: true }
         );
@@ -100,7 +101,7 @@ export const useUsuarios = () => {
           confirmButtonText: "Aceptar"
         });
       } else {
-        await axios.post("http://localhost:3000/api/usuarios", userData, {
+        await configAxios.post("api/usuarios", userData, {
           withCredentials: true,
         });
         Swal.fire({
@@ -189,7 +190,7 @@ export const useUsuarios = () => {
 
     if (result.isConfirmed) {
       try {
-        await axios.delete(`http://localhost:3000/api/usuarios/${id}`, {
+        await configAxios.delete(`api/usuarios/${id}`, {
           withCredentials: true,
         });
         fetchUsuarios();

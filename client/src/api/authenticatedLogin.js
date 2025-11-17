@@ -7,7 +7,7 @@ export const registerUser = async (userData) => {
     return response.data;
   } catch (error) {
     console.error(
-      "Error al registrar usuario:",
+      "❌ Error al registrar usuario:",
       error.response?.data || error.message
     );
     throw error;
@@ -17,11 +17,17 @@ export const registerUser = async (userData) => {
 // Inicio de sesión
 export const loginUser = async (credentials) => {
   try {
+    console.log("🔐 Intentando iniciar sesión con:", { 
+      correo: credentials.Correo 
+    });
+    
     const response = await configAxios.post("/api/login", credentials);
+    
+    console.log("✅ Login exitoso:", response.data);
     return response.data;
   } catch (error) {
     console.error(
-      "Error al iniciar sesión:",
+      "❌ Error al iniciar sesión:",
       error.response?.data || error.message
     );
 
@@ -41,7 +47,7 @@ export const logoutUser = async () => {
     return response.data;
   } catch (error) {
     console.error(
-      "Error al cerrar sesión:",
+      "❌ Error al cerrar sesión:",
       error.response?.data || error.message
     );
     throw error;
@@ -55,7 +61,7 @@ export const validateToken = async () => {
     return response.data;
   } catch (error) {
     console.error(
-      "Error al validar el token:",
+      "❌ Error al validar el token:",
       error.response?.data || error.message
     );
     throw error;
@@ -65,13 +71,28 @@ export const validateToken = async () => {
 // Obtener usuario autenticado
 export const getAuthenticatedUser = async () => {
   try {
+    console.log("🔍 Obteniendo datos del usuario autenticado...");
+    
     const response = await configAxios.get("/api/auth/me");
+    
+    console.log("✅ Usuario obtenido:", response.data);
     return response.data;
   } catch (error) {
     console.error(
-      "Error al obtener datos del usuario:",
-      error.response?.data || error.message
+      "❌ Error al obtener datos del usuario:",
+      {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      }
     );
+    
+    // Si es 403 o 401, no hay sesión válida
+    if (error.response?.status === 403 || error.response?.status === 401) {
+      console.log("🔒 Usuario no autenticado");
+    }
+    
     throw error;
   }
 };

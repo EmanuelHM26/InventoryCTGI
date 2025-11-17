@@ -34,7 +34,7 @@ export const useProductosConsumibles = () => {
   const fetchProductos = async () => {
     try {
       const response = await configAxios.get(
-        "api/productosconsumibles",
+        "/api/productosconsumibles",
         { withCredentials: true }
       );
       setProductos(response.data);
@@ -48,7 +48,7 @@ export const useProductosConsumibles = () => {
       let response;
       if (newProducto.IdProductosConsumibles) {
         response = await axios.put(
-          `api/productosconsumibles/${newProducto.IdProductosConsumibles}`,
+          `/api/productosconsumibles/${newProducto.IdProductosConsumibles}`,
           newProducto,
           { withCredentials: true }
         );
@@ -59,7 +59,7 @@ export const useProductosConsumibles = () => {
         );
       } else {
         response = await configAxios.post(
-          "api/productosconsumibles",
+          "/api/productosconsumibles",
           newProducto,
           { withCredentials: true }
         );
@@ -110,7 +110,7 @@ export const useProductosConsumibles = () => {
     if (result.isConfirmed) {
       try {
         await configAxios.delete(
-          `api/productosconsumibles/${id}`,
+          `/api/productosconsumibles/${id}`,
           { withCredentials: true }
         );
         fetchProductos();

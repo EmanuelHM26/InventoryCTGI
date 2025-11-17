@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Base de datos MariaDB
   database:
@@ -13,6 +11,7 @@ services:
       MYSQL_DATABASE: mydb
     volumes:
       - mariadb_data_dev:/var/lib/mysql
+      - ./src/scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - inventoryctgi_network
     healthcheck:
@@ -21,6 +20,7 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+
   # Backend (Node.js + Express)
   backend:
     build:
@@ -42,10 +42,11 @@ services:
       EMAIL_USER: emanuelhuertas2604@gmail.com
       EMAIL_PASS: vedr xvqu ftnl ltjo
     depends_on:
-      - database
+      database:
+        condition: service_healthy  # ✅ Espera a que la BD esté HEALTHY
     volumes:
       - ./src:/app
-      - /app/node_modules  # ← VOLVER A AGREGAR (volumen anónimo)
+      - /app/node_modules
     networks:
       - inventoryctgi_network
 
@@ -61,12 +62,14 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: http://backend:3000
+      VITE_API_URL: http://localhost:3000
+      VITE_IS_DOCKER: true
     depends_on:
-      - backend
+      backend:
+        condition: service_started  # ✅ Espera a que el backend inicie
     volumes:
       - ./client:/app
-      - /app/node_modules  # ← VOLVER A AGREGAR (volumen anónimo)
+      - /app/node_modules
     networks:
       - inventoryctgi_network
     stdin_open: true

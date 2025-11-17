@@ -18,12 +18,13 @@ import movimientosConsumiblesRoutes from "./routes/movimientosConsumibles.routes
 import ambientesRoutes from "./routes/ambientes.routes.js";
 
 import cookieParser from "cookie-parser";
+import models from "./models/index.js";
 
 const app = express();
 
 // cors = es un mecanismo de seguridad que controla (dominios,puertos..) pueden hacer peticiones al backend 
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://frontend:5173'],
+    origin: ['http://localhost:5173', 'http://frontend:5173',  'http://localhost:3000'],
     credentials: true
 }));
 

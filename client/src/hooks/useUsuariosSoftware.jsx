@@ -86,7 +86,7 @@ export const useUsuariosSoftware = () => {
 
   const fetchUsuarios = async () => {
     try {
-      const response = await configAxios.get("api/users");
+      const response = await configAxios.get("/api/users");
 
       // Mapear los campos correctamente
       const usuariosConEstado = response.data.map((user) => ({
@@ -111,7 +111,7 @@ export const useUsuariosSoftware = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await configAxios.get("api/roles");
+      const response = await configAxios.get("/api/roles");
       setRoles(response.data);
     } catch (error) {
       console.error("Error al obtener roles:", error);
@@ -171,7 +171,7 @@ export const useUsuariosSoftware = () => {
       return;
     }
     try {
-      await configAxios.post("api/users", data);
+      await configAxios.post("/api/users", data);
       await Swal.fire({
         icon: "success",
         title: "Usuario creado",
@@ -212,7 +212,7 @@ export const useUsuariosSoftware = () => {
 
     if (result.isConfirmed) {
       try {
-        await configAxios.delete(`api/users/${id}`);
+        await configAxios.delete(`/api/users/${id}`);
         fetchUsuarios();
         Swal.fire({
           icon: "success",
@@ -266,7 +266,7 @@ export const useUsuariosSoftware = () => {
 
     try {
       await configAxios.put(
-        `api/users/${editingUser.IdRegistroLogin}`,
+        `/api/users/${editingUser.IdRegistroLogin}`,
         {
           Usuario: editingUser.Usuario,
           Correo: editingUser.Correo,
@@ -374,7 +374,7 @@ export const useUsuariosSoftware = () => {
   const toggleUserActivation = async (userId, isCurrentlyActive) => {
     try {
       const response = await configAxios.put(
-        `api/admin/users/${userId}/toggle-activation`, // ← Ruta corregida
+        `/api/admin/users/${userId}/toggle-activation`, // ← Ruta corregida
         {
           activate: !isCurrentlyActive,
         },
@@ -435,7 +435,7 @@ export const useUsuariosSoftware = () => {
   const changeUserRole = async (userId, newRoleId) => {
     try {
       await configAxios.put(
-        `api/admin/users/${userId}/role`,
+        `/api/admin/users/${userId}/role`,
         {
           newRoleId: parseInt(newRoleId),
         },

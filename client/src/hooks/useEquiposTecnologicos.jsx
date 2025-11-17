@@ -52,7 +52,7 @@ export const useEquiposTecnologicos = () => {
   const fetchEquipos = async () => {
     try {
       setLoading(true);
-      const response = await configAxios.get("api/equipostecnologicos",
+      const response = await configAxios.get("/api/equipostecnologicos",
         { withCredentials: true }
       );
       setEquipos(response.data);
@@ -72,7 +72,7 @@ export const useEquiposTecnologicos = () => {
   // Función para verificar si el código ya existe
   const checkCodigoExists = async (codigo, excludeId = null) => {
     try {
-      const response = await configAxios.get("api/equipostecnologicos",
+      const response = await configAxios.get("/api/equipostecnologicos",
         { withCredentials: true }
       );
       const equipos = response.data;
@@ -123,7 +123,7 @@ export const useEquiposTecnologicos = () => {
       if (equipoId) {
         // Modo edición
         await configAxios.put(
-          `api/equipostecnologicos/${equipoId}`,
+          `/api/equipostecnologicos/${equipoId}`,
           equipoData,
           { withCredentials: true }
         );
@@ -137,7 +137,7 @@ export const useEquiposTecnologicos = () => {
       } else {
         // Modo creación
         await configAxios.post(
-          "api/equipostecnologicos",
+          "/api/equipostecnologicos",
           equipoData,
           { withCredentials: true }
         );
@@ -214,7 +214,7 @@ export const useEquiposTecnologicos = () => {
       try {
         setLoading(true);
         await configAxios.delete(
-          `api/equipostecnologicos/${id}`,
+          `/api/equipostecnologicos/${id}`,
           { withCredentials: true }
         );
         

@@ -35,7 +35,7 @@ export const useAmbientes = () => {
   async function fetchAmbientes() {
     try {
       setLoading(true);
-      const res = await configAxios.get("/ambientes");
+      const res = await configAxios.get("/api/ambientes");
       const ambientesConEstado = res.data.map(amb => ({
         ...amb,
         estado: amb.estado || "Disponible"
@@ -99,7 +99,7 @@ export const useAmbientes = () => {
           nombre: form.nombre.toString().trim()
         };
         const editingId = editing.idAmbiente || editing.id;
-        await configAxios.put(`/ambientes/${editingId}`, payload);
+        await configAxios.put(`/api/ambientes/${editingId}`, payload);
         Swal.fire({ title: "Ambiente actualizado", text: `Se actualizó "${payload.nombre}"`, icon: "success", confirmButtonText: "Aceptar" });
       } else {
         // Al crear siempre se establece 'Disponible' por defecto.
@@ -108,7 +108,7 @@ export const useAmbientes = () => {
           nombre: form.nombre.toString().trim(),
           estado: "Disponible"
         };
-        await configAxios.post("/ambientes", payload);
+        await configAxios.post("/api/ambientes", payload);
         Swal.fire({ title: "Ambiente creado", text: `Se creó "${payload.nombre}"`, icon: "success", confirmButtonText: "Aceptar" });
       }
       closeModal();
@@ -132,7 +132,7 @@ export const useAmbientes = () => {
     if (!result.isConfirmed) return;
     try {
       const itemId = item.idAmbiente || item.id;
-      await configAxios.delete(`/ambientes/${itemId}`);
+      await configAxios.delete(`/api/ambientes/${itemId}`);
       Swal.fire({ title: "Ambiente eliminado", text: `"${item.nombre}" eliminado.`, icon: "success", confirmButtonText: "Aceptar" });
       setAmbientes(prev => prev.filter(a => (a.idAmbiente || a.id) !== itemId));
     } catch (err) {
@@ -262,7 +262,7 @@ export const useAmbientes = () => {
             continue;
           }
 
-          await configAxios.post("/ambientes", payload);
+          await configAxios.post("/api/ambientes", payload);
           successCount++;
         } catch (err) {
           errorCount++;

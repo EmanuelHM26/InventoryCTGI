@@ -7,7 +7,6 @@ import {
   getAuthenticatedUser,
 } from "../api/authenticatedLogin";
 import Swal from "sweetalert2";
-import axios from "axios";
 
 const AuthContext = createContext();
 
@@ -20,7 +19,7 @@ export const AuthProvider = ({ children }) => {
   const loadUserData = async () => {
     try {
       const userData = await getAuthenticatedUser();
-      console.log("Datos del usuario obtenidos:", userData);
+      console.log("✅ Datos del usuario obtenidos:", userData);
 
       // Asegurar compatibilidad con diferentes estructuras de respuesta
       setUser({
@@ -32,8 +31,14 @@ export const AuthProvider = ({ children }) => {
 
       return true;
     } catch (error) {
-      console.error("Error al cargar datos del usuario:", error);
-      setUser(null);
+      console.error("❌ Error al cargar datos del usuario:", error);
+      
+      // Si es error 403, limpiar el usuario
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        console.log("🔒 No autenticado - limpiando sesión");
+        setUser(null);
+      }
+      
       return false;
     } finally {
       setLoading(false);
@@ -61,36 +66,45 @@ export const AuthProvider = ({ children }) => {
   const signup = async (userData) => {
     try {
       const response = await registerUser(userData);
+      
+      Swal.fire({
+        icon: "success",
+        title: "✅ Registro exitoso",
+        text: "Revisa tu correo para verificar tu cuenta",
+        confirmButtonColor: "#22c55e",
+      });
+      
       navigate("/login");
       return response;
     } catch (error) {
-      console.error("Error al registrar usuario:", error);
+      console.error("❌ Error al registrar usuario:", error);
       throw error;
     }
   };
 
-  // Inicio de sesión - CORREGIDA
+  // Inicio de sesión
   const signin = async (credentials) => {
     try {
       const response = await loginUser(credentials);
-      console.log("Respuesta de inicio de sesión:", response);
+      console.log("✅ Respuesta de inicio de sesión:", response);
 
-      // Guardar el usuario en el estado directamente desde la respuesta
-      setUser({
+      // Guardar el usuario en el estado
+      const userData = {
         id: response.id || response.IdRegistroLogin,
         nombre: response.Usuario || response.nombre,
         rol: response.Rol || response.rol,
         email: response.Correo || response.email,
-      });
+      };
+      
+      setUser(userData);
+      console.log("👤 Usuario establecido:", userData);
 
       // Navegar al dashboard
       navigate("/dashboard");
 
       return response;
     } catch (error) {
-      console.error("Error al iniciar sesión:", error);
-
-      // Propagar el error con el mensaje original para que LoginPage lo maneje
+      console.error("❌ Error al iniciar sesión:", error);
       throw error;
     }
   };
@@ -114,18 +128,27 @@ export const AuthProvider = ({ children }) => {
       await logoutUser();
       setUser(null);
       navigate("/login");
+      
       Swal.fire(
         "Sesión cerrada",
         "Has cerrado sesión exitosamente.",
         "success"
       );
     } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-      Swal.fire("Error", "Hubo un problema al cerrar sesión.", "error");
+      console.error("❌ Error al cerrar sesión:", error);
+      
+      // Aunque falle el logout en el servidor, limpiar estado local
+      setUser(null);
+      navigate("/login");
+      
+      Swal.fire(
+        "Sesión cerrada",
+        "Se cerró la sesión localmente",
+        "info"
+      );
     }
   };
 
-  // Proveer el contexto de autenticación a los componentes hijos
   return (
     <AuthContext.Provider value={{ user, loading, signup, signin, logout }}>
       {children}

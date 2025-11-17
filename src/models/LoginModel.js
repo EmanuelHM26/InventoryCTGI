@@ -1,72 +1,95 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js";
-import Password from "../models/PasswordModel.js"; // Importa el modelo Password
+import Password from "../models/PasswordModel.js";
 import Role from "../models/RolModel.js";
-
 
 const RegistroLogin = sequelize.define("RegistroLogin", {
   IdRegistroLogin: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
+    field: "IdregistroLogin", // ← EXACTO como en BD
   },
   Usuario: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(45),
     allowNull: false,
     unique: true,
+    field: "Usuario",
   },
   Correo: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: false,
     unique: true,
     validate: {
-      isEmail: true, // Validación de correo electrónico
-    }
+      isEmail: true,
+    },
+    field: "Correo",
+  },
+  Password: {
+    type: DataTypes.STRING(45),
+    allowNull: true,
+    field: "Password", // Campo de texto en la tabla
   },
   IdPassword: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.BIGINT, // ← BIGINT como en BD
     allowNull: true,
-    references: {
-      model: Password, // Relación con la tabla Password
-      key: "IdPassword",
-    },
+    field: "IdPassword",
   },
   FechaInicioSesion: {
     type: DataTypes.DATE,
-    allowNull: true,  // Permite NULL hasta que el usuario inicie sesión
+    allowNull: true,
+    field: "FechaInicioSesion",
+  },
+  FechaCerrarSesion: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: "FechaCerrarSesion",
   },
   HoraInicioSesion: {
     type: DataTypes.TIME,
-    allowNull: true,  // Permite NULL hasta que el usuario inicie sesión
+    allowNull: true,
+    field: "HoraInicioSesion",
+  },
+  HoraCerrarSesion: {
+    type: DataTypes.TIME,
+    allowNull: true,
+    field: "HoraCerrarSesion",
+  },
+  emailVerified: {
+    type: DataTypes.TINYINT, // ← TINYINT(1) como en BD
+    defaultValue: 0,
+    allowNull: false,
+    field: "emailVerified",
   },
   isVerified: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false, // Por defecto, no verificado
+    type: DataTypes.TINYINT, // ← TINYINT(1) como en BD
+    defaultValue: 0,
     allowNull: false,
-  },
-  emailVerified:{
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-    allowNull: false,
+    field: "isVerified",
   },
   IdRol: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.TINYINT, // ← TINYINT(4) como en BD
     allowNull: false,
-    references: {
-      model: Role,
-      key: "IdRol",
-    },
+    defaultValue: 1,
+    field: "IdRol",
   },
 }, {
-  tableName: "registroLogin",
+  tableName: "registrologin",
   timestamps: false,
+  underscored: false,
 });
 
-// Relación con la tabla Password
-RegistroLogin.belongsTo(Password, { foreignKey: "IdPassword" });
-// Relación con la tabla Rol
-RegistroLogin.belongsTo(Role, { foreignKey: "IdRol", as: "Rol" });
+// Relaciones
+RegistroLogin.belongsTo(Password, { 
+  foreignKey: "IdPassword",
+  targetKey: "IdPassword",
+  as: "PasswordData"
+});
 
+RegistroLogin.belongsTo(Role, { 
+  foreignKey: "IdRol",
+  targetKey: "IdRol", 
+  as: "Rol" 
+});
 
 export default RegistroLogin;
-

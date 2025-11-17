@@ -25,7 +25,7 @@ const ResetToken = sequelize.define("ResetToken", {
     allowNull: false,
   },
 }, {
-  tableName: "resetTokens",
+  tableName: "resettokens",
   timestamps: false,
 });
 

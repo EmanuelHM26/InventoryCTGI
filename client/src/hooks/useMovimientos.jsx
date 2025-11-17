@@ -36,7 +36,7 @@ export const useMovimientos = (actualizarProductoLocal) => {
   const fetchMovimientos = async () => {
     try {
       const response = await configAxios.get(
-        "api/movimientosconsumibles",
+        "/api/movimientosconsumibles",
         { withCredentials: true }
       );
       setMovimientos(response.data.rows || response.data);
@@ -53,7 +53,7 @@ export const useMovimientos = (actualizarProductoLocal) => {
   const fetchProductos = async () => {
     try {
       const response = await configAxios.get(
-        "api/productosconsumibles",
+        "/api/productosconsumibles",
         { withCredentials: true }
       );
       setProductos(response.data);
@@ -80,7 +80,7 @@ export const useMovimientos = (actualizarProductoLocal) => {
       };
 
       await configAxios.post(
-        "api/movimientosconsumibles",
+        "/api/movimientosconsumibles",
         movimientoData,
         { withCredentials: true }
       );

@@ -23,7 +23,7 @@ export const useRoles = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await configAxios.get("api/roles", {
+      const response = await configAxios.get("/api/roles", {
         withCredentials: true,
       });
       setRoles(response.data);
@@ -46,7 +46,7 @@ export const useRoles = () => {
 
       if (newRole.IdRol) {
         await configAxios.put(
-          `api/roles/${newRole.IdRol}`,
+          `/api/roles/${newRole.IdRol}`,
           { NombreRol: newRole.NombreRol },
           { withCredentials: true }
         );
@@ -58,7 +58,7 @@ export const useRoles = () => {
         });
       } else {
         await configAxios.post(
-          "api/roles",
+          "/api/roles",
           { NombreRol: newRole.NombreRol },
           { withCredentials: true }
         );
@@ -109,7 +109,7 @@ export const useRoles = () => {
 
     if (result.isConfirmed) {
       try {
-        await configAxios.delete(`api/roles/${id}`, {
+        await configAxios.delete(`/api/roles/${id}`, {
           withCredentials: true,
         });
         fetchRoles();

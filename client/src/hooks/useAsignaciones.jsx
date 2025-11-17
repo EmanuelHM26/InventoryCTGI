@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import configAxios from "../api/configAxios";
 
 export const useAsignaciones = () => {
   const [asignaciones, setAsignaciones] = useState([]);
@@ -58,8 +59,8 @@ export const useAsignaciones = () => {
 
   const fetchAsignaciones = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/asignaciones",
+      const response = await configAxios.get(
+        "/api/asignaciones",
         { withCredentials: true }
       );
       setAsignaciones(response.data);
@@ -77,7 +78,7 @@ export const useAsignaciones = () => {
   // Función para obtener los usuarios
   const fetchUsuarios = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/usuarios", {
+      const response = await configAxios.get("/api/usuarios", {
         withCredentials: true,
       });
       setUsuarios(response.data);
@@ -95,7 +96,7 @@ export const useAsignaciones = () => {
   // Función para obtener los ambientes
   const fetchAmbientes = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/ambientes", {
+      const response = await configAxios.get("/api/ambientes", {
         withCredentials: true,
       });
       setAmbientes(response.data);
@@ -322,8 +323,8 @@ export const useAsignaciones = () => {
     try {
       if (newAsignacion.IdAsignaciones) {
         // Modo edición - mantener las fechas/horas existentes
-        await axios.put(
-          `http://localhost:3000/api/asignaciones/${newAsignacion.IdAsignaciones}`,
+        await configAxios.put(
+          `/api/asignaciones/${newAsignacion.IdAsignaciones}`,
           newAsignacion,
           { withCredentials: true }
         );
@@ -352,8 +353,8 @@ export const useAsignaciones = () => {
           CodigosEquipos: scannedEquipment.map(eq => eq.code).join(',')
         };
 
-        await axios.post(
-          "http://localhost:3000/api/asignaciones",
+        await configAxios.post(
+          "/api/asignaciones",
           asignacionData,
           { withCredentials: true }
         );
@@ -444,7 +445,7 @@ export const useAsignaciones = () => {
 
     if (result.isConfirmed) {
       try {
-        await axios.delete(`http://localhost:3000/api/asignaciones/${id}`, {
+        await configAxios.delete(`/api/asignaciones/${id}`, {
           withCredentials: true,
         });
         fetchAsignaciones();
@@ -511,8 +512,8 @@ export const useAsignaciones = () => {
       const FechaDevolucion = getTodayLocal();
       const HoraDevolucion = now.toTimeString().split(" ")[0].substring(0, 8);
 
-      await axios.patch(
-        `http://localhost:3000/api/asignaciones/${id}/confirmar-devolucion`,
+      await configAxios.patch(
+        `/api/asignaciones/${id}/confirmar-devolucion`,
         {
           FechaDevolucion,
           HoraDevolucion,

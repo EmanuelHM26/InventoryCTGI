@@ -25,7 +25,7 @@ const VerificationToken = sequelize.define("VerificationToken", {
     allowNull: false,
   },
 }, {
-  tableName: "verificationTokens",
+  tableName: "verificationtokens",
   timestamps: false,
 });
 

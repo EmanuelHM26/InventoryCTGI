@@ -14,7 +14,7 @@ export const useMovimientosConsumibles = (actualizarProductoLocal) => {
   const realizarMovimiento = async (producto, tipo, cantidad, motivo) => {
     try {
       const response = await configAxios.post(
-        "api/movimientosconsumibles",
+        "/api/movimientosconsumibles",
         {
           IdProductoConsumible: producto.IdProductosConsumibles,
           TipoMovimiento: tipo,

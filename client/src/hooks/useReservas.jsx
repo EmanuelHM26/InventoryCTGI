@@ -4,6 +4,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
+import configAxios from "../api/configAxios";
 
 export const useReservas = () => {
 
@@ -52,7 +53,7 @@ export const useReservas = () => {
 
   const fetchAmbientes = async () => {
   try {
-    const response = await axios.get("http://localhost:3000/api/ambientes", {
+    const response = await configAxios.get("/api/ambientes", {
       withCredentials: true,
     });
     setAmbientes(response.data);
@@ -63,8 +64,8 @@ export const useReservas = () => {
 
   const fetchReservasFijas = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/reservasfijas",
+      const response = await configAxios.get(
+        "/api/reservasfijas",
         { withCredentials: true }
       );
       setReservasFijas(response.data);
@@ -79,8 +80,8 @@ export const useReservas = () => {
   // Si hay un error, lo registra en la consola.
   const fetchReservasDiarias = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/reservas-diarias",
+      const response = await configAxios.get(
+        "api/reservas-diarias",
         { withCredentials: true }
       );
       setReservasDiarias(response.data);
@@ -95,7 +96,7 @@ export const useReservas = () => {
 // Si hay un error, lo registra en la consola.
   const fetchUsuarios = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/usuarios", {
+      const response = await configAxios.get("/api/usuarios", {
         withCredentials: true,
       });
       setUsuarios(response.data);
@@ -110,8 +111,8 @@ export const useReservas = () => {
 // Si hay un error, lo registra en la consola.
   const fetchEquiposTecnologicos = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3000/api/equipostecnologicos",
+      const response = await configAxios.get(
+        "/api/equipostecnologicos",
         { withCredentials: true }
       );
       setEquiposTecnologicos(response.data);
@@ -181,7 +182,12 @@ export const useReservas = () => {
           return;
         }
 
-        const endpoint = "http://localhost:3000/api/reservasfijas";
+        // Construye la URL usando el baseURL configurado en configAxios (si existe),
+        // y si no, usa la ruta relativa al backend.
+        const endpoint = "/api/reservasfijas";
+
+        // Nota: para aprovechar configAxios (ej. headers, withCredentials por defecto)
+        // reemplaza axios.post/put/delete por configAxios.post/put/delete donde uses `endpoint`.
         const reservaFija = {
           ...newReserva,
           nombrePrograma: newReserva.nombrePrograma.trim(),
@@ -191,13 +197,13 @@ export const useReservas = () => {
         };
 
         if (newReserva.idReservaFija) {
-          await axios.put(
+          await configAxios.put(
             `${endpoint}/${newReserva.idReservaFija}`,
             reservaFija,
             { withCredentials: true }
           );
         } else {
-          await axios.post(endpoint, reservaFija, { withCredentials: true });
+          await configAxios.post(endpoint, reservaFija, { withCredentials: true });
         }
         fetchReservasFijas();
       } else {
@@ -255,7 +261,8 @@ export const useReservas = () => {
           return;
         }
 
-        const endpoint = "http://localhost:3000/api/reservas-diarias";
+        
+        const endpoint = "/api/reservas-diarias";
         let fechaFormateada = newReserva.fecha;
         if (newReserva.fecha && newReserva.fecha.includes("/")) {
           const [dia, mes, anio] = newReserva.fecha.split("/");
@@ -284,13 +291,13 @@ export const useReservas = () => {
         }
 
         if (newReserva.idReservaDiaria) {
-          await axios.put(
+          await configAxios.put(
             `${endpoint}/${newReserva.idReservaDiaria}`,
             reservaData,
             { withCredentials: true }
           );
         } else {
-          await axios.post(endpoint, reservaData, { withCredentials: true });
+          await configAxios.post(endpoint, reservaData, { withCredentials: true });
         }
         fetchReservasDiarias();
       }
@@ -331,8 +338,8 @@ export const useReservas = () => {
       }).then(async (result) => {
         if (result.isConfirmed) {
           try {
-            await axios.delete(
-              `http://localhost:3000/api/reservasfijas/${id}`,
+            await configAxios.delete(
+              `/api/reservasfijas/${id}`,
               { withCredentials: true }
             );
             fetchReservasFijas();
@@ -359,8 +366,8 @@ export const useReservas = () => {
       }).then(async (result) => {
         if (result.isConfirmed) {
           try {
-            await axios.delete(
-              `http://localhost:3000/api/reservas-diarias/${id}`,
+            await configAxios.delete(
+              `/api/reservas-diarias/${id}`,
               { withCredentials: true }
             );
             fetchReservasDiarias();
@@ -396,8 +403,8 @@ export const useReservas = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axios.put(
-            `http://localhost:3000/api/reservasfijas/${reserva.idReservaFija}`,
+          await configAxios.put(
+            `/api/reservasfijas/${reserva.idReservaFija}`,
             { ...reserva, Estado: nuevoEstado },
             { withCredentials: true }
           );
