@@ -12,8 +12,6 @@ import {
 } from "lucide-react";
 import { useEquiposTecnologicos } from "../hooks/useEquiposTecnologicos";
 
-
-// Todas etsas son la funciones que estoy trayendo del hook useEquiposTecnologicos
 const EquiposTecnologicos = () => {
   const {
     equipos,
@@ -41,14 +39,12 @@ const EquiposTecnologicos = () => {
     sortedEquipos,
     watch,
     loading,
+    ESTADOS_EQUIPOS,
+    getEstadoClass,
     exportToPDF,
     exportToExcel
   } = useEquiposTecnologicos();
 
-
-
-  // sirve para construir una barra de búsqueda con un campo de texto y un botón para crear un nuevo equipo.
-//________________________________________________________________________________
   return (
     <div className="px-4 py-20 md:px-8 lg:px-10 max-w-full bg-gray-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -62,8 +58,8 @@ const EquiposTecnologicos = () => {
               <input
                 type="text"
                 placeholder="Buscar por código, nombre, marca, estado..."
-                value={searchTerm} // Es lo que el usuario escribe
-                onChange={(e) => setSearchTerm(e.target.value)} // Actualiza el estado searchTerm
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-64"
               />
               <Search
@@ -72,7 +68,7 @@ const EquiposTecnologicos = () => {
               />
               {searchTerm && (
                 <button
-                  onClick={() => setSearchTerm("")} // Limpia el campo de búsqueda
+                  onClick={() => setSearchTerm("")}
                   className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
                 >
                   <X size={18} />
@@ -80,7 +76,6 @@ const EquiposTecnologicos = () => {
               )}
             </div>
 
-            {/* Botones de exportar */}
             <div className="flex gap-2">
               <button
                 onClick={exportToPDF}
@@ -95,41 +90,25 @@ const EquiposTecnologicos = () => {
                 className="flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm"
                 title="Exportar a Excel"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 4h16v16H4V4zm8 4v8m-3-3l3 3 3-3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 4h16v16H4V4zm8 4v8m0 0l-3-3m3 3l3-3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 Excel
               </button>
             </div>
 
             <button
-              onClick={handleNewEquipo} // Abre el modal para crear un nuevo equipo
+              onClick={handleNewEquipo}
               disabled={loading}
               className="flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm disabled:bg-blue-300 disabled:cursor-not-allowed"
             >
-
-              {/* Si la app está cargando algo (loading = true) → se muestra un iconito que gira (como un relojito).  */}    
               {loading ? (
                 <Loader size={18} className="mr-2 animate-spin" />
               ) : (
-
-                // Si la app no está cargando (loading = false) → se muestra un iconito de “+” (para agregar un nuevo equipo).   
                 <Plus size={18} className="mr-2" />
               )}
               {loading ? "Cargando..." : "Nuevo Equipo"} 
-              
             </button>
           </div>
         </div>
-
-
-
-
-
-
-
-
-
-
-
 
         {loading && (
           <div className="flex justify-center items-center py-8">
@@ -147,36 +126,33 @@ const EquiposTecnologicos = () => {
                   "Código",
                   "Nombre",
                   "Marca",
-                  "Modelo",
                   "Estado",
                   "Acciones",
                 ].map((header, index) => (
                   <th
                     key={index}
                     onClick={() => {
-                      if (index < 6) {
+                      if (index < 5) {
                         const keys = [
                           "idequipostecnologicos",
                           "Codigo",
                           "Nombre",
                           "Marca",
-                          "Modelo",
                           "Estado",
                         ];
                         requestSort(keys[index]);
                       }
                     }}
-                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 6 ? "cursor-pointer hover:bg-gray-100" : ""
+                    className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${index < 5 ? "cursor-pointer hover:bg-gray-100" : ""
                       }`}
                   >
                     <div className="flex items-center">
                       {header}
-                      {index < 6 && sortConfig.key === [
+                      {index < 5 && sortConfig.key === [
                         "idequipostecnologicos",
                         "Codigo",
                         "Nombre",
                         "Marca",
-                        "Modelo",
                         "Estado",
                       ][index] && (
                           <span className="ml-1">
@@ -190,12 +166,15 @@ const EquiposTecnologicos = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {equipos.length > 0 ? (
-
-                // Ese código sirve para llenar la tabla con los equipos que tienes en la lista.
                 equipos.map((equipo) => (
                   <tr
                     key={equipo.idequipostecnologicos}
-                    className="hover:bg-blue-50 transition-colors duration-150"
+                    className={`transition-colors duration-150 ${
+                      equipo.Estado === ESTADOS_EQUIPOS.DANADO || 
+                      equipo.Estado === ESTADOS_EQUIPOS.MANTENIMIENTO 
+                        ? "bg-red-50 hover:bg-red-100" 
+                        : "hover:bg-blue-50"
+                    }`}
                   >
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">
                       {equipo.idequipostecnologicos}
@@ -209,26 +188,13 @@ const EquiposTecnologicos = () => {
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {equipo.Marca}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      {equipo.Modelo}
-                    </td>
-                    
-     
-
-
-
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${equipo.Estado === "Activo"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                        }`}>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getEstadoClass(equipo.Estado)}`}>
                         {equipo.Estado || "Sin estado"}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex space-x-2">
-
-                        {/* Etos botones sirven para editar o eliminar un equipo. */}
                         <button
                           onClick={() => handleEditEquipo(equipo)}
                           disabled={loading}
@@ -252,7 +218,7 @@ const EquiposTecnologicos = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="6"
                     className="px-4 py-8 text-center text-gray-500"
                   >
                     {loading ? "Cargando..." : "No se encontraron equipos tecnológicos"}
@@ -263,47 +229,25 @@ const EquiposTecnologicos = () => {
           </table>
         </div>
 
-
-
-
-
-        {/* Paginación */}
-
-
-        {/* Este código sirve para mostrar la paginación debajo de la tabla.*/}
         {sortedEquipos.length > 0 && (
           <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
             <div>
-              
               Mostrando {indexOfFirstItem + 1} a{" "}
-              {/* // Aquí se asegura de no mostrar un número mayor al total de equipos.*/}
-
-               {/*  sortedEquipos es la lista de equipos ya filtrada y ordenada.
-              // indexOfFirstItem y indexOfLastItem son los índices que indican qué parte de la lista se está mostrando en la página actual.*/}
               {Math.min(indexOfLastItem, sortedEquipos.length)} de{" "}
               {sortedEquipos.length} equipos
-             
             </div>
             <div className="flex space-x-1">
               <button
-
-               // Botón para ir a la página anterior
                 onClick={() => paginate(currentPage - 1)}
-
-                // Deshabilita el botón si ya estás en la primera página o si está cargando
                 disabled={currentPage === 1 || loading}
-
-                // Cambia el estilo del botón según si está deshabilitado o no
                 className={`p-2 rounded-md ${currentPage === 1 || loading
                     ? "text-gray-300 cursor-not-allowed"
                     : "text-gray-600 hover:bg-gray-100"
                   }`}
               >
-               {/* Icono de flecha izquierda*/}
                 <ChevronLeft size={18} />
               </button>
 
-              {/* Botones para cada número de página */}
               {Array.from({ length: totalPages }).map((_, idx) => (
                 <button
                   key={idx}
@@ -318,21 +262,14 @@ const EquiposTecnologicos = () => {
                 </button>
               ))}
 
-              {/* Botón para ir a la página siguiente*/}
               <button
                 onClick={() => paginate(currentPage + 1)}
-
-                // Deshabilita el botón si ya estás en la última página o si está cargando
                 disabled={currentPage === totalPages || loading}
-
-                // Cambia el estilo del botón según si está deshabilitado o no
                 className={`p-2 rounded-md ${currentPage === totalPages || loading
                     ? "text-gray-300 cursor-not-allowed"
                     : "text-gray-600 hover:bg-gray-100"
                   }`}
               >
-
-                {/* Icono de flecha derecha */}
                 <ChevronRight size={18} />
               </button>
             </div>
@@ -340,28 +277,14 @@ const EquiposTecnologicos = () => {
         )}
       </div>
 
- 
-
-
-
-
-
-
       {/* Modal para crear o editar un equipo */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg mx-4 max-h-screen overflow-y-auto">
             <h2 className="text-xl font-bold mb-6 text-gray-800 border-b pb-2">
-
-              {/* 
-              Si watch('idequipostecnologicos') tiene un valor (es decir, estás editando un equipo),
-               muestra "Editar Equipo". Si no tiene valor (estás creando uno nuevo), muestra "Crear Nuevo Equipo".
-               */}
-
               {watch('idequipostecnologicos') ? "Editar Equipo" : "Crear Nuevo Equipo"}
             </h2>
 
-            {/* Modo de Escáner */}
             <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <label className="block text-sm font-medium text-blue-700 mb-2">
                 Escáner de Código de Barras
@@ -369,8 +292,6 @@ const EquiposTecnologicos = () => {
               <div className="flex gap-2 items-center">
                 <button
                   type="button"
-
-                  // Botón para iniciar o detener el escáner
                   onClick={() => setIsScanning(!isScanning)}
                   disabled={loading}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isScanning
@@ -386,7 +307,6 @@ const EquiposTecnologicos = () => {
               </div>
             </div>
 
-            {/* Componente BarcodeReader dentro del modal */}
             {isScanning && (
               <div className="mb-4 p-4 border-2 border-blue-300 rounded-lg bg-blue-50">
                 <div className="text-center mb-2">
@@ -394,14 +314,12 @@ const EquiposTecnologicos = () => {
                   <p className="text-xs text-blue-600">Apunte la cámara hacia el código de barras</p>
                 </div>
                 <BarcodeReader
-                // Componente que maneja la lectura del código de barras
                   onScan={handleBarcodeScanned}
                   isActive={isScanning}
                 />
               </div>
             )}
 
-            
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
@@ -410,8 +328,6 @@ const EquiposTecnologicos = () => {
                   </label>
                   <input
                     type="text"
-                    // Aquí se registran las reglas de validación para el campo "Código"
-                    //  el ... register Sirve para “desarmar” el objeto que devuelve register y poner sus propiedades dentro del input
                     {...register("Codigo", {
                       required: "El código es obligatorio",
                       minLength: {
@@ -438,9 +354,6 @@ const EquiposTecnologicos = () => {
                   </label>
                   <input
                     type="text"
-
-                    // Aquí se registran las reglas de validación para el campo "nombre"
-                    //  el ... register Sirve para “desarmar” el objeto que devuelve register y poner sus propiedades dentro del input
                     {...register("Nombre", {
                       required: "El nombre es obligatorio",
                       minLength: {
@@ -487,31 +400,6 @@ const EquiposTecnologicos = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Modelo *
-                  </label>
-                  <input
-                    type="text"
-                    {...register("Modelo", {
-                      required: "El modelo es obligatorio",
-                      minLength: {
-                        value: 1,
-                        message: "El modelo debe tener al menos 1 carácter"
-                      },
-                      validate: {
-                        notEmpty: value => value.trim() !== "" || "El modelo no puede estar vacío"
-                      }
-                    })}
-                    className={`border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.Modelo ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                      }`}
-                    disabled={loading}
-                  />
-                  {errors.Modelo && (
-                    <p className="text-red-500 text-xs mt-1">{errors.Modelo.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Estado
                   </label>
                   <select
@@ -519,10 +407,10 @@ const EquiposTecnologicos = () => {
                     className="border p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300"
                     disabled={loading}
                   >
-                    <option value="Activo">Activo</option>
-                    <option value="Inactivo">Inactivo</option>
-                    <option value="Mantenimiento">Mantenimiento</option>
-                    <option value="Dañado">Dañado</option>
+                    <option value={ESTADOS_EQUIPOS.DISPONIBLE}>Disponible</option>
+                    <option value={ESTADOS_EQUIPOS.EN_PRESTAMO}>En Préstamo</option>
+                    <option value={ESTADOS_EQUIPOS.DANADO}>Dañado</option>
+                    <option value={ESTADOS_EQUIPOS.MANTENIMIENTO}>En Mantenimiento</option>
                   </select>
                 </div>
               </div>

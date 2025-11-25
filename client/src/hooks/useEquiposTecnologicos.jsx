@@ -7,11 +7,7 @@ import Swal from "sweetalert2";
 import { useForm } from "react-hook-form";
 import configAxios from "../api/configAxios";
 
-
-// Hook personalizado para gestionar equipos tecnológicos
 export const useEquiposTecnologicos = () => {
-
-  // Estados del hook 
   const [equipos, setEquipos] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [sortConfig, setSortConfig] = useState({
@@ -19,12 +15,19 @@ export const useEquiposTecnologicos = () => {
     direction: "ascending",
   });
 
-  // Estados para paginación y búsqueda
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [loading, setLoading] = useState(false);
   const itemsPerPage = 8;
+
+  // Nuevos estados para equipos
+  const ESTADOS_EQUIPOS = {
+    DISPONIBLE: "Disponible",
+    EN_PRESTAMO: "En Préstamo", 
+    DANADO: "Dañado",
+    MANTENIMIENTO: "En Mantenimiento"
+  };
 
   const {
     register,
@@ -40,8 +43,7 @@ export const useEquiposTecnologicos = () => {
       Codigo: "",
       Nombre: "",
       Marca: "",
-      Modelo: "",
-      Estado: "Activo" // Valor por defecto
+      Estado: ESTADOS_EQUIPOS.DISPONIBLE
     }
   });
 
@@ -69,7 +71,6 @@ export const useEquiposTecnologicos = () => {
     }
   };
 
-  // Función para verificar si el código ya existe
   const checkCodigoExists = async (codigo, excludeId = null) => {
     try {
       const response = await configAxios.get("/api/equipostecnologicos",
@@ -88,15 +89,29 @@ export const useEquiposTecnologicos = () => {
     }
   };
 
+  // Función para obtener clase CSS según estado
+  const getEstadoClass = (estado) => {
+    switch (estado) {
+      case ESTADOS_EQUIPOS.DISPONIBLE:
+        return "bg-green-100 text-green-800 border-green-200";
+      case ESTADOS_EQUIPOS.EN_PRESTAMO:
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case ESTADOS_EQUIPOS.DANADO:
+        return "bg-red-100 text-red-800 border-red-200";
+      case ESTADOS_EQUIPOS.MANTENIMIENTO:
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
   const onSubmit = async (data) => {
     try {
       setLoading(true);
       
       const equipoId = watch('idequipostecnologicos');
-      // Eliminar espacios al inicio y final del código
       const codigo = data.Codigo.trim();
 
-      // Verificar si el código ya existe (excepto para el equipo actual en edición)
       const codigoExiste = await checkCodigoExists(codigo, equipoId);
       
       if (codigoExiste) {
@@ -108,20 +123,16 @@ export const useEquiposTecnologicos = () => {
         return;
       }
 
-      // Limpiar error de código si existe
       clearErrors('Codigo');
 
       const equipoData = {
         Codigo: codigo,
         Nombre: data.Nombre.trim(),
         Marca: data.Marca.trim(),
-        Modelo: data.Modelo.trim(),
-        Estado: data.Estado || "Activo"
-        // Se eliminaron IdCodigoBarras e IdEstado
+        Estado: data.Estado || ESTADOS_EQUIPOS.DISPONIBLE
       };
 
       if (equipoId) {
-        // Modo edición
         await configAxios.put(
           `/api/equipostecnologicos/${equipoId}`,
           equipoData,
@@ -135,7 +146,6 @@ export const useEquiposTecnologicos = () => {
           timer: 2000
         });
       } else {
-        // Modo creación
         await configAxios.post(
           "/api/equipostecnologicos",
           equipoData,
@@ -165,39 +175,29 @@ export const useEquiposTecnologicos = () => {
         errorMessage = "Error del servidor. Intente nuevamente.";
       }
       
-      // Mostrar mensaje de error específico
       Swal.fire({
         icon: "error",
         title: "Error",
         text: errorMessage,
         showConfirmButton: true,
       });
-
-      // Si el error es por código duplicado, establecer error en el campo
     } finally {
       setLoading(false);
     }
   };
 
   const handleEditEquipo = (equipo) => {
-
-    // Rellenar el formulario con los datos del equipo a editar
     reset({
       idequipostecnologicos: equipo.idequipostecnologicos,
       Codigo: equipo.Codigo || "",
       Nombre: equipo.Nombre || "",
       Marca: equipo.Marca || "",
-      Modelo: equipo.Modelo || "",
-      Estado: equipo.Estado || "Activo"
+      Estado: equipo.Estado || ESTADOS_EQUIPOS.DISPONIBLE
     });
     setShowModal(true);
-
   };
 
-
-// Función para eliminar un equipo con confirmación
   const handleDeleteEquipo = async (id) => {
-    // Mostrar alerta de confirmación
     const result = await Swal.fire({
       title: "¿Estás seguro?",
       text: "Esta acción no se puede deshacer. El equipo será eliminado permanentemente.",
@@ -249,13 +249,11 @@ export const useEquiposTecnologicos = () => {
   };
 
   const handleBarcodeScanned = (barcode) => {
-    // Eliminar espacios en blanco y validar
     if (barcode && barcode.trim() !== '') {
       const codigoLimpio = barcode.trim();
       setValue('Codigo', codigoLimpio);
       setIsScanning(false);
       
-      // Validar inmediatamente si el código existe
       checkCodigoExists(codigoLimpio).then(existe => {
         if (existe) {
           setError('Codigo', {
@@ -296,55 +294,37 @@ export const useEquiposTecnologicos = () => {
       Codigo: "",
       Nombre: "",
       Marca: "",
-      Modelo: "",
-      Estado: "Activo"
+      Estado: ESTADOS_EQUIPOS.DISPONIBLE
     });
     clearErrors();
     setShowModal(true);
   };
 
-  // Tabla y paginación
   const requestSort = (key) => {
-    // Determinar la dirección de ordenamiento
     let direction = "ascending";
-
-    // Si ya está ordenado por esta clave, invertir la dirección
     if (sortConfig.key === key && sortConfig.direction === "ascending") {
       direction = "descending";
     }
-
-    // Actualizar el estado de ordenamiento
     setSortConfig({ key, direction });
   };
 
-
-  // Filtrar equipos según el término de búsqueda
   const filteredEquipos = equipos.filter((equipo) => {
     if (!searchTerm) return true;
     
-
-    // Convertir el término de búsqueda a minúsculas para comparación insensible a mayúsculas
     const searchTermLower = searchTerm.toLowerCase();
     return (
-
-      // Verificar si el término de búsqueda está en alguno de los campos relevantes
       (equipo.Nombre?.toLowerCase().includes(searchTermLower)) ||
       (equipo.Marca?.toLowerCase().includes(searchTermLower)) ||
-      (equipo.Modelo?.toLowerCase().includes(searchTermLower)) ||
       (equipo.Codigo?.toString().toLowerCase().includes(searchTermLower)) ||
       (equipo.Estado?.toLowerCase().includes(searchTermLower))
     );
   });
 
-
-  // Ordenar los equipos filtrados según la configuración de ordenamiento
   const sortedEquipos = [...filteredEquipos].sort((a, b) => {
     if (!a[sortConfig.key] && !b[sortConfig.key]) return 0;
     if (!a[sortConfig.key]) return 1;
     if (!b[sortConfig.key]) return -1;
     
-
-    // Comparar los valores para determinar el orden
     if (a[sortConfig.key] < b[sortConfig.key]) {
       return sortConfig.direction === "ascending" ? -1 : 1;
     }
@@ -354,8 +334,6 @@ export const useEquiposTecnologicos = () => {
     return 0;
   });
 
-
-  // Calcular los índices para la paginación
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentEquipos = sortedEquipos.slice(indexOfFirstItem, indexOfLastItem);
@@ -392,9 +370,9 @@ export const useEquiposTecnologicos = () => {
     indexOfLastItem,
     sortedEquipos,
     watch,
-    loading
-    ,
-    // Exportar a PDF
+    loading,
+    ESTADOS_EQUIPOS,
+    getEstadoClass,
     exportToPDF: async () => {
       try {
         const getBase64FromUrl = async (url) => {
@@ -411,32 +389,27 @@ export const useEquiposTecnologicos = () => {
         const senaLogoBase64 = await getBase64FromUrl("/logosena.png");
         const doc = new jsPDF();
 
-        // --- LOGO SENA ---
         doc.addImage(senaLogoBase64, "PNG", 15, 10, 30, 25);
 
-        // --- TÍTULO EN VERDE CENTRADO ---
         doc.setFontSize(22);
         doc.setTextColor(57, 181, 74);
         doc.setFont(undefined, "bold");
         doc.text("Inventario CTGI", 105, 25, { align: "center" });
 
-        // --- SUBTÍTULO EN NEGRO ---
         doc.setFontSize(18);
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, "bold");
         doc.text("Equipos tecnológicos", 15, 45);
 
-        // --- FECHA Y TOTAL ---
         doc.setFontSize(12);
         doc.setFont(undefined, "bold");
         doc.text(`Fecha:`, 15, 55);
         doc.text(`Total:`, 15, 63);
 
         doc.setFont(undefined, "normal");
-  doc.text(`${new Date().toLocaleDateString("es-ES")}`, 40, 55);
-  doc.text(`${sortedEquipos.length}`, 40, 63);
+        doc.text(`${new Date().toLocaleDateString("es-ES")}`, 40, 55);
+        doc.text(`${sortedEquipos.length}`, 40, 63);
 
-        // --- DESCRIPCIÓN ---
         doc.setFontSize(13);
         doc.setFont(undefined, "bold");
         doc.text("Descripción:", 15, 73);
@@ -449,18 +422,16 @@ export const useEquiposTecnologicos = () => {
           { maxWidth: 180 }
         );
 
-        // --- TABLA ---
         const tableData = sortedEquipos.map((eq) => [
           String(eq.idequipostecnologicos || ""),
           eq.Codigo || "",
           eq.Nombre || "",
           eq.Marca || "",
-          eq.Modelo || "",
           eq.Estado || ""
         ]);
 
         autoTable(doc, {
-          head: [["ID", "Código", "Nombre", "Marca", "Modelo", "Estado"]],
+          head: [["ID", "Código", "Nombre", "Marca", "Estado"]],
           body: tableData,
           startY: 90,
           styles: {
@@ -494,17 +465,15 @@ export const useEquiposTecnologicos = () => {
         });
       }
     },
-    // Exportar a Excel
     exportToExcel: () => {
       try {
         const wsData = [
-          ["ID", "Código", "Nombre", "Marca", "Modelo", "Estado"],
+          ["ID", "Código", "Nombre", "Marca", "Estado"],
           ...sortedEquipos.map((eq) => [
             eq.idequipostecnologicos || "",
             eq.Codigo || "",
             eq.Nombre || "",
             eq.Marca || "",
-            eq.Modelo || "",
             eq.Estado || ""
           ]),
         ];

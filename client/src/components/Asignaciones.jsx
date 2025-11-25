@@ -1,6 +1,7 @@
 import React from "react";
 import { useAsignaciones } from "../hooks/useAsignaciones";
 import BarcodeReader from "./BarcodeReader";
+import { useAmbientes } from "../hooks/useAmbientes";
 import {
   Search,
   Edit,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 
 const Asignaciones = () => {
+  const { refreshAmbientes } = useAmbientes();
   const {
     usuarios,
     showModal,
@@ -97,7 +99,11 @@ const Asignaciones = () => {
     setShowNovedadesConsumiblesModal,
     handleUpdateNovedadConsumible,
     handleProcesarDevolucionConsumibles,
-  } = useAsignaciones();
+    equiposDanados,
+    ESTADOS_EQUIPOS,
+    handleToggleEquipoDanado,
+    
+  } = useAsignaciones(refreshAmbientes);
 
   return (
     <div className="px-4 py-20 md:px-8 lg:px-2 max-w-full bg-gray-50 min-h-screen">
@@ -1217,6 +1223,7 @@ const Asignaciones = () => {
                   onClick={() => {
                     setShowNovedadesDevolucionModal(false);
                     setEquiposConDetalles([]);
+                    setEquiposDanados([]);
                   }}
                   className="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-all duration-200"
                 >
@@ -1248,7 +1255,8 @@ const Asignaciones = () => {
                   <div
                     key={index}
                     className={`border-2 rounded-xl p-5 transition-all duration-200 ${
-                      equipo.TieneNovedad
+                      equipo.TieneNovedad ||
+                      equiposDanados.includes(equipo.CodigoEquipo)
                         ? "bg-red-50 border-red-300 shadow-md"
                         : "bg-gray-50 border-gray-200 hover:shadow-md"
                     }`}
@@ -1256,10 +1264,14 @@ const Asignaciones = () => {
                     <div className="flex items-start gap-4">
                       <div
                         className={`p-3 rounded-lg ${
-                          equipo.TieneNovedad ? "bg-red-100" : "bg-green-100"
+                          equipo.TieneNovedad ||
+                          equiposDanados.includes(equipo.CodigoEquipo)
+                            ? "bg-red-100"
+                            : "bg-green-100"
                         }`}
                       >
-                        {equipo.TieneNovedad ? (
+                        {equipo.TieneNovedad ||
+                        equiposDanados.includes(equipo.CodigoEquipo) ? (
                           <AlertCircle size={24} className="text-red-600" />
                         ) : (
                           <Check size={24} className="text-green-600" />
@@ -1308,6 +1320,32 @@ const Asignaciones = () => {
                           </label>
                         </div>
 
+                        {/* 👇 NUEVO CHECKBOX PARA MARCAR EQUIPO COMO DAÑADO */}
+                        {equipo.TieneNovedad && (
+                          <div className="mb-3">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={equiposDanados.includes(
+                                  equipo.CodigoEquipo
+                                )}
+                                onChange={(e) =>
+                                  handleToggleEquipoDanado(equipo.CodigoEquipo)
+                                }
+                                className="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-2 focus:ring-red-500"
+                              />
+                              <span className="font-medium text-red-700">
+                                ⚠️ Marcar equipo como DAÑADO (cambiará el estado
+                                a "Dañado")
+                              </span>
+                            </label>
+                            <p className="text-xs text-red-600 ml-8 mt-1">
+                              Solo marque esta opción si el equipo está
+                              físicamente dañado y no puede ser usado
+                            </p>
+                          </div>
+                        )}
+
                         {/* Textarea para descripción de novedad (solo si está marcado) */}
                         {equipo.TieneNovedad && (
                           <div>
@@ -1342,6 +1380,32 @@ const Asignaciones = () => {
                 ))}
               </div>
 
+              {/* Resumen de equipos dañados */}
+              {equiposDanados.length > 0 && (
+                <div className="mt-6 p-4 bg-red-50 border-2 border-red-300 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle size={20} className="text-red-600" />
+                    <h4 className="font-bold text-red-800">
+                      Equipos que serán marcados como DAÑADOS:
+                    </h4>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {equiposDanados.map((codigo) => (
+                      <span
+                        key={codigo}
+                        className="bg-red-200 text-red-800 px-3 py-1 rounded-full text-sm font-mono font-bold"
+                      >
+                        {codigo}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-red-700 mt-2">
+                    Estos equipos cambiarán su estado a "Dañado" y no podrán ser
+                    asignados hasta que sean reparados.
+                  </p>
+                </div>
+              )}
+
               {/* Novedad general (opcional) */}
               <div className="mt-6 p-5 bg-gray-100 border border-gray-300 rounded-xl">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1360,18 +1424,30 @@ const Asignaciones = () => {
             {/* Footer */}
             <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
               <div className="flex justify-between items-center">
-                <p className="text-sm text-gray-600">
-                  <strong>
-                    {equiposConDetalles.filter((eq) => eq.TieneNovedad).length}
-                  </strong>{" "}
-                  de <strong>{equiposConDetalles.length}</strong> equipos con
-                  novedades
-                </p>
+                <div className="text-sm text-gray-600">
+                  <p>
+                    <strong>
+                      {
+                        equiposConDetalles.filter((eq) => eq.TieneNovedad)
+                          .length
+                      }
+                    </strong>{" "}
+                    de <strong>{equiposConDetalles.length}</strong> equipos con
+                    novedades
+                  </p>
+                  {equiposDanados.length > 0 && (
+                    <p className="text-red-600 font-semibold">
+                      <strong>{equiposDanados.length}</strong> equipo(s) serán
+                      marcados como DAÑADOS
+                    </p>
+                  )}
+                </div>
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
                       setShowNovedadesDevolucionModal(false);
                       setEquiposConDetalles([]);
+                      setEquiposDanados([]);
                     }}
                     className="px-6 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-semibold"
                   >
@@ -1387,9 +1463,12 @@ const Asignaciones = () => {
                         );
 
                       if (equiposConNovedadSinDescripcion.length > 0) {
-                        alert(
-                          "Por favor, describa la novedad de todos los equipos marcados"
-                        );
+                        Swal.fire({
+                          icon: "warning",
+                          title: "Descripción requerida",
+                          text: "Por favor, describa la novedad de todos los equipos marcados",
+                          showConfirmButton: true,
+                        });
                         return;
                       }
 

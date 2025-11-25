@@ -6,7 +6,7 @@ import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import configAxios from "../api/configAxios";
 
-export const useAsignaciones = () => {
+export const useAsignaciones = (refreshAmbientes) => {
   const [asignaciones, setAsignaciones] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -26,6 +26,9 @@ export const useAsignaciones = () => {
   const [showNovedadesDevolucionModal, setShowNovedadesDevolucionModal] =
     useState(false);
   const [equiposConDetalles, setEquiposConDetalles] = useState([]);
+
+  // Nuevos estados para checkbox de equipos dañados
+  const [equiposDanados, setEquiposDanados] = useState([]);
 
   // 👇 NUEVOS ESTADOS PARA CONSUMIBLES
   const [productosConsumibles, setProductosConsumibles] = useState([]);
@@ -57,6 +60,13 @@ export const useAsignaciones = () => {
     Item: "",
     Estado: "Activo",
   });
+
+  const ESTADOS_EQUIPOS = {
+    DISPONIBLE: "Disponible",
+    EN_PRESTAMO: "En Préstamo",
+    DANADO: "Dañado",
+    MANTENIMIENTO: "En Mantenimiento",
+  };
 
   // Estados para paginación y búsqueda
   const [currentPage, setCurrentPage] = useState(1);
@@ -272,66 +282,102 @@ export const useAsignaciones = () => {
       prod.CantidadDisponible > 0
   );
 
+  const validateEquipmentOnScan = async (scannedCode) => {
+    try {
+      // 1. Verificar que no esté ya escaneado
+      const existingEquipment = scannedEquipment.find(
+        (eq) => eq.code === scannedCode
+      );
+      if (existingEquipment) {
+        return {
+          success: false,
+          message: `El equipo con código ${scannedCode} ya fue escaneado.`,
+        };
+      }
+
+      // 2. Verificar disponibilidad en tiempo real
+      const response = await configAxios.get("/api/equipostecnologicos", {
+        withCredentials: true,
+      });
+
+      const equipos = response.data;
+      const equipo = equipos.find((e) => e.Codigo === scannedCode);
+
+      if (!equipo) {
+        return {
+          success: false,
+          message: `❌ El equipo con código ${scannedCode} no existe en el inventario`,
+        };
+      }
+
+      if (equipo.Estado !== ESTADOS_EQUIPOS.DISPONIBLE) {
+        return {
+          success: false,
+          message: `❌ El equipo ${scannedCode} no está disponible. Estado actual: ${equipo.Estado}`,
+        };
+      }
+
+      // 3. Verificar que no esté asignado en otra asignación activa
+      const asignacionesResponse = await configAxios.get("/api/asignaciones", {
+        withCredentials: true,
+      });
+
+      const asignacionActiva = asignacionesResponse.data.find(
+        (asig) =>
+          asig.Estado === "Activo" &&
+          asig.Item === "Equipo Tecnologico" &&
+          asig.DetallesEquipos?.some((det) => det.CodigoEquipo === scannedCode)
+      );
+
+      if (asignacionActiva) {
+        return {
+          success: false,
+          message: `❌ El equipo ${scannedCode} ya está asignado a ${asignacionActiva.Nombre} ${asignacionActiva.Apellido} (Asignación #${asignacionActiva.IdAsignaciones})`,
+        };
+      }
+
+      return { success: true, equipo };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Error al verificar disponibilidad del equipo",
+      };
+    }
+  };
+
   const handleBarcodeScan = async (scannedCode) => {
     if (!showModal) return;
 
     try {
       if (barcodeMode === "user") {
-        const usuario = usuarios.find(
-          (u) => String(u.NumeroDocumento).trim() === String(scannedCode).trim()
-        );
-
-        if (usuario) {
-          setNewAsignacion({
-            ...newAsignacion,
-            IdUsuario: usuario.IdUsuario.toString(),
-            Nombre: usuario.Nombre,
-            Apellido: usuario.Apellido,
-            Documento: usuario.NumeroDocumento || "",
-          });
-
-          Swal.fire({
-            icon: "success",
-            title: "Usuario encontrado",
-            text: `${usuario.Nombre} ${usuario.Apellido}`,
-            timer: 2000,
-            showConfirmButton: false,
-          });
-
-          setBarcodeMode("equipment");
-          setShowBarcodeInstructions(true);
-          setTimeout(() => setShowBarcodeInstructions(false), 3000);
-        } else {
-          Swal.fire({
-            icon: "warning",
-            title: "Usuario no encontrado",
-            text: "No se encontró un usuario con ese documento",
-            showConfirmButton: true,
-            confirmButtonText: "Cerrar",
-          });
-        }
+        // ... código existente para usuarios
       } else if (barcodeMode === "equipment") {
-        const existingEquipment = scannedEquipment.find(
-          (eq) => eq.code === scannedCode
-        );
+        // VALIDAR ANTES DE AGREGAR
+        const validation = await validateEquipmentOnScan(scannedCode);
 
-        if (existingEquipment) {
+        if (!validation.success) {
           Swal.fire({
-            icon: "warning",
-            title: "Equipo duplicado",
-            text: `El equipo con código ${scannedCode} ya fue escaneado.`,
+            icon: "error",
+            title: "Equipo no disponible",
+            html: `
+            <div class="text-left">
+              <p class="font-semibold text-red-700 mb-2">${validation.message}</p>
+              <p class="text-sm text-gray-600">No se puede agregar este equipo a la asignación.</p>
+            </div>
+          `,
             showConfirmButton: true,
-            confirmButtonText: "Cerrar",
+            confirmButtonText: "Entendido",
           });
-        } else {
-          setScannedEquipment((prev) => [
-            ...prev,
-            { code: scannedCode, quantity: 1, observacionInicial: "" },
-          ]);
+          return;
         }
 
-        const totalQuantity =
-          scannedEquipment.reduce((sum, eq) => sum + eq.quantity, 0) + 1;
+        // Si pasa validación, agregar al estado
+        setScannedEquipment((prev) => [
+          ...prev,
+          { code: scannedCode, quantity: 1, observacionInicial: "" },
+        ]);
+
+        const totalQuantity = scannedEquipment.length + 1;
         setNewAsignacion({
           ...newAsignacion,
           Cantidad: totalQuantity.toString(),
@@ -339,10 +385,16 @@ export const useAsignaciones = () => {
 
         Swal.fire({
           icon: "success",
-          title: "Equipo escaneado",
-          text: `Código: ${scannedCode}`,
+          title: "✅ Equipo disponible",
+          html: `
+          <div class="text-left">
+            <p class="font-semibold text-green-700">Equipo escaneado correctamente</p>
+            <p class="text-sm text-gray-600 mt-1">Código: <code class="bg-gray-100 px-2 py-1 rounded">${scannedCode}</code></p>
+            <p class="text-xs text-green-600 mt-2">✔️ Verificado y disponible para asignación</p>
+          </div>
+        `,
           showConfirmButton: true,
-          confirmButtonText: "Ok",
+          confirmButtonText: "Continuar",
         });
       }
     } catch (error) {
@@ -439,6 +491,94 @@ export const useAsignaciones = () => {
     );
   };
 
+  // 👇 NUEVA FUNCIÓN PARA VERIFICAR DISPONIBILIDAD DE EQUIPOS
+  const verificarDisponibilidadEquipos = async (codigosEquipos) => {
+    try {
+      // Obtener todos los equipos del sistema
+      const response = await configAxios.get("/api/equipostecnologicos", {
+        withCredentials: true,
+      });
+
+      const equipos = response.data;
+      const errores = [];
+
+      console.log(
+        `🔍 Verificando disponibilidad de ${codigosEquipos.length} equipos...`
+      );
+
+      for (const codigo of codigosEquipos) {
+        // VALIDACIÓN 1: Verificar que el equipo existe
+        const equipo = equipos.find((e) => e.Codigo === codigo);
+
+        if (!equipo) {
+          errores.push({
+            codigo: codigo,
+            mensaje: `El equipo con código ${codigo} no existe en el inventario`,
+            tipo: "no_existe",
+          });
+          console.error(`❌ Equipo ${codigo}: NO EXISTE`);
+          continue;
+        }
+
+        // VALIDACIÓN 2: Verificar que el equipo esté disponible
+        if (equipo.Estado !== ESTADOS_EQUIPOS.DISPONIBLE) {
+          errores.push({
+            codigo: codigo,
+            mensaje: `El equipo ${codigo} no está disponible`,
+            detalle: `Estado actual: ${equipo.Estado}`,
+            tipo: "no_disponible",
+          });
+          console.error(`❌ Equipo ${codigo}: Estado = ${equipo.Estado}`);
+          continue;
+        }
+
+        // VALIDACIÓN 3: Verificar que el equipo no esté ya asignado en otra asignación activa
+        const asignacionActiva = asignaciones.find(
+          (asig) =>
+            asig.Estado === "Activo" &&
+            asig.Item === "Equipo Tecnologico" &&
+            asig.DetallesEquipos?.some((det) => det.CodigoEquipo === codigo)
+        );
+
+        if (asignacionActiva) {
+          errores.push({
+            codigo: codigo,
+            mensaje: `El equipo ${codigo} ya está en préstamo`,
+            detalle: `Asignado a: ${asignacionActiva.Nombre} ${asignacionActiva.Apellido}`,
+            asignacionId: asignacionActiva.IdAsignaciones,
+            tipo: "ya_asignado",
+          });
+          console.error(
+            `❌ Equipo ${codigo}: Ya asignado a ${asignacionActiva.Nombre} ${asignacionActiva.Apellido}`
+          );
+          continue;
+        }
+
+        console.log(`✅ Equipo ${codigo}: DISPONIBLE`);
+      }
+
+      if (errores.length > 0) {
+        console.error(
+          `❌ ${errores.length} equipos con problemas de ${codigosEquipos.length} verificados`
+        );
+      } else {
+        console.log(`✅ Todos los equipos están disponibles`);
+      }
+
+      return errores;
+    } catch (error) {
+      console.error("❌ Error al verificar disponibilidad:", error);
+      return [
+        {
+          codigo: "ERROR",
+          mensaje: "Error al verificar disponibilidad de equipos",
+          detalle: error.message,
+          tipo: "error_sistema",
+        },
+      ];
+    }
+  };
+
   const handleCreateAsignacion = async () => {
     // Validación de campos obligatorios
     const requiredFields = {
@@ -453,7 +593,9 @@ export const useAsignaciones = () => {
 
     // 👇 VALIDACIÓN CONDICIONAL DE AMBIENTE
     if (newAsignacion.Item === "Equipo Tecnologico") {
-      requiredFields.Ambiente = "Ambiente";
+     if (refreshAmbientes) {
+          setTimeout(() => refreshAmbientes(), 500);
+        }
     }
 
     const missingFields = [];
@@ -508,6 +650,152 @@ export const useAsignaciones = () => {
         showConfirmButton: true,
       });
       return;
+    }
+
+    // 👇 NUEVA VALIDACIÓN: VERIFICAR DISPONIBILIDAD DE EQUIPOS
+    if (
+      newAsignacion.Item === "Equipo Tecnologico" &&
+      scannedEquipment.length > 0
+    ) {
+      const codigosEquipos = scannedEquipment.map((eq) => eq.code);
+      const erroresDisponibilidad = await verificarDisponibilidadEquipos(
+        codigosEquipos
+      );
+
+      if (erroresDisponibilidad.length > 0) {
+        // Agrupar errores por tipo para mejor visualización
+        const erroresPorTipo = {
+          no_existe: erroresDisponibilidad.filter(
+            (e) => e.tipo === "no_existe"
+          ),
+          no_disponible: erroresDisponibilidad.filter(
+            (e) => e.tipo === "no_disponible"
+          ),
+          ya_asignado: erroresDisponibilidad.filter(
+            (e) => e.tipo === "ya_asignado"
+          ),
+          error_sistema: erroresDisponibilidad.filter(
+            (e) => e.tipo === "error_sistema"
+          ),
+        };
+
+        // Construir HTML del mensaje
+        let mensajeHTML = '<div class="text-left space-y-4">';
+
+        // Errores de equipos que no existen
+        if (erroresPorTipo.no_existe.length > 0) {
+          mensajeHTML += `
+      <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+        <p class="font-bold text-red-800 mb-2">❌ Equipos que no existen (${
+          erroresPorTipo.no_existe.length
+        }):</p>
+        <ul class="list-disc list-inside space-y-1 text-sm text-red-700">
+          ${erroresPorTipo.no_existe
+            .map(
+              (e) =>
+                `<li><code class="bg-red-100 px-2 py-1 rounded">${e.codigo}</code> - ${e.mensaje}</li>`
+            )
+            .join("")}
+        </ul>
+      </div>
+    `;
+        }
+
+        // Errores de equipos no disponibles
+        if (erroresPorTipo.no_disponible.length > 0) {
+          mensajeHTML += `
+      <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
+        <p class="font-bold text-yellow-800 mb-2">⚠️ Equipos no disponibles (${
+          erroresPorTipo.no_disponible.length
+        }):</p>
+        <ul class="list-disc list-inside space-y-1 text-sm text-yellow-700">
+          ${erroresPorTipo.no_disponible
+            .map(
+              (e) => `
+            <li>
+              <code class="bg-yellow-100 px-2 py-1 rounded">${
+                e.codigo
+              }</code> - ${e.mensaje}
+              ${
+                e.detalle
+                  ? `<br><span class="ml-6 text-xs">${e.detalle}</span>`
+                  : ""
+              }
+            </li>
+          `
+            )
+            .join("")}
+        </ul>
+      </div>
+    `;
+        }
+
+        // Errores de equipos ya asignados
+        if (erroresPorTipo.ya_asignado.length > 0) {
+          mensajeHTML += `
+      <div class="bg-orange-50 border-l-4 border-orange-500 p-3 rounded">
+        <p class="font-bold text-orange-800 mb-2">🔒 Equipos ya en préstamo (${
+          erroresPorTipo.ya_asignado.length
+        }):</p>
+        <ul class="list-disc list-inside space-y-1 text-sm text-orange-700">
+          ${erroresPorTipo.ya_asignado
+            .map(
+              (e) => `
+            <li>
+              <code class="bg-orange-100 px-2 py-1 rounded">${
+                e.codigo
+              }</code> - ${e.mensaje}
+              ${
+                e.detalle
+                  ? `<br><span class="ml-6 text-xs">${e.detalle}</span>`
+                  : ""
+              }
+              ${
+                e.asignacionId
+                  ? `<br><span class="ml-6 text-xs">Asignación #${e.asignacionId}</span>`
+                  : ""
+              }
+            </li>
+          `
+            )
+            .join("")}
+        </ul>
+      </div>
+    `;
+        }
+
+        // Errores del sistema
+        if (erroresPorTipo.error_sistema.length > 0) {
+          mensajeHTML += `
+      <div class="bg-gray-50 border-l-4 border-gray-500 p-3 rounded">
+        <p class="font-bold text-gray-800 mb-2">⚙️ Errores del sistema:</p>
+        <ul class="list-disc list-inside space-y-1 text-sm text-gray-700">
+          ${erroresPorTipo.error_sistema
+            .map((e) => `<li>${e.mensaje}</li>`)
+            .join("")}
+        </ul>
+      </div>
+    `;
+        }
+
+        mensajeHTML += "</div>";
+
+        // Mostrar alerta con SweetAlert2
+        Swal.fire({
+          icon: "error",
+          title: "⚠️ No se puede crear la asignación",
+          html: mensajeHTML,
+          showConfirmButton: true,
+          confirmButtonText: "Entendido",
+          confirmButtonColor: "#EF4444",
+          width: "600px",
+          customClass: {
+            popup: "text-left",
+          },
+        });
+
+        return; // Detener la creación de la asignación
+      }
     }
 
     if (newAsignacion.FechaDevolucion && newAsignacion.FechaAsignacion) {
@@ -593,11 +881,12 @@ export const useAsignaciones = () => {
       }
 
       setScannedEquipment([]);
-      setSelectedConsumibles([]); // 👈 LIMPIAR CONSUMIBLES
+      setSelectedConsumibles([]);
+      setEquiposDanados([]); // 👈 Limpiar equipos dañados
       setBarcodeMode("user");
       setShowModal(false);
       setShowObservacionesModal(false);
-      setShowObservacionesConsumiblesModal(false); // 👈 NUEVO
+      setShowObservacionesConsumiblesModal(false);
       fetchAsignaciones();
       setNewAsignacion({
         IdUsuario: "",
@@ -628,6 +917,16 @@ export const useAsignaciones = () => {
       });
       console.error(error);
     }
+  };
+
+  const handleToggleEquipoDanado = (codigoEquipo) => {
+    setEquiposDanados((prev) => {
+      if (prev.includes(codigoEquipo)) {
+        return prev.filter((codigo) => codigo !== codigoEquipo);
+      } else {
+        return [...prev, codigoEquipo];
+      }
+    });
   };
 
   const handleEditAsignacion = async (asignacion) => {
@@ -676,6 +975,10 @@ export const useAsignaciones = () => {
           withCredentials: true,
         });
         fetchAsignaciones();
+         // 👇 Refrescar ambientes después de eliminar
+          if (refreshAmbientes) {
+        setTimeout(() => refreshAmbientes(), 500);
+      }
         Swal.fire({
           icon: "success",
           title: "¡Eliminado!",
@@ -761,13 +1064,20 @@ export const useAsignaciones = () => {
           Estado: "Inactivo",
           Novedad: novedadGeneral || null,
           DetallesEquipos: detallesEquipos,
+          EquiposDanados: equiposDanados, // 👈 Enviar equipos marcados como dañados
         },
         { withCredentials: true }
       );
 
       await fetchAsignaciones();
+        // 👇 Refrescar ambientes después de devolución
+      if (refreshAmbientes) {
+        setTimeout(() => refreshAmbientes(), 500);
+      }
+      
       setShowNovedadesDevolucionModal(false);
       setEquiposConDetalles([]);
+      setEquiposDanados([]); // 👈 Limpiar equipos dañados
 
       Swal.fire({
         icon: "success",
@@ -1178,6 +1488,8 @@ export const useAsignaciones = () => {
     showObservacionesConsumiblesModal,
     showNovedadesConsumiblesModal,
     consumiblesConDetalles,
+    equiposDanados,
+    ESTADOS_EQUIPOS,
 
     // Funciones existentes
     setSearchTerm,
@@ -1218,7 +1530,7 @@ export const useAsignaciones = () => {
     handleUpdateNovedadEquipo,
     handleProcesarDevolucion,
 
-    // 👇 NUEVAS FUNCIONES PARA CONSUMIBLES
+    // NUEVAS FUNCIONES PARA CONSUMIBLES
     setShowConsumiblesPanel,
     setConsumibleSearchTerm,
     setSelectedConsumibles,
@@ -1230,5 +1542,9 @@ export const useAsignaciones = () => {
     setShowNovedadesConsumiblesModal,
     handleUpdateNovedadConsumible,
     handleProcesarDevolucionConsumibles,
+
+    // NUEVAS FUNCIONES PARA EQUIPOS DAÑADOS
+    handleToggleEquipoDanado,
+    verificarDisponibilidadEquipos,
   };
 };

@@ -4,16 +4,33 @@ import configAxios from "../api/configAxios";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useForm } from "react-hook-form";
 
 export const useAmbientes = () => {
   const [ambientes, setAmbientes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ codigo: "", nombre: "" });
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // React Hook Form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    watch,
+    trigger
+  } = useForm({
+    mode: "onChange",
+    defaultValues: {
+      codigo: "",
+      nombre: ""
+    }
+  });
 
   useEffect(() => {
     fetchAmbientes();
@@ -54,69 +71,71 @@ export const useAmbientes = () => {
     }
   }
 
-  // NOTE: La opción de cambiar el estado desde la tabla de Ambientes fue eliminada.
-  // El estado "Asignado" sigue existiendo en el modelo para uso futuro,
-  // pero aquí no se ofrece funcionalidad para cambiarlo manualmente.
-
   const openNew = () => {
     setEditing(null);
-    setForm({ codigo: "", nombre: "" });
+    reset({
+      codigo: "",
+      nombre: ""
+    });
     setShowModal(true);
   };
 
   const openEdit = (item) => {
     setEditing(item);
-    setForm({ 
-      codigo: item.codigo ?? "", 
-      nombre: item.nombre ?? ""
-    });
+    setValue("codigo", item.codigo ?? "");
+    setValue("nombre", item.nombre ?? "");
     setShowModal(true);
   };
 
   const closeModal = () => {
     setShowModal(false);
     setEditing(null);
-    setForm({ codigo: "", nombre: "" });
+    reset({
+      codigo: "",
+      nombre: ""
+    });
   };
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!form.nombre || form.nombre.toString().trim() === "") {
-      Swal.fire({ title: "Formulario incompleto", text: "El campo Nombre es obligatorio.", icon: "warning", confirmButtonText: "Aceptar" });
-      return;
-    }
-
+  const onSubmit = async (data) => {
     try {
       if (editing) {
-        // Al editar no se modifica el campo 'estado' desde la tabla de Ambientes.
         const payload = { 
-          codigo: Number(form.codigo), 
-          nombre: form.nombre.toString().trim()
+          codigo: Number(data.codigo), 
+          nombre: data.nombre.toString().trim()
         };
         const editingId = editing.idAmbiente || editing.id;
         await configAxios.put(`/api/ambientes/${editingId}`, payload);
-        Swal.fire({ title: "Ambiente actualizado", text: `Se actualizó "${payload.nombre}"`, icon: "success", confirmButtonText: "Aceptar" });
+        Swal.fire({ 
+          title: "Ambiente actualizado", 
+          text: `Se actualizó "${payload.nombre}"`, 
+          icon: "success", 
+          confirmButtonText: "Aceptar" 
+        });
       } else {
-        // Al crear siempre se establece 'Disponible' por defecto.
         const payload = { 
-          codigo: Number(form.codigo), 
-          nombre: form.nombre.toString().trim(),
+          codigo: Number(data.codigo), 
+          nombre: data.nombre.toString().trim(),
           estado: "Disponible"
         };
         await configAxios.post("/api/ambientes", payload);
-        Swal.fire({ title: "Ambiente creado", text: `Se creó "${payload.nombre}"`, icon: "success", confirmButtonText: "Aceptar" });
+        Swal.fire({ 
+          title: "Ambiente creado", 
+          text: `Se creó "${payload.nombre}"`, 
+          icon: "success", 
+          confirmButtonText: "Aceptar" 
+        });
       }
       closeModal();
       fetchAmbientes();
     } catch (err) {
       console.error("Error guardando ambiente:", err);
       const serverMsg = err.response?.data?.message || err.message || "Error al guardar";
-      Swal.fire({ title: "Error al guardar", text: `${err.response?.status || ""} - ${serverMsg}`, icon: "error", confirmButtonText: "Aceptar" });
+      Swal.fire({ 
+        title: "Error al guardar", 
+        text: `${err.response?.status || ""} - ${serverMsg}`, 
+        icon: "error", 
+        confirmButtonText: "Aceptar" 
+      });
     }
   };
 
@@ -133,18 +152,27 @@ export const useAmbientes = () => {
     try {
       const itemId = item.idAmbiente || item.id;
       await configAxios.delete(`/api/ambientes/${itemId}`);
-      Swal.fire({ title: "Ambiente eliminado", text: `"${item.nombre}" eliminado.`, icon: "success", confirmButtonText: "Aceptar" });
+      Swal.fire({ 
+        title: "Ambiente eliminado", 
+        text: `"${item.nombre}" eliminado.`, 
+        icon: "success", 
+        confirmButtonText: "Aceptar" 
+      });
       setAmbientes(prev => prev.filter(a => (a.idAmbiente || a.id) !== itemId));
     } catch (err) {
       console.error("Error eliminando ambiente:", err);
       const serverMsg = err.response?.data?.message || err.message || "No se pudo eliminar";
-      Swal.fire({ title: "Error al eliminar", text: serverMsg, icon: "error", confirmButtonText: "Aceptar" });
+      Swal.fire({ 
+        title: "Error al eliminar", 
+        text: serverMsg, 
+        icon: "error", 
+        confirmButtonText: "Aceptar" 
+      });
     }
   };
 
   const getEstadoBadgeColor = (estado) => {
     const estadoNormalizado = estado || "Disponible";
-    // Sin cursor-pointer ni hover: no se puede cambiar el estado desde la UI de Ambientes.
     switch (estadoNormalizado) {
       case "Disponible":
         return "bg-green-100 text-green-800 border border-green-200";
@@ -217,6 +245,27 @@ export const useAmbientes = () => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Validación de tipo de archivo
+    const allowedTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/csv'
+    ];
+    
+    if (!allowedTypes.includes(file.type)) {
+      Swal.fire("Error", "Por favor, sube un archivo Excel válido (.xlsx, .xls, .csv)", "error");
+      event.target.value = '';
+      return;
+    }
+
+    // Validación de tamaño (5MB máximo)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      Swal.fire("Error", "El archivo es demasiado grande. Máximo 5MB permitido.", "error");
+      event.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -249,18 +298,33 @@ export const useAmbientes = () => {
 
       for (const item of jsonData) {
         try {
-          const payload = {
-            codigo: Number(item.CODIGO || item.codigo),
-            nombre: (item.NOMBRE || item.nombre)?.toString().trim(),
-            // Al importar siempre se crea como 'Disponible' (no se permite cambiar estado desde Ambientes)
-            estado: "Disponible"
-          };
+          const codigo = Number(item.CODIGO || item.codigo);
+          const nombre = (item.NOMBRE || item.nombre)?.toString().trim();
 
-          if (!payload.nombre) {
+          // Validaciones de importación
+          if (!nombre) {
             errorCount++;
             errors.push(`Fila ${jsonData.indexOf(item) + 2}: Nombre es obligatorio`);
             continue;
           }
+
+          if (nombre.length < 2 || nombre.length > 100) {
+            errorCount++;
+            errors.push(`Fila ${jsonData.indexOf(item) + 2}: El nombre debe tener entre 2 y 100 caracteres`);
+            continue;
+          }
+
+          if (isNaN(codigo) || codigo < 0) {
+            errorCount++;
+            errors.push(`Fila ${jsonData.indexOf(item) + 2}: El código debe ser un número válido mayor o igual a 0`);
+            continue;
+          }
+
+          const payload = {
+            codigo: codigo,
+            nombre: nombre,
+            estado: "Disponible"
+          };
 
           await configAxios.post("/api/ambientes", payload);
           successCount++;
@@ -309,12 +373,15 @@ export const useAmbientes = () => {
     }
   };
 
+  const refreshAmbientes = () => {
+  fetchAmbientes(); // Esto ya recarga los ambientes desde la API
+};
+
   return {
     ambientes,
     loading,
     showModal,
     editing,
-    form,
     searchTerm,
     currentPage,
     totalPages,
@@ -322,17 +389,22 @@ export const useAmbientes = () => {
     setSearchTerm,
     setShowModal,
     setEditing,
-    setForm,
     openNew,
     openEdit,
     closeModal,
-    handleChange,
-    handleSubmit,
     handleDelete,
     exportToPDF,
     exportToExcel,
     importFromExcel,
     paginate,
-    getEstadoBadgeColor
+    getEstadoBadgeColor,
+    filteredAmbientes,
+    // React Hook Form
+    register,
+    handleSubmit: handleSubmit(onSubmit),
+    errors,
+    watch,
+    refreshAmbientes,
+    trigger
   };
 };

@@ -23,16 +23,11 @@ const EquiposTecnologicos = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: false,
     },
-    Modelo: {
-      type: DataTypes.STRING(40),
-      allowNull: false,
-    },
     Estado: {
       type: DataTypes.STRING(45),
       allowNull: true,
       defaultValue: null,
     },
-    // Se eliminaron IdCodigoBarras e IdEstado
     IdReservaDiaria: {
       type: DataTypes.INTEGER,
       allowNull: true,

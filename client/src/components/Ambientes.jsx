@@ -8,28 +8,42 @@ const Ambientes = () => {
     loading,
     showModal,
     editing,
-    form,
     searchTerm,
     currentPage,
     totalPages,
     currentAmbientes,
     setSearchTerm,
     setShowModal,
-    setEditing,
-    setForm,
     openNew,
     openEdit,
     closeModal,
-    handleChange,
-    handleSubmit,
     handleDelete,
-    cambiarEstadoAmbiente,
     exportToPDF,
     exportToExcel,
     importFromExcel,
     paginate,
-    getEstadoBadgeColor
+    getEstadoBadgeColor,
+    filteredAmbientes,
+    // React Hook Form
+    register,
+    handleSubmit,
+    errors,
+    watch,
+    trigger
   } = useAmbientes();
+
+  // Función para validar código único (podrías implementar una verificación contra la API si es necesario)
+  const validateUniqueCode = (value) => {
+    if (!value) return true;
+    
+    const currentCode = Number(value);
+    const isDuplicate = ambientes.some(amb => 
+      amb.codigo === currentCode && 
+      (!editing || amb.idAmbiente !== editing.idAmbiente)
+    );
+    
+    return !isDuplicate || "Este código ya está en uso";
+  };
 
   return (
     <div className="px-4 py-20 md:px-8 lg:px-10 max-w-full bg-gray-50 min-h-screen">
@@ -45,6 +59,7 @@ const Ambientes = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                maxLength={50}
               />
               <Search
                 size={18}
@@ -124,7 +139,7 @@ const Ambientes = () => {
               ) : currentAmbientes.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
-                    No hay ambientes.
+                    {searchTerm ? "No se encontraron ambientes que coincidan con la búsqueda." : "No hay ambientes."}
                   </td>
                 </tr>
               ) : (
@@ -141,9 +156,7 @@ const Ambientes = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center w-1/6">
                       <span 
-                        onClick={() => cambiarEstadoAmbiente(a)}
                         className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full transition-colors duration-200 ${getEstadoBadgeColor(a.estado)}`}
-                        title={`Haz clic para cambiar el estado (actual: ${a.estado || "Disponible"})`}
                       >
                         {a.estado || "Disponible"}
                       </span>
@@ -178,8 +191,8 @@ const Ambientes = () => {
           <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
             <div>
               Mostrando {((currentPage - 1) * 10) + 1} a{" "}
-              {Math.min(currentPage * 10, ambientes.length)} de{" "}
-              {ambientes.length} ambientes
+              {Math.min(currentPage * 10, filteredAmbientes.length)} de{" "}
+              {filteredAmbientes.length} ambientes
             </div>
             <div className="flex space-x-1">
               <button
@@ -221,39 +234,105 @@ const Ambientes = () => {
           </div>
         )}
 
-        {/* Modal simplificado sin campo Estado */}
+        {/* Modal con validaciones */}
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-white rounded shadow-lg w-full max-w-lg p-6">
               <h3 className="text-lg font-medium mb-4">{editing ? "Editar ambiente" : "Nuevo ambiente"}</h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Código</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Código
+                    <span className="text-gray-500 text-xs ml-1">(Opcional)</span>
+                  </label>
                   <input 
-                    name="codigo" 
-                    value={form.codigo} 
-                    onChange={handleChange} 
-                    className="w-full border px-3 py-2 rounded" 
+                    {...register("codigo", {
+                      validate: {
+                        positiveNumber: (value) => 
+                          !value || (Number(value) >= 0) || "El código debe ser un número positivo",
+                        uniqueCode: validateUniqueCode,
+                        maxValue: (value) => 
+                          !value || (Number(value) <= 999999) || "El código no puede ser mayor a 999999"
+                      },
+                      pattern: {
+                        value: /^\d*$/,
+                        message: "Solo se permiten números"
+                      }
+                    })}
+                    className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 ${
+                      errors.codigo 
+                        ? "border-red-500 focus:ring-red-200" 
+                        : "border-gray-300 focus:ring-blue-200"
+                    }`}
                     type="number" 
+                    min="0"
+                    max="999999"
+                    placeholder="Ej: 101"
                   />
+                  {errors.codigo && (
+                    <p className="text-red-500 text-xs mt-1">{errors.codigo.message}</p>
+                  )}
                 </div>
+                
                 <div>
-                  <label className="block text-sm font-medium mb-1">Nombre *</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Nombre *
+                  </label>
                   <input 
-                    name="nombre" 
-                    value={form.nombre} 
-                    onChange={handleChange} 
-                    className="w-full border px-3 py-2 rounded" 
-                    type="text" 
-                    required 
+                    {...register("nombre", {
+                      required: "El nombre es obligatorio",
+                      minLength: {
+                        value: 2,
+                        message: "El nombre debe tener al menos 2 caracteres"
+                      },
+                      maxLength: {
+                        value: 100,
+                        message: "El nombre no puede tener más de 100 caracteres"
+                      },
+                      pattern: {
+                        value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s\-_.,()]+$/,
+                        message: "Solo se permiten letras, números, espacios y los caracteres -_.,()"
+                      },
+                      validate: {
+                        notOnlyNumbers: (value) => 
+                          !/^\d+$/.test(value) || "El nombre no puede contener solo números",
+                        notEmpty: (value) => 
+                          value.trim().length > 0 || "El nombre no puede estar vacío"
+                      }
+                    })}
+                    className={`w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 ${
+                      errors.nombre 
+                        ? "border-red-500 focus:ring-red-200" 
+                        : "border-gray-300 focus:ring-blue-200"
+                    }`}
+                    type="text"
+                    placeholder="Ej: Laboratorio de Computación A-101"
+                    maxLength={100}
                   />
+                  <div className="flex justify-between mt-1">
+                    {errors.nombre ? (
+                      <p className="text-red-500 text-xs">{errors.nombre.message}</p>
+                    ) : (
+                      <p className="text-gray-500 text-xs">
+                        {watch("nombre")?.length || 0}/100 caracteres
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2">
-                  <button type="button" onClick={closeModal} className="px-4 py-2 rounded border hover:bg-gray-50 transition-colors duration-200">
+                  <button 
+                    type="button" 
+                    onClick={closeModal} 
+                    className="px-4 py-2 rounded border border-gray-300 hover:bg-gray-50 transition-colors duration-200"
+                  >
                     Cancelar
                   </button>
-                  <button type="submit" className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition-colors duration-200">
+                  <button 
+                    type="submit" 
+                    className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={Object.keys(errors).length > 0}
+                  >
                     {editing ? "Actualizar" : "Crear"}
                   </button>
                 </div>
