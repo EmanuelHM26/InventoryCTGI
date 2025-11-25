@@ -72,8 +72,7 @@ CodigoAmbiente: {
   type: DataTypes.STRING(20),
   allowNull: false, 
 },
-
-  
+ 
 CodigosEquipos: {
   type: DataTypes.TEXT,
   allowNull: true,
@@ -96,6 +95,20 @@ export const setupAsignacionesAssociations = (models) => {
     foreignKey: 'IdUsuario',
     targetKey: 'IdUsuario',
     as: 'Usuario'
+  });
+
+  // Nueva asociación con detalles de equipos
+  Asignaciones.hasMany(models.AsignacionesEquiposDetalles, {
+    foreignKey: 'IdAsignacion',
+    sourceKey: 'IdAsignaciones',
+    as: 'DetallesEquipos'
+  });
+
+  // NUEVA ASOCIACIÓN con detalles de consumibles
+  Asignaciones.hasMany(models.AsignacionesConsumiblesDetalles, {
+    foreignKey: 'IdAsignacion',
+    sourceKey: 'IdAsignaciones',
+    as: 'DetallesConsumibles'
   });
 };
 

@@ -9,6 +9,8 @@ import ResetTokenModel from '../models/ResetTokenModel.js';
 // models/index.js
 import Usuario from '../models/UsuariosModel.js';
 import Asignaciones from '../models/AsignacionesModel.js';
+import AsignacionesEquiposDetalles from '../models/AsignacionesEquiposDetallesModel.js';
+import AsignacionesConsumiblesDetalles from '../models/AsignacionesConsumiblesDetallesModel.js'; // 👈 NUEVO
 import ProductosConsumibles from '../models/ProductosConsumiblesModel.js';
 import MovimientosConsumibles from '../models/MovimientosConsumiblesModel.js';
 
@@ -17,9 +19,10 @@ import Ambientes from '../models/AmbientesModel.js';
 import ReservasDiarias from '../models/ReservasDiariasModel.js';
 import ReservasFijas from '../models/ReservasFijasModel.js';
 
-
 import { setupUsuarioAssociations } from '../models/UsuariosModel.js';
 import { setupAsignacionesAssociations } from '../models/AsignacionesModel.js';
+import { setupAsignacionesEquiposDetallesAssociations } from '../models/AsignacionesEquiposDetallesModel.js';
+import { setupAsignacionesConsumiblesDetallesAssociations } from '../models/AsignacionesConsumiblesDetallesModel.js'; 
 import { setupProductosConsumiblesAssociations } from '../models/ProductosConsumiblesModel.js';
 import { setupMovimientosConsumiblesAssociations } from '../models/MovimientosConsumiblesModel.js';
 
@@ -34,6 +37,8 @@ const models = {
   ResetTokenModel,
   Usuario,
   Asignaciones,
+  AsignacionesEquiposDetalles,
+  AsignacionesConsumiblesDetalles, 
   ProductosConsumibles,
   MovimientosConsumibles,
   EquiposTecnologicos,
@@ -46,6 +51,8 @@ const models = {
 const setupAssociations = () => {
   setupUsuarioAssociations(models);
   setupAsignacionesAssociations(models);
+  setupAsignacionesEquiposDetallesAssociations(models);
+  setupAsignacionesConsumiblesDetallesAssociations(models); 
   setupProductosConsumiblesAssociations(models);
   setupMovimientosConsumiblesAssociations(models);
 };
@@ -62,6 +69,8 @@ export {
   EstadoModel,
   Usuario,
   Asignaciones,
+  AsignacionesEquiposDetalles,
+  AsignacionesConsumiblesDetalles, 
   ProductosConsumibles,
   MovimientosConsumibles,
   EquiposTecnologicos,

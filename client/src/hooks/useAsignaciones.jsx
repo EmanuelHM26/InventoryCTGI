@@ -20,6 +20,26 @@ export const useAsignaciones = () => {
   const [showEquipmentsModal, setShowEquipmentsModal] = useState(false);
   const [selectedEquipments, setSelectedEquipments] = useState([]);
   const [formTouched, setFormTouched] = useState(false);
+
+  // Nuevos estados para observaciones y novedades por equipo
+  const [showObservacionesModal, setShowObservacionesModal] = useState(false);
+  const [showNovedadesDevolucionModal, setShowNovedadesDevolucionModal] =
+    useState(false);
+  const [equiposConDetalles, setEquiposConDetalles] = useState([]);
+
+  // 👇 NUEVOS ESTADOS PARA CONSUMIBLES
+  const [productosConsumibles, setProductosConsumibles] = useState([]);
+  const [showConsumiblesPanel, setShowConsumiblesPanel] = useState(false);
+  const [consumibleSearchTerm, setConsumibleSearchTerm] = useState("");
+  const [selectedConsumibles, setSelectedConsumibles] = useState([]);
+  const [
+    showObservacionesConsumiblesModal,
+    setShowObservacionesConsumiblesModal,
+  ] = useState(false);
+  const [showNovedadesConsumiblesModal, setShowNovedadesConsumiblesModal] =
+    useState(false);
+  const [consumiblesConDetalles, setConsumiblesConDetalles] = useState([]);
+
   const [newAsignacion, setNewAsignacion] = useState({
     IdUsuario: "",
     Nombre: "",
@@ -37,6 +57,7 @@ export const useAsignaciones = () => {
     Item: "",
     Estado: "Activo",
   });
+
   // Estados para paginación y búsqueda
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,7 +68,7 @@ export const useAsignaciones = () => {
   const itemsPerPage = 8;
 
   //Estados para el lector de código de barras
-  const [barcodeMode, setBarcodeMode] = useState("user"); // 'user' o 'equipment'
+  const [barcodeMode, setBarcodeMode] = useState("user");
   const [scannedEquipment, setScannedEquipment] = useState([]);
   const [showBarcodeInstructions, setShowBarcodeInstructions] = useState(false);
 
@@ -55,14 +76,14 @@ export const useAsignaciones = () => {
     fetchAsignaciones();
     fetchUsuarios();
     fetchAmbientes();
+    fetchProductosConsumibles(); // 👈 NUEVO
   }, []);
 
   const fetchAsignaciones = async () => {
     try {
-      const response = await configAxios.get(
-        "/api/asignaciones",
-        { withCredentials: true }
-      );
+      const response = await configAxios.get("/api/asignaciones", {
+        withCredentials: true,
+      });
       setAsignaciones(response.data);
     } catch (error) {
       console.error("Error al obtener asignaciones:", error);
@@ -75,7 +96,6 @@ export const useAsignaciones = () => {
     }
   };
 
-  // Función para obtener los usuarios
   const fetchUsuarios = async () => {
     try {
       const response = await configAxios.get("/api/usuarios", {
@@ -93,7 +113,6 @@ export const useAsignaciones = () => {
     }
   };
 
-  // Función para obtener los ambientes
   const fetchAmbientes = async () => {
     try {
       const response = await configAxios.get("/api/ambientes", {
@@ -111,7 +130,24 @@ export const useAsignaciones = () => {
     }
   };
 
-  // Función para seleccionar un ambiente
+  // 👇 NUEVA FUNCIÓN PARA OBTENER PRODUCTOS CONSUMIBLES
+  const fetchProductosConsumibles = async () => {
+    try {
+      const response = await configAxios.get("/api/productosconsumibles", {
+        withCredentials: true,
+      });
+      setProductosConsumibles(response.data);
+    } catch (error) {
+      console.error("Error al obtener productos consumibles:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudieron cargar los productos consumibles",
+        showConfirmButton: true,
+      });
+    }
+  };
+
   const handleSelectAmbiente = (ambiente) => {
     setNewAsignacion({
       ...newAsignacion,
@@ -129,6 +165,99 @@ export const useAsignaciones = () => {
     });
   };
 
+  // 👇 NUEVA FUNCIÓN PARA SELECCIONAR CONSUMIBLE
+  const handleSelectConsumible = (producto, cantidad) => {
+    if (!cantidad || cantidad <= 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Cantidad inválida",
+        text: "Debe ingresar una cantidad mayor a 0",
+        showConfirmButton: true,
+      });
+      return;
+    }
+
+    if (cantidad > producto.CantidadDisponible) {
+      Swal.fire({
+        icon: "warning",
+        title: "Stock insuficiente",
+        text: `Solo hay ${producto.CantidadDisponible} unidades disponibles de ${producto.Nombre}`,
+        showConfirmButton: true,
+      });
+      return;
+    }
+
+    const yaSeleccionado = selectedConsumibles.find(
+      (c) => c.IdProductoConsumible === producto.IdProductosConsumibles
+    );
+
+    if (yaSeleccionado) {
+      Swal.fire({
+        icon: "warning",
+        title: "Producto ya seleccionado",
+        text: "Este producto ya está en la lista",
+        showConfirmButton: true,
+      });
+      return;
+    }
+
+    const nuevoConsumible = {
+      IdProductoConsumible: producto.IdProductosConsumibles,
+      Nombre: producto.Nombre,
+      CantidadAsignada: parseInt(cantidad),
+      CantidadDisponible: producto.CantidadDisponible,
+      UnidadMedida: producto.UnidadMedida,
+      ValorMedida: producto.ValorMedida,
+      ObservacionInicial: "",
+    };
+
+    setSelectedConsumibles((prev) => [...prev, nuevoConsumible]);
+
+    // Actualizar cantidad total
+    const totalCantidad =
+      selectedConsumibles.reduce((sum, c) => sum + c.CantidadAsignada, 0) +
+      parseInt(cantidad);
+
+    setNewAsignacion({
+      ...newAsignacion,
+      Cantidad: totalCantidad.toString(),
+    });
+
+    Swal.fire({
+      icon: "success",
+      title: "Producto agregado",
+      text: `${cantidad} unidad(es) de ${producto.Nombre}`,
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  };
+
+  // 👇 FUNCIÓN PARA ELIMINAR CONSUMIBLE SELECCIONADO
+  const handleRemoveConsumible = (idProducto) => {
+    const updatedConsumibles = selectedConsumibles.filter(
+      (c) => c.IdProductoConsumible !== idProducto
+    );
+    setSelectedConsumibles(updatedConsumibles);
+
+    // Actualizar cantidad total
+    const totalCantidad = updatedConsumibles.reduce(
+      (sum, c) => sum + c.CantidadAsignada,
+      0
+    );
+    setNewAsignacion({
+      ...newAsignacion,
+      Cantidad: totalCantidad.toString(),
+    });
+
+    Swal.fire({
+      icon: "success",
+      title: "Producto eliminado",
+      text: "El producto fue eliminado de la lista",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  };
+
   // Filtrar ambientes por búsqueda
   const filteredAmbientes = ambientes.filter(
     (amb) =>
@@ -136,13 +265,18 @@ export const useAsignaciones = () => {
       amb.codigo?.toString().includes(ambienteSearchTerm)
   );
 
-  // Función para manejar códigos de barras escaneados
+  // 👇 FILTRAR CONSUMIBLES POR BÚSQUEDA
+  const filteredConsumibles = productosConsumibles.filter(
+    (prod) =>
+      prod.Nombre?.toLowerCase().includes(consumibleSearchTerm.toLowerCase()) &&
+      prod.CantidadDisponible > 0
+  );
+
   const handleBarcodeScan = async (scannedCode) => {
-    if (!showModal) return; // Solo procesar si el modal está abierto
+    if (!showModal) return;
 
     try {
       if (barcodeMode === "user") {
-        // Buscar usuario por documento
         const usuario = usuarios.find(
           (u) => String(u.NumeroDocumento).trim() === String(scannedCode).trim()
         );
@@ -164,7 +298,6 @@ export const useAsignaciones = () => {
             showConfirmButton: false,
           });
 
-          // Cambiar automáticamente a modo equipo después de escanear usuario
           setBarcodeMode("equipment");
           setShowBarcodeInstructions(true);
           setTimeout(() => setShowBarcodeInstructions(false), 3000);
@@ -178,7 +311,6 @@ export const useAsignaciones = () => {
           });
         }
       } else if (barcodeMode === "equipment") {
-        // Agregar equipo escaneado a la lista
         const existingEquipment = scannedEquipment.find(
           (eq) => eq.code === scannedCode
         );
@@ -192,14 +324,12 @@ export const useAsignaciones = () => {
             confirmButtonText: "Cerrar",
           });
         } else {
-          // Agregar nuevo equipo
           setScannedEquipment((prev) => [
             ...prev,
-            { code: scannedCode, quantity: 1 },
+            { code: scannedCode, quantity: 1, observacionInicial: "" },
           ]);
         }
 
-        // Actualizar cantidad total
         const totalQuantity =
           scannedEquipment.reduce((sum, eq) => sum + eq.quantity, 0) + 1;
         setNewAsignacion({
@@ -227,14 +357,12 @@ export const useAsignaciones = () => {
     }
   };
 
-  // Función para eliminar un equipo escaneado
   const handleRemoveScannedEquipment = (codeToRemove) => {
     const updatedEquipment = scannedEquipment.filter(
       (eq) => eq.code !== codeToRemove
     );
     setScannedEquipment(updatedEquipment);
 
-    // Actualizar cantidad total (número de equipos únicos)
     const totalQuantity = updatedEquipment.length;
     setNewAsignacion({
       ...newAsignacion,
@@ -250,7 +378,6 @@ export const useAsignaciones = () => {
     });
   };
 
-  // Llenar automáticamente Nombre, Apellido y Documento al seleccionar usuario
   const handleUsuarioChange = (e) => {
     const selectedId = e.target.value;
     const usuario = usuarios.find((u) => u.IdUsuario.toString() === selectedId);
@@ -263,6 +390,55 @@ export const useAsignaciones = () => {
     });
   };
 
+  // 👇 FUNCIÓN PARA ABRIR MODAL DE OBSERVACIONES DE EQUIPOS
+  const handleOpenObservacionesModal = () => {
+    if (scannedEquipment.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Sin equipos",
+        text: "Primero debe escanear al menos un equipo",
+        showConfirmButton: true,
+      });
+      return;
+    }
+    setShowObservacionesModal(true);
+  };
+
+  // 👇 NUEVA FUNCIÓN PARA ABRIR MODAL DE OBSERVACIONES DE CONSUMIBLES
+  const handleOpenObservacionesConsumiblesModal = () => {
+    if (selectedConsumibles.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Sin productos",
+        text: "Primero debe seleccionar al menos un producto consumible",
+        showConfirmButton: true,
+      });
+      return;
+    }
+    setShowObservacionesConsumiblesModal(true);
+  };
+
+  const handleUpdateObservacionEquipo = (codigoEquipo, observacion) => {
+    setScannedEquipment((prev) =>
+      prev.map((eq) =>
+        eq.code === codigoEquipo
+          ? { ...eq, observacionInicial: observacion }
+          : eq
+      )
+    );
+  };
+
+  // 👇 NUEVA FUNCIÓN PARA ACTUALIZAR OBSERVACIÓN DE CONSUMIBLE
+  const handleUpdateObservacionConsumible = (idProducto, observacion) => {
+    setSelectedConsumibles((prev) =>
+      prev.map((c) =>
+        c.IdProductoConsumible === idProducto
+          ? { ...c, ObservacionInicial: observacion }
+          : c
+      )
+    );
+  };
+
   const handleCreateAsignacion = async () => {
     // Validación de campos obligatorios
     const requiredFields = {
@@ -273,8 +449,12 @@ export const useAsignaciones = () => {
       Cantidad: "Cantidad",
       Item: "Item",
       Estado: "Estado",
-      Ambiente: "Ambiente" 
     };
+
+    // 👇 VALIDACIÓN CONDICIONAL DE AMBIENTE
+    if (newAsignacion.Item === "Equipo Tecnologico") {
+      requiredFields.Ambiente = "Ambiente";
+    }
 
     const missingFields = [];
     for (const [field, label] of Object.entries(requiredFields)) {
@@ -286,7 +466,6 @@ export const useAsignaciones = () => {
       }
     }
 
-    // Si Observacion está vacío, ponerle automáticamente "ninguna observación"
     if (!newAsignacion.Observacion || !newAsignacion.Observacion.trim()) {
       newAsignacion.Observacion = "ninguna observación";
     }
@@ -304,7 +483,33 @@ export const useAsignaciones = () => {
       return;
     }
 
-    // Validación de fecha de devolución
+    // 👇 VALIDACIÓN ESPECÍFICA POR TIPO DE ITEM
+    if (
+      newAsignacion.Item === "Equipo Tecnologico" &&
+      scannedEquipment.length === 0
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Sin equipos",
+        text: "Debe escanear al menos un equipo tecnológico",
+        showConfirmButton: true,
+      });
+      return;
+    }
+
+    if (
+      newAsignacion.Item === "Producto Consumible" &&
+      selectedConsumibles.length === 0
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Sin productos",
+        text: "Debe seleccionar al menos un producto consumible",
+        showConfirmButton: true,
+      });
+      return;
+    }
+
     if (newAsignacion.FechaDevolucion && newAsignacion.FechaAsignacion) {
       if (
         new Date(newAsignacion.FechaDevolucion) <
@@ -322,7 +527,6 @@ export const useAsignaciones = () => {
 
     try {
       if (newAsignacion.IdAsignaciones) {
-        // Modo edición - mantener las fechas/horas existentes
         await configAxios.put(
           `/api/asignaciones/${newAsignacion.IdAsignaciones}`,
           newAsignacion,
@@ -336,28 +540,49 @@ export const useAsignaciones = () => {
           confirmButtonText: "Ok",
         });
       } else {
-        // Modo creación - establecer fecha/hora actual automáticamente
         const now = new Date();
-
-        // Formatear fecha como YYYY-MM-DD
         const today = now.toISOString().split("T")[0];
-        // Formatear hora como HH:MM:SS
         const currentTime = now.toTimeString().split(" ")[0];
 
-        const asignacionData = {
+        let asignacionData = {
           ...newAsignacion,
-          FechaAsignacion: today, // Se establece automáticamente
-          HoraAsignacion: currentTime, // Se establece automáticamente
-          FechaDevolucion: null, // Debe ser null al crear
-          HoraDevolucion: null, // Debe ser null al crear
-          CodigosEquipos: scannedEquipment.map(eq => eq.code).join(',')
+          FechaAsignacion: today,
+          HoraAsignacion: currentTime,
+          FechaDevolucion: null,
+          HoraDevolucion: null,
         };
 
-        await configAxios.post(
-          "/api/asignaciones",
-          asignacionData,
-          { withCredentials: true }
-        );
+        // 👇 PREPARAR DATOS SEGÚN EL TIPO DE ITEM
+        if (newAsignacion.Item === "Equipo Tecnologico") {
+          const detallesEquipos = scannedEquipment.map((eq) => ({
+            CodigoEquipo: eq.code,
+            ObservacionInicial: eq.observacionInicial || null,
+          }));
+
+          asignacionData = {
+            ...asignacionData,
+            CodigosEquipos: scannedEquipment.map((eq) => eq.code).join(","),
+            DetallesEquipos: detallesEquipos,
+          };
+        } else if (newAsignacion.Item === "Producto Consumible") {
+          const detallesConsumibles = selectedConsumibles.map((c) => ({
+            IdProductoConsumible: c.IdProductoConsumible,
+            CantidadAsignada: c.CantidadAsignada,
+            ObservacionInicial: c.ObservacionInicial || null,
+          }));
+
+          asignacionData = {
+            ...asignacionData,
+            DetallesConsumibles: detallesConsumibles,
+            Ambiente: newAsignacion.Ambiente || null,
+            CodigoAmbiente: newAsignacion.CodigoAmbiente || null,
+          };
+        }
+
+        await configAxios.post("/api/asignaciones", asignacionData, {
+          withCredentials: true,
+        });
+
         Swal.fire({
           icon: "success",
           title: "¡Éxito!",
@@ -367,9 +592,12 @@ export const useAsignaciones = () => {
         });
       }
 
-      setScannedEquipment([]); // Limpiar equipos escaneados
-      setBarcodeMode("user"); // Resetear modo
+      setScannedEquipment([]);
+      setSelectedConsumibles([]); // 👈 LIMPIAR CONSUMIBLES
+      setBarcodeMode("user");
       setShowModal(false);
+      setShowObservacionesModal(false);
+      setShowObservacionesConsumiblesModal(false); // 👈 NUEVO
       fetchAsignaciones();
       setNewAsignacion({
         IdUsuario: "",
@@ -403,7 +631,6 @@ export const useAsignaciones = () => {
   };
 
   const handleEditAsignacion = async (asignacion) => {
-    // Formatear las fechas para el input date
     const formatDateForInput = (dateString) => {
       if (!dateString) return "";
       const date = new Date(dateString);
@@ -423,8 +650,8 @@ export const useAsignaciones = () => {
       text: "Modo edición activado",
       icon: "info",
       showCancelButton: true,
-      confirmButtonText: "#d33",
-      cancelButtonText: "#3085d6",
+      confirmButtonText: "#3085d6",
+      cancelButtonText: "#d33",
       confirmButtonText: "Sí, editar",
       cancelButtonText: "Cancelar",
     });
@@ -469,61 +696,78 @@ export const useAsignaciones = () => {
     }
   };
 
-  // Función para confirmar devolución de una asignación
   const handleConfirmarDevolucion = async (id) => {
-    const { value: hasNovedad } = await Swal.fire({
-      title: "¿Hay alguna novedad que reportar?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sí",
-      cancelButtonText: "No",
-      reverseButtons: true,
-    });
-
-    let novedad = "";
-    if (hasNovedad) {
-      const { value: novedadInput } = await Swal.fire({
-        title: "Describe la novedad",
-        input: "textarea",
-        inputLabel: "Novedad",
-        inputPlaceholder: "Escribe aquí la novedad...",
-        inputAttributes: {
-          "aria-label": "Escribe aquí la novedad",
-        },
-        showCancelButton: true,
-        confirmButtonText: "Guardar",
-        cancelButtonText: "Cancelar",
-        inputValidator: (value) => {
-          if (!value) {
-            return "Debes escribir una novedad";
-          }
-        },
+    try {
+      const response = await configAxios.get(`/api/asignaciones/${id}`, {
+        withCredentials: true,
       });
 
-      if (novedadInput) {
-        novedad = novedadInput;
-      } else {
-        return; // Usuario canceló
-      }
-    }
+      const asignacion = response.data;
 
+      // 👇 PREPARAR SEGÚN EL TIPO DE ITEM
+      if (asignacion.Item === "Equipo Tecnologico") {
+        const equipos = asignacion.DetallesEquipos.map((detalle) => ({
+          CodigoEquipo: detalle.CodigoEquipo,
+          ObservacionInicial: detalle.ObservacionInicial,
+          NovedadDevolucion: "",
+          TieneNovedad: false,
+        }));
+
+        setEquiposConDetalles(equipos);
+        setSelectedAsignacion(asignacion);
+        setShowNovedadesDevolucionModal(true);
+      } else if (asignacion.Item === "Producto Consumible") {
+        const consumibles = asignacion.DetallesConsumibles.map((detalle) => ({
+          IdProductoConsumible: detalle.IdProductoConsumible,
+          Nombre: detalle.ProductoConsumible.Nombre,
+          CantidadAsignada: detalle.CantidadAsignada,
+          CantidadDevuelta: detalle.CantidadAsignada, // Por defecto devuelve todo
+          ObservacionInicial: detalle.ObservacionInicial,
+          NovedadDevolucion: "",
+          TieneNovedad: false,
+        }));
+
+        setConsumiblesConDetalles(consumibles);
+        setSelectedAsignacion(asignacion);
+        setShowNovedadesConsumiblesModal(true);
+      }
+    } catch (error) {
+      console.error("Error al obtener detalles de asignación:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudieron cargar los detalles de la asignación",
+        showConfirmButton: true,
+      });
+    }
+  };
+
+  const handleProcesarDevolucion = async (novedadGeneral) => {
     try {
       const now = new Date();
       const FechaDevolucion = getTodayLocal();
       const HoraDevolucion = now.toTimeString().split(" ")[0].substring(0, 8);
 
+      const detallesEquipos = equiposConDetalles.map((eq) => ({
+        CodigoEquipo: eq.CodigoEquipo,
+        NovedadDevolucion: eq.TieneNovedad ? eq.NovedadDevolucion : null,
+      }));
+
       await configAxios.patch(
-        `/api/asignaciones/${id}/confirmar-devolucion`,
+        `/api/asignaciones/${selectedAsignacion.IdAsignaciones}/confirmar-devolucion`,
         {
           FechaDevolucion,
           HoraDevolucion,
           Estado: "Inactivo",
-          Novedad: novedad || null,
+          Novedad: novedadGeneral || null,
+          DetallesEquipos: detallesEquipos,
         },
         { withCredentials: true }
       );
 
       await fetchAsignaciones();
+      setShowNovedadesDevolucionModal(false);
+      setEquiposConDetalles([]);
 
       Swal.fire({
         icon: "success",
@@ -543,7 +787,87 @@ export const useAsignaciones = () => {
     }
   };
 
-  // Formatear fecha para mostrar en formato legible
+  // 👇 NUEVA FUNCIÓN PARA PROCESAR DEVOLUCIÓN DE CONSUMIBLES
+  const handleProcesarDevolucionConsumibles = async (novedadGeneral) => {
+    try {
+      const now = new Date();
+      const FechaDevolucion = getTodayLocal();
+      const HoraDevolucion = now.toTimeString().split(" ")[0].substring(0, 8);
+
+      const detallesConsumibles = consumiblesConDetalles.map((c) => ({
+        IdProductoConsumible: c.IdProductoConsumible,
+        CantidadDevuelta: parseInt(c.CantidadDevuelta),
+        NovedadDevolucion: c.TieneNovedad ? c.NovedadDevolucion : null,
+      }));
+
+      await configAxios.patch(
+        `/api/asignaciones/${selectedAsignacion.IdAsignaciones}/confirmar-devolucion`,
+        {
+          FechaDevolucion,
+          HoraDevolucion,
+          Estado: "Inactivo",
+          Novedad: novedadGeneral || null,
+          DetallesConsumibles: detallesConsumibles,
+        },
+        { withCredentials: true }
+      );
+
+      await fetchAsignaciones();
+      await fetchProductosConsumibles(); // Actualizar stock
+      setShowNovedadesConsumiblesModal(false);
+      setConsumiblesConDetalles([]);
+
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: "Devolución registrada exitosamente",
+        showConfirmButton: true,
+        confirmButtonText: "Ok",
+      });
+    } catch (error) {
+      console.error("Error completo:", error.response?.data);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.response?.data?.message || "Error al confirmar devolución",
+        showConfirmButton: true,
+      });
+    }
+  };
+
+  const handleUpdateNovedadEquipo = (codigoEquipo, tieneNovedad, novedad) => {
+    setEquiposConDetalles((prev) =>
+      prev.map((eq) =>
+        eq.CodigoEquipo === codigoEquipo
+          ? { ...eq, TieneNovedad: tieneNovedad, NovedadDevolucion: novedad }
+          : eq
+      )
+    );
+  };
+
+  const handleUpdateNovedadConsumible = (
+    idProducto,
+    tieneNovedad,
+    novedad,
+    cantidadDevuelta
+  ) => {
+    setConsumiblesConDetalles((prev) =>
+      prev.map((c) =>
+        c.IdProductoConsumible === idProducto
+          ? {
+              ...c,
+              TieneNovedad: tieneNovedad,
+              NovedadDevolucion: novedad,
+              CantidadDevuelta:
+                cantidadDevuelta !== undefined
+                  ? cantidadDevuelta
+                  : c.CantidadDevuelta,
+            }
+          : c
+      )
+    );
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return "";
     return dateString;
@@ -554,45 +878,51 @@ export const useAsignaciones = () => {
     today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
     return today.toISOString().split("T")[0];
   }
-
   const truncateText = (text, maxLength = 10) => {
     if (!text) return "";
     return text.length > maxLength
       ? text.substring(0, maxLength) + "..."
       : text;
   };
-
   const handleShowNovedad = (novedad) => {
     setSelectedNovedad(novedad || "Sin novedad registrada");
     setShowNovedadModal(true);
   };
-
   const handleShowDetails = (asignacion) => {
     setSelectedAsignacion(asignacion);
     setShowDetailsModal(true);
   };
-
- const handleShowEquipments = (asignacion) => {
-  let equipmentCodes = [];
-  
-  // Intentar obtener de CodigosEquipos
-  if (asignacion.CodigosEquipos) {
-    equipmentCodes = asignacion.CodigosEquipos.split(',').map(code => code.trim());
-  }
-  // Si no existe, intentar extraer de la observación (compatibilidad con registros antiguos)
-  else if (asignacion.Observacion) {
-    // Buscar patrones de códigos en la observación
-    const matches = asignacion.Observacion.match(/[A-Z0-9]+\*\d+/g);
-    if (matches) {
-      equipmentCodes = matches;
+  const handleShowEquipments = (asignacion) => {
+    // 👇 MANEJAR PRODUCTOS CONSUMIBLES
+    if (asignacion.Item === "Producto Consumible") {
+      if (
+        asignacion.DetallesConsumibles &&
+        asignacion.DetallesConsumibles.length > 0
+      ) {
+        setSelectedEquipments(asignacion.DetallesConsumibles);
+      } else {
+        setSelectedEquipments([]);
+      }
+      setShowEquipmentsModal(true);
+      return;
     }
-  }
-  
-  setSelectedEquipments(equipmentCodes);
-  setShowEquipmentsModal(true);
-};
 
-  // Funciones para la tabla mejorada
+    // 👇 MANEJAR EQUIPOS TECNOLÓGICOS (código original)
+    if (asignacion.DetallesEquipos && asignacion.DetallesEquipos.length > 0) {
+      setSelectedEquipments(asignacion.DetallesEquipos);
+    } else {
+      let equipmentCodes = [];
+      if (asignacion.CodigosEquipos) {
+        equipmentCodes = asignacion.CodigosEquipos.split(",").map((code) => ({
+          CodigoEquipo: code.trim(),
+          ObservacionInicial: null,
+          NovedadDevolucion: null,
+        }));
+      }
+      setSelectedEquipments(equipmentCodes);
+    }
+    setShowEquipmentsModal(true);
+  };
   const requestSort = (key) => {
     let direction = "ascending";
     if (sortConfig.key === key && sortConfig.direction === "ascending") {
@@ -603,7 +933,6 @@ export const useAsignaciones = () => {
 
   const filteredAsignaciones = asignaciones.filter((asignacion) => {
     const searchTermLower = searchTerm.toLowerCase();
-
     if (!isNaN(searchTerm) && searchTerm.trim() !== "") {
       return asignacion.IdAsignaciones.toString() === searchTerm.trim();
     }
@@ -634,8 +963,6 @@ export const useAsignaciones = () => {
     }
     return 0;
   });
-
-  // Paginación
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentAsignaciones = sortedAsignaciones.slice(
@@ -643,16 +970,13 @@ export const useAsignaciones = () => {
     indexOfLastItem
   );
   const totalPages = Math.ceil(sortedAsignaciones.length / itemsPerPage);
-
   const paginate = (pageNumber) => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
     }
   };
-
   const exportToPDF = async () => {
     try {
-      // Cargar el logo y convertirlo a base64
       const getBase64FromUrl = async (url) => {
         const response = await fetch(url);
         const blob = await response.blob();
@@ -663,26 +987,21 @@ export const useAsignaciones = () => {
           reader.readAsDataURL(blob);
         });
       };
-
       const senaLogoBase64 = await getBase64FromUrl("/logosena.png");
       const doc = new jsPDF();
 
-      // --- LOGO SENA ---
       doc.addImage(senaLogoBase64, "PNG", 15, 10, 30, 25);
 
-      // --- TÍTULO EN VERDE CENTRADO ---
       doc.setFontSize(22);
-      doc.setTextColor(57, 181, 74); // Verde SENA
+      doc.setTextColor(57, 181, 74);
       doc.setFont(undefined, "bold");
       doc.text("Inventario CTGI", 105, 25, { align: "center" });
 
-      // --- SUBTÍTULO EN NEGRO ---
       doc.setFontSize(18);
       doc.setTextColor(0, 0, 0);
       doc.setFont(undefined, "bold");
       doc.text("Historial de asignaciones", 15, 45);
 
-      // --- FECHA Y TOTAL ---
       doc.setFontSize(12);
       doc.setFont(undefined, "bold");
       doc.text(`Fecha:`, 15, 55);
@@ -692,7 +1011,6 @@ export const useAsignaciones = () => {
       doc.text(`${new Date().toLocaleDateString("es-ES")}`, 40, 55);
       doc.text(`${sortedAsignaciones.length}`, 40, 63);
 
-      // --- DESCRIPCIÓN ---
       doc.setFontSize(13);
       doc.setFont(undefined, "bold");
       doc.text("Descripción:", 15, 73);
@@ -705,7 +1023,6 @@ export const useAsignaciones = () => {
         { maxWidth: 180 }
       );
 
-      // --- TABLA ---
       const tableData = sortedAsignaciones.map((asig) => [
         String(asig.IdAsignaciones || ""),
         asig.Nombre || "",
@@ -741,7 +1058,7 @@ export const useAsignaciones = () => {
           cellPadding: 2,
         },
         headStyles: {
-          fillColor: [57, 181, 74], // Verde SENA
+          fillColor: [57, 181, 74],
           textColor: 255,
           fontStyle: "bold",
         },
@@ -769,7 +1086,6 @@ export const useAsignaciones = () => {
       });
     }
   };
-
   const exportToExcel = () => {
     try {
       const wsData = [
@@ -798,7 +1114,6 @@ export const useAsignaciones = () => {
           asig.Estado || "",
         ]),
       ];
-
       const worksheet = XLSX.utils.aoa_to_sheet(wsData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Asignaciones");
@@ -807,7 +1122,6 @@ export const useAsignaciones = () => {
         new Date().toISOString().split("T")[0]
       }.xlsx`;
       XLSX.writeFile(workbook, fileName);
-
       Swal.fire({
         icon: "success",
         title: "Excel generado",
@@ -824,9 +1138,8 @@ export const useAsignaciones = () => {
       });
     }
   };
-
   return {
-    // Estados
+    // Estados existentes
     asignaciones,
     usuarios,
     showModal,
@@ -853,7 +1166,20 @@ export const useAsignaciones = () => {
     totalPages,
     showEquipmentsModal,
     selectedEquipments,
-    // Funciones
+    showObservacionesModal,
+    showNovedadesDevolucionModal,
+    equiposConDetalles,
+    // 👇 NUEVOS ESTADOS PARA CONSUMIBLES
+    productosConsumibles,
+    showConsumiblesPanel,
+    consumibleSearchTerm,
+    selectedConsumibles,
+    filteredConsumibles,
+    showObservacionesConsumiblesModal,
+    showNovedadesConsumiblesModal,
+    consumiblesConDetalles,
+
+    // Funciones existentes
     setSearchTerm,
     setShowModal,
     setShowNovedadModal,
@@ -885,5 +1211,24 @@ export const useAsignaciones = () => {
     handleRemoveScannedEquipment,
     setShowEquipmentsModal,
     handleShowEquipments,
+    setShowObservacionesModal,
+    handleOpenObservacionesModal,
+    handleUpdateObservacionEquipo,
+    setShowNovedadesDevolucionModal,
+    handleUpdateNovedadEquipo,
+    handleProcesarDevolucion,
+
+    // 👇 NUEVAS FUNCIONES PARA CONSUMIBLES
+    setShowConsumiblesPanel,
+    setConsumibleSearchTerm,
+    setSelectedConsumibles,
+    handleSelectConsumible,
+    handleRemoveConsumible,
+    setShowObservacionesConsumiblesModal,
+    handleOpenObservacionesConsumiblesModal,
+    handleUpdateObservacionConsumible,
+    setShowNovedadesConsumiblesModal,
+    handleUpdateNovedadConsumible,
+    handleProcesarDevolucionConsumibles,
   };
 };
