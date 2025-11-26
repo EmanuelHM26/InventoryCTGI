@@ -3,6 +3,8 @@ export const getAuthenticatedUserService = (user) => {
     return {
       id: user.id,
       nombre: user.nombre,
+      correo: user.correo, 
       rol: user.rol,
+      rolId: user.rolId, 
     };
   };

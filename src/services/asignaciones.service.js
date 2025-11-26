@@ -44,21 +44,26 @@ const validarUsuarioExiste = async (idUsuario) => {
  * 👇 MODIFICADO: Ahora también valida disponibilidad del ambiente
  */
 const validarAmbiente = async (data) => {
-  if (
-    data.Item === "Equipo Tecnologico" &&
-    (!data.Ambiente || !data.CodigoAmbiente)
-  ) {
-    throw new Error("El ambiente es obligatorio para equipos tecnológicos");
+  // aplicar la validación tanto a equipos como (opcionalmente) a consumibles
+  if (data.Item !== "Equipo Tecnologico") return;
+
+  if (!data.Ambiente || !data.CodigoAmbiente) {
+    throw new Error("El ambiente es obligatorio para equipos tecnológicos.");
   }
 
-  // 👇 NUEVO: Si es Equipo Tecnológico, validar que el ambiente esté disponible
-  if (data.Item === "Equipo Tecnologico" && data.CodigoAmbiente) {
+  if (
+    (data.Item === "Equipo Tecnologico" ||
+      data.Item === "Producto Consumible") &&
+    data.CodigoAmbiente
+  ) {
     const ambiente = await Ambientes.findOne({
-      where: { codigo: data.CodigoAmbiente }
+      where: { codigo: data.CodigoAmbiente },
     });
 
     if (!ambiente) {
-      throw new Error(`❌ El ambiente con código ${data.CodigoAmbiente} no existe`);
+      throw new Error(
+        `❌ El ambiente con código ${data.CodigoAmbiente} no existe`
+      );
     }
 
     if (ambiente.estado !== ESTADOS_AMBIENTES.DISPONIBLE) {
@@ -68,13 +73,12 @@ const validarAmbiente = async (data) => {
     }
   }
 
-  // Si es Producto Consumible, el ambiente es opcional
+  // Si es Producto Consumible, antes venía poniendo null; mantener si aplica
   if (data.Item === "Producto Consumible") {
     data.Ambiente = data.Ambiente || null;
     data.CodigoAmbiente = data.CodigoAmbiente || null;
   }
 };
-
 /**
  * Valida que un equipo exista, esté disponible y no esté ya asignado
  */
@@ -248,7 +252,9 @@ export const createAsignacionService = async (data) => {
           { estado: ESTADOS_AMBIENTES.EN_PRESTAMO },
           { where: { codigo: data.CodigoAmbiente } }
         );
-        console.log(`✅ Ambiente "${data.Ambiente}" actualizado a "En Préstamo"`);
+        console.log(
+          `✅ Ambiente "${data.Ambiente}" actualizado a "En Préstamo"`
+        );
       }
     }
 
@@ -514,7 +520,9 @@ export const deleteAsignacionService = async (idAsignaciones) => {
           { estado: ESTADOS_AMBIENTES.DISPONIBLE },
           { where: { codigo: asignacion.CodigoAmbiente } }
         );
-        console.log(`✅ Ambiente "${asignacion.Ambiente}" restaurado a "Disponible"`);
+        console.log(
+          `✅ Ambiente "${asignacion.Ambiente}" restaurado a "Disponible"`
+        );
       }
     }
 
@@ -685,7 +693,9 @@ export const confirmarDevolucionService = async (
           { estado: ESTADOS_AMBIENTES.DISPONIBLE },
           { where: { codigo: asignacion.CodigoAmbiente } }
         );
-        console.log(`✅ Ambiente "${asignacion.Ambiente}" restaurado a "Disponible"`);
+        console.log(
+          `✅ Ambiente "${asignacion.Ambiente}" restaurado a "Disponible"`
+        );
       }
     }
 

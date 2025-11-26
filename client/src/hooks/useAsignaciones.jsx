@@ -86,7 +86,7 @@ export const useAsignaciones = (refreshAmbientes) => {
     fetchAsignaciones();
     fetchUsuarios();
     fetchAmbientes();
-    fetchProductosConsumibles(); // 👈 NUEVO
+    fetchProductosConsumibles();
   }, []);
 
   const fetchAsignaciones = async () => {
@@ -129,6 +129,10 @@ export const useAsignaciones = (refreshAmbientes) => {
         withCredentials: true,
       });
       setAmbientes(response.data);
+      console.log(
+        "🔄 Ambientes actualizados en useAsignaciones:",
+        response.data
+      );
     } catch (error) {
       console.error("Error al obtener ambientes:", error);
       Swal.fire({
@@ -158,20 +162,66 @@ export const useAsignaciones = (refreshAmbientes) => {
     }
   };
 
-  // 👇 ACTUALIZAR handleSelectAmbiente con validación
-  const handleSelectAmbiente = (ambiente) => {
-    // Validar disponibilidad antes de seleccionar
-    const disponible = verificarDisponibilidadAmbiente(ambiente.codigo);
+  // 👇 FUNCIÓN MEJORADA: Verificar disponibilidad de ambiente contra la API
+  const verificarDisponibilidadAmbienteAPI = async (codigoAmbiente) => {
+    try {
+      const response = await configAxios.get("/api/ambientes", {
+        withCredentials: true,
+      });
 
-    if (!disponible) {
+      const ambiente = response.data.find(
+        (amb) => amb.codigo === codigoAmbiente
+      );
+
+      if (!ambiente) {
+        return { disponible: false, mensaje: "Ambiente no encontrado" };
+      }
+
+      console.log(
+        `🔍 Verificando ambiente ${codigoAmbiente}:`,
+        ambiente.estado
+      );
+
+      return {
+        disponible: ambiente.estado === "Disponible",
+        estado: ambiente.estado,
+        ambiente: ambiente,
+      };
+    } catch (error) {
+      console.error("Error al verificar disponibilidad del ambiente:", error);
+      return {
+        disponible: false,
+        mensaje: "Error al verificar disponibilidad",
+      };
+    }
+  };
+
+  // 👇 ACTUALIZAR handleSelectAmbiente con validación contra API
+  const handleSelectAmbiente = async (ambiente) => {
+    console.log(
+      "🎯 Intentando seleccionar ambiente:",
+      ambiente.codigo,
+      ambiente.nombre
+    );
+
+    // Validar disponibilidad contra la API en tiempo real
+    const verificacion = await verificarDisponibilidadAmbienteAPI(
+      ambiente.codigo
+    );
+
+    console.log("✅ Resultado de verificación:", verificacion);
+
+    if (!verificacion.disponible) {
       Swal.fire({
         icon: "error",
         title: "Ambiente no disponible",
         html: `
         <div class="text-left">
           <p class="font-semibold text-red-700 mb-2">
-            El ambiente <strong>${ambiente.nombre}</strong> (Código: ${ambiente.codigo}) 
-            está actualmente en préstamo.
+            El ambiente <strong>${ambiente.nombre}</strong> (Código: ${
+          ambiente.codigo
+        }) 
+            está actualmente ${verificacion.estado || "en préstamo"}.
           </p>
           <p class="text-sm text-gray-600">
             Por favor, seleccione otro ambiente disponible.
@@ -293,7 +343,7 @@ export const useAsignaciones = (refreshAmbientes) => {
     });
   };
 
-  // Filtrar ambientes por búsqueda
+  // 👇 FILTRAR AMBIENTES: Mostrar solo disponibles
   const filteredAmbientes = ambientes.filter((amb) => {
     // Primero aplicar búsqueda por término
     const matchesSearch =
@@ -302,16 +352,9 @@ export const useAsignaciones = (refreshAmbientes) => {
 
     if (!matchesSearch) return false;
 
-    // 👇 VALIDACIÓN CRÍTICA: Verificar si el ambiente está en préstamo activo
-    const estaEnPrestamo = asignaciones.some(
-      (asig) =>
-        asig.Estado === "Activo" && // Asignación activa
-        asig.Item === "Equipo Tecnologico" && // Es de equipos (los que usan ambiente)
-        asig.CodigoAmbiente === amb.codigo // Mismo código de ambiente
-    );
-
-    // Solo mostrar ambientes que NO estén en préstamo O que tengan estado "En Préstamo"
-    return !estaEnPrestamo || amb.estado === "Disponible";
+    // 👇 CRÍTICO: Solo mostrar ambientes con estado "Disponible"
+    console.log(`🔍 Filtrando ambiente ${amb.codigo}:`, amb.estado);
+    return amb.estado === "Disponible";
   });
 
   // 👇 FILTRAR CONSUMIBLES POR BÚSQUEDA
@@ -530,16 +573,10 @@ export const useAsignaciones = (refreshAmbientes) => {
     );
   };
 
-  // 👇 NUEVA FUNCIÓN: Verificar si un ambiente específico está disponible
+  // 👇 FUNCIÓN LOCAL: Verificar si un ambiente específico está disponible (para filtrado rápido)
   const verificarDisponibilidadAmbiente = (codigoAmbiente) => {
-    const estaEnPrestamo = asignaciones.some(
-      (asig) =>
-        asig.Estado === "Activo" &&
-        asig.Item === "Equipo Tecnologico" &&
-        asig.CodigoAmbiente === codigoAmbiente
-    );
-
-    return !estaEnPrestamo;
+    const ambiente = ambientes.find((amb) => amb.codigo === codigoAmbiente);
+    return ambiente?.estado === "Disponible";
   };
 
   // 👇 NUEVA FUNCIÓN PARA VERIFICAR DISPONIBILIDAD DE EQUIPOS
@@ -641,13 +678,6 @@ export const useAsignaciones = (refreshAmbientes) => {
       Item: "Item",
       Estado: "Estado",
     };
-
-    // 👇 VALIDACIÓN CONDICIONAL DE AMBIENTE
-    if (newAsignacion.Item === "Equipo Tecnologico") {
-      if (refreshAmbientes) {
-        setTimeout(() => refreshAmbientes(), 500);
-      }
-    }
 
     const missingFields = [];
     for (const [field, label] of Object.entries(requiredFields)) {
@@ -806,27 +836,25 @@ export const useAsignaciones = (refreshAmbientes) => {
                   ? `<br><span class="ml-6 text-xs">Asignación #${e.asignacionId}</span>`
                   : ""
               }
-            </li>
-          `
+            </li>`
             )
             .join("")}
         </ul>
       </div>
     `;
         }
-
         // Errores del sistema
         if (erroresPorTipo.error_sistema.length > 0) {
           mensajeHTML += `
-      <div class="bg-gray-50 border-l-4 border-gray-500 p-3 rounded">
-        <p class="font-bold text-gray-800 mb-2">⚙️ Errores del sistema:</p>
-        <ul class="list-disc list-inside space-y-1 text-sm text-gray-700">
-          ${erroresPorTipo.error_sistema
-            .map((e) => `<li>${e.mensaje}</li>`)
-            .join("")}
-        </ul>
-      </div>
-    `;
+  <div class="bg-gray-50 border-l-4 border-gray-500 p-3 rounded">
+    <p class="font-bold text-gray-800 mb-2">⚙️ Errores del sistema:</p>
+    <ul class="list-disc list-inside space-y-1 text-sm text-gray-700">
+      ${erroresPorTipo.error_sistema
+        .map((e) => `<li>${e.mensaje}</li>`)
+        .join("")}
+    </ul>
+  </div>
+`;
         }
 
         mensajeHTML += "</div>";
@@ -931,14 +959,22 @@ export const useAsignaciones = (refreshAmbientes) => {
         });
       }
 
+      // 👇 CRÍTICO: Refrescar estados INMEDIATAMENTE después de crear/editar
+      await fetchAsignaciones();
+      await fetchAmbientes();
+
+      if (refreshAmbientes) {
+        refreshAmbientes(); // Refrescar el hook de useAmbientes también
+      }
+
       setScannedEquipment([]);
       setSelectedConsumibles([]);
-      setEquiposDanados([]); // 👈 Limpiar equipos dañados
+      setEquiposDanados([]);
       setBarcodeMode("user");
       setShowModal(false);
       setShowObservacionesModal(false);
       setShowObservacionesConsumiblesModal(false);
-      fetchAsignaciones();
+
       setNewAsignacion({
         IdUsuario: "",
         Nombre: "",
@@ -969,7 +1005,6 @@ export const useAsignaciones = (refreshAmbientes) => {
       console.error(error);
     }
   };
-
   const handleToggleEquipoDanado = (codigoEquipo) => {
     setEquiposDanados((prev) => {
       if (prev.includes(codigoEquipo)) {
@@ -979,14 +1014,12 @@ export const useAsignaciones = (refreshAmbientes) => {
       }
     });
   };
-
   const handleEditAsignacion = async (asignacion) => {
     const formatDateForInput = (dateString) => {
       if (!dateString) return "";
       const date = new Date(dateString);
       return date.toISOString().split("T")[0];
     };
-
     setNewAsignacion({
       ...asignacion,
       FechaAsignacion: formatDateForInput(asignacion.FechaAsignacion),
@@ -1000,13 +1033,10 @@ export const useAsignaciones = (refreshAmbientes) => {
       text: "Modo edición activado",
       icon: "info",
       showCancelButton: true,
-      confirmButtonText: "#3085d6",
-      cancelButtonText: "#d33",
       confirmButtonText: "Sí, editar",
       cancelButtonText: "Cancelar",
     });
   };
-
   const handleDeleteAsignacion = async (id) => {
     const result = await Swal.fire({
       title: "¿Estás seguro?",
@@ -1019,17 +1049,20 @@ export const useAsignaciones = (refreshAmbientes) => {
       cancelButtonText: "Cancelar",
       reverseButtons: true,
     });
-
     if (result.isConfirmed) {
       try {
         await configAxios.delete(`/api/asignaciones/${id}`, {
           withCredentials: true,
         });
-        fetchAsignaciones();
-        // 👇 Refrescar ambientes después de eliminar
+
+        // 👇 CRÍTICO: Refrescar inmediatamente después de eliminar
+        await fetchAsignaciones();
+        await fetchAmbientes();
+
         if (refreshAmbientes) {
-          setTimeout(() => refreshAmbientes(), 500);
+          refreshAmbientes();
         }
+
         Swal.fire({
           icon: "success",
           title: "¡Eliminado!",
@@ -1049,13 +1082,11 @@ export const useAsignaciones = (refreshAmbientes) => {
       }
     }
   };
-
   const handleConfirmarDevolucion = async (id) => {
     try {
       const response = await configAxios.get(`/api/asignaciones/${id}`, {
         withCredentials: true,
       });
-
       const asignacion = response.data;
 
       // 👇 PREPARAR SEGÚN EL TIPO DE ITEM
@@ -1095,13 +1126,11 @@ export const useAsignaciones = (refreshAmbientes) => {
       });
     }
   };
-
   const handleProcesarDevolucion = async (novedadGeneral) => {
     try {
       const now = new Date();
       const FechaDevolucion = getTodayLocal();
       const HoraDevolucion = now.toTimeString().split(" ")[0].substring(0, 8);
-
       const detallesEquipos = equiposConDetalles.map((eq) => ({
         CodigoEquipo: eq.CodigoEquipo,
         NovedadDevolucion: eq.TieneNovedad ? eq.NovedadDevolucion : null,
@@ -1115,20 +1144,22 @@ export const useAsignaciones = (refreshAmbientes) => {
           Estado: "Inactivo",
           Novedad: novedadGeneral || null,
           DetallesEquipos: detallesEquipos,
-          EquiposDanados: equiposDanados, // 👈 Enviar equipos marcados como dañados
+          EquiposDanados: equiposDanados,
         },
         { withCredentials: true }
       );
 
+      // 👇 CRÍTICO: Refrescar inmediatamente después de devolución
       await fetchAsignaciones();
-      // 👇 Refrescar ambientes después de devolución
+      await fetchAmbientes();
+
       if (refreshAmbientes) {
-        setTimeout(() => refreshAmbientes(), 500);
+        refreshAmbientes();
       }
 
       setShowNovedadesDevolucionModal(false);
       setEquiposConDetalles([]);
-      setEquiposDanados([]); // 👈 Limpiar equipos dañados
+      setEquiposDanados([]);
 
       Swal.fire({
         icon: "success",
@@ -1147,14 +1178,12 @@ export const useAsignaciones = (refreshAmbientes) => {
       });
     }
   };
-
   // 👇 NUEVA FUNCIÓN PARA PROCESAR DEVOLUCIÓN DE CONSUMIBLES
   const handleProcesarDevolucionConsumibles = async (novedadGeneral) => {
     try {
       const now = new Date();
       const FechaDevolucion = getTodayLocal();
       const HoraDevolucion = now.toTimeString().split(" ")[0].substring(0, 8);
-
       const detallesConsumibles = consumiblesConDetalles.map((c) => ({
         IdProductoConsumible: c.IdProductoConsumible,
         CantidadDevuelta: parseInt(c.CantidadDevuelta),
@@ -1195,7 +1224,6 @@ export const useAsignaciones = (refreshAmbientes) => {
       });
     }
   };
-
   const handleUpdateNovedadEquipo = (codigoEquipo, tieneNovedad, novedad) => {
     setEquiposConDetalles((prev) =>
       prev.map((eq) =>
@@ -1205,7 +1233,6 @@ export const useAsignaciones = (refreshAmbientes) => {
       )
     );
   };
-
   const handleUpdateNovedadConsumible = (
     idProducto,
     tieneNovedad,
@@ -1228,12 +1255,10 @@ export const useAsignaciones = (refreshAmbientes) => {
       )
     );
   };
-
   const formatDate = (dateString) => {
     if (!dateString) return "";
     return dateString;
   };
-
   function getTodayLocal() {
     const today = new Date();
     today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
@@ -1267,7 +1292,6 @@ export const useAsignaciones = (refreshAmbientes) => {
       setShowEquipmentsModal(true);
       return;
     }
-
     // 👇 MANEJAR EQUIPOS TECNOLÓGICOS (código original)
     if (asignacion.DetallesEquipos && asignacion.DetallesEquipos.length > 0) {
       setSelectedEquipments(asignacion.DetallesEquipos);
@@ -1291,13 +1315,11 @@ export const useAsignaciones = (refreshAmbientes) => {
     }
     setSortConfig({ key, direction });
   };
-
   const filteredAsignaciones = asignaciones.filter((asignacion) => {
     const searchTermLower = searchTerm.toLowerCase();
     if (!isNaN(searchTerm) && searchTerm.trim() !== "") {
       return asignacion.IdAsignaciones.toString() === searchTerm.trim();
     }
-
     const fullName = asignacion.Usuario
       ? `${asignacion.Usuario.Nombre || ""} ${
           asignacion.Usuario.Apellido || ""
@@ -1314,7 +1336,6 @@ export const useAsignaciones = (refreshAmbientes) => {
       asignacion.Item?.toLowerCase().includes(searchTermLower)
     );
   });
-
   const sortedAsignaciones = [...filteredAsignaciones].sort((a, b) => {
     if (a[sortConfig.key] < b[sortConfig.key]) {
       return sortConfig.direction === "ascending" ? -1 : 1;
@@ -1350,7 +1371,6 @@ export const useAsignaciones = (refreshAmbientes) => {
       };
       const senaLogoBase64 = await getBase64FromUrl("/logosena.png");
       const doc = new jsPDF();
-
       doc.addImage(senaLogoBase64, "PNG", 15, 10, 30, 25);
 
       doc.setFontSize(22);
@@ -1478,7 +1498,6 @@ export const useAsignaciones = (refreshAmbientes) => {
       const worksheet = XLSX.utils.aoa_to_sheet(wsData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Asignaciones");
-
       const fileName = `asignaciones_${
         new Date().toISOString().split("T")[0]
       }.xlsx`;
@@ -1542,7 +1561,6 @@ export const useAsignaciones = (refreshAmbientes) => {
     consumiblesConDetalles,
     equiposDanados,
     ESTADOS_EQUIPOS,
-
     // Funciones existentes
     setSearchTerm,
     setShowModal,

@@ -96,3 +96,24 @@ export const getAuthenticatedUser = async () => {
     throw error;
   }
 };
+
+export const updatePassword = async (currentPassword, newPassword) => {
+  try {
+    const response = await configAxios.put('/api/users/password', {
+      currentPassword,
+      newPassword
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateProfile = async (profileData) => {
+  try {
+    const response = await configAxios.put('/api/users/profile', profileData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

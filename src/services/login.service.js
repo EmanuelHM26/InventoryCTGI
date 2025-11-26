@@ -11,7 +11,6 @@ import Role from "../models/RolModel.js";
 
 dotenv.config();
 
-
 // ======================= CREAR USUARIO =======================
 export const createUserService = async ({ Usuario, Correo, PasswordTexto }) => {
   if (!Usuario || !Correo || !PasswordTexto) {
@@ -73,9 +72,6 @@ export const createUserService = async ({ Usuario, Correo, PasswordTexto }) => {
       "Usuario registrado exitosamente. Pendiente de activación por administrador.",
   };
 };
-
-
-
 
 // ======================= AUTENTICACIÓN =======================
 export const loginUserService = async ({ Correo, PasswordTexto }) => {
@@ -357,4 +353,52 @@ export const getUsersByStatusService = async (isVerified) => {
       },
     ],
   });
+};
+
+// ======================= ACTUALIZAR CONTRASEÑA DEL USUARIO AUTENTICADO =======================
+export const updateUserPasswordService = async (
+  userId,
+  currentPassword,
+  newPassword
+) => {
+  console.log("🔍 Buscando usuario con ID:", userId);
+
+  const user = await RegistroLogin.findByPk(userId);
+  if (!user) {
+    console.error("❌ Usuario no encontrado con ID:", userId);
+    throw new Error("Usuario no encontrado");
+  }
+
+  console.log("✅ Usuario encontrado:", user.Usuario);
+
+  const password = await Password.findByPk(user.IdPassword);
+  if (!password) {
+    console.error(
+      "❌ Contraseña no encontrada para IdPassword:",
+      user.IdPassword
+    );
+    throw new Error("Contraseña no encontrada");
+  }
+
+  // Verificar que la contraseña actual sea correcta
+  const isMatch = await bcrypt.compare(currentPassword, password.Password);
+  if (!isMatch) {
+    console.error("❌ Contraseña actual incorrecta");
+    throw new Error("La contraseña actual es incorrecta");
+  }
+
+  console.log("✅ Contraseña actual verificada");
+
+  // Hashear la nueva contraseña
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  // Actualizar la contraseña
+  password.Password = hashedPassword;
+  password.FechaActualizacion = new Date();
+  await password.save();
+
+  console.log("✅ Contraseña actualizada exitosamente");
+
+  return { message: "Contraseña actualizada exitosamente" };
 };

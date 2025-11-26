@@ -5,6 +5,8 @@ import {
   loginUser,
   logoutUser,
   getAuthenticatedUser,
+  updatePassword,
+  updateProfile,
 } from "../api/authenticatedLogin";
 import Swal from "sweetalert2";
 
@@ -23,22 +25,26 @@ export const AuthProvider = ({ children }) => {
 
       // Asegurar compatibilidad con diferentes estructuras de respuesta
       setUser({
-        id: userData.id || userData.IdRegistroLogin,
-        nombre: userData.nombre || userData.Usuario,
-        rol: userData.rol || userData.Rol,
-        email: userData.email || userData.Correo,
+         id: userData.id,
+        nombre: userData.nombre,
+        correo: userData.correo, 
+        rol: userData.rol,
+        email: userData.correo, 
+        Usuario: userData.nombre, 
+        Correo: userData.correo, 
+        Rol: userData.rol,
       });
 
       return true;
     } catch (error) {
       console.error("❌ Error al cargar datos del usuario:", error);
-      
-      // Si es error 403, limpiar el usuario
+
+      // Si es error 403 o 401, limpiar el usuario
       if (error.response?.status === 403 || error.response?.status === 401) {
         console.log("🔒 No autenticado - limpiando sesión");
         setUser(null);
       }
-      
+
       return false;
     } finally {
       setLoading(false);
@@ -66,14 +72,14 @@ export const AuthProvider = ({ children }) => {
   const signup = async (userData) => {
     try {
       const response = await registerUser(userData);
-      
+
       Swal.fire({
         icon: "success",
         title: "✅ Registro exitoso",
         text: "Revisa tu correo para verificar tu cuenta",
         confirmButtonColor: "#22c55e",
       });
-      
+
       navigate("/login");
       return response;
     } catch (error) {
@@ -88,6 +94,8 @@ export const AuthProvider = ({ children }) => {
       const response = await loginUser(credentials);
       console.log("✅ Respuesta de inicio de sesión:", response);
 
+      await loadUserData();
+      
       // Guardar el usuario en el estado
       const userData = {
         id: response.id || response.IdRegistroLogin,
@@ -98,10 +106,10 @@ export const AuthProvider = ({ children }) => {
       
       setUser(userData);
       console.log("👤 Usuario establecido:", userData);
-
+      
       // Navegar al dashboard
       navigate("/dashboard");
-
+      
       return response;
     } catch (error) {
       console.error("❌ Error al iniciar sesión:", error);
@@ -128,7 +136,7 @@ export const AuthProvider = ({ children }) => {
       await logoutUser();
       setUser(null);
       navigate("/login");
-      
+
       Swal.fire(
         "Sesión cerrada",
         "Has cerrado sesión exitosamente.",
@@ -136,21 +144,57 @@ export const AuthProvider = ({ children }) => {
       );
     } catch (error) {
       console.error("❌ Error al cerrar sesión:", error);
-      
+
       // Aunque falle el logout en el servidor, limpiar estado local
       setUser(null);
       navigate("/login");
-      
-      Swal.fire(
-        "Sesión cerrada",
-        "Se cerró la sesión localmente",
-        "info"
-      );
+
+      Swal.fire("Sesión cerrada", "Se cerró la sesión localmente", "info");
+    }
+  };
+
+  // Actualizar contraseña
+  const handleUpdatePassword = async (currentPassword, newPassword) => {
+    try {
+      const response = await updatePassword(currentPassword, newPassword);
+      return response;
+    } catch (error) {
+      console.error("❌ Error al actualizar contraseña:", error);
+      throw error;
+    }
+  };
+
+  // Actualizar perfil
+  const handleUpdateProfile = async (profileData) => {
+    try {
+      const response = await updateProfile(profileData);
+
+      // Actualizar el usuario en el estado
+      setUser({
+        ...user,
+        nombre: profileData.nombre || user.nombre,
+        email: profileData.email || user.email,
+      });
+
+      return response;
+    } catch (error) {
+      console.error("❌ Error al actualizar perfil:", error);
+      throw error;
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signup, signin, logout }}>
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        loading, 
+        signup, 
+        signin, 
+        logout, 
+        updatePassword: handleUpdatePassword, 
+        updateProfile: handleUpdateProfile 
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

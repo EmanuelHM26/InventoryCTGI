@@ -38,6 +38,7 @@ export const verifyToken = async (req, res, next) => {
     req.user = {
       id: user.IdRegistroLogin,
       nombre: user.Usuario,
+      correo: user.Correo, // ✅ AGREGAR CORREO AQUÍ
       rol: user.Rol?.NombreRol || "Sin rol",
       rolId: user.IdRol 
     };
